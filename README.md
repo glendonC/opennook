@@ -77,6 +77,10 @@ you want one. It is not pulled in by `NookApp`.
   presents each by briefly taking over the expanded surface. Bind it via
   `NookConfiguration.onReady` and render with `NookActivityHost`. The queue
   yields the surface whenever the user is engaging it. See `Examples/ActivityNook`.
+- `Volume/` — an ambient volume glyph: `SystemVolumeObserver` tracks the default
+  output device's volume and mute via public CoreAudio APIs; `NookVolumeIndicator`
+  renders it as a compact-slot glyph. It shows the level — it does not intercept
+  or replace Apple's volume HUD. See `Examples/VolumeNook`.
 
 ### The demo app
 
@@ -131,6 +135,7 @@ swift run ClockNook     # custom home view + a custom compact slot
 swift run ThemedNook    # a host-supplied theme + lifecycle hooks
 swift run ShelfNook     # a drop-files-on-the-notch shelf (NookComponents)
 swift run ActivityNook  # a priority live-activity queue (NookComponents)
+swift run VolumeNook    # an ambient volume glyph in the compact pill (NookComponents)
 ```
 
 ## Start your own notch app

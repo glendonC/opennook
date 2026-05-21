@@ -37,6 +37,11 @@ public struct NookExpandedView: View {
     let topBarLeadingTitle: (AppState) -> String
     let topBarLeadingIcon: String?
 
+    /// Whether the framework top bar and Settings screen are part of the chrome
+    /// (see ``NookConfiguration/showsTopBar`` / ``NookConfiguration/showsSettings``).
+    let showsTopBar: Bool
+    let showsSettings: Bool
+
     @State private var isHomeIconHovered = false
 
     public init(
@@ -48,7 +53,9 @@ public struct NookExpandedView: View {
         theme: @escaping (AppState) -> NookResolvedTheme = NookResolvedTheme.live,
         home: @escaping () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
         topBarLeadingTitle: @escaping (AppState) -> String = { _ in "Home" },
-        topBarLeadingIcon: String? = "house"
+        topBarLeadingIcon: String? = "house",
+        showsTopBar: Bool = true,
+        showsSettings: Bool = true
     ) {
         self.appState = appState
         self.services = services
@@ -59,6 +66,8 @@ public struct NookExpandedView: View {
         self.home = home
         self.topBarLeadingTitle = topBarLeadingTitle
         self.topBarLeadingIcon = topBarLeadingIcon
+        self.showsTopBar = showsTopBar
+        self.showsSettings = showsSettings
     }
 
     private var resolvedTheme: NookResolvedTheme {
@@ -71,17 +80,20 @@ public struct NookExpandedView: View {
 
     public var body: some View {
         VStack(spacing: 8) {
-            NookTopBar(
-                appState: appState,
-                chromeInteractionAccent: chromeInteractionAccent,
-                isHomeIconHovered: $isHomeIconHovered,
-                toggleKeepOpen: toggleKeepOpen,
-                leadingTitle: topBarLeadingTitle,
-                leadingIcon: topBarLeadingIcon
-            )
+            if showsTopBar {
+                NookTopBar(
+                    appState: appState,
+                    chromeInteractionAccent: chromeInteractionAccent,
+                    isHomeIconHovered: $isHomeIconHovered,
+                    toggleKeepOpen: toggleKeepOpen,
+                    leadingTitle: topBarLeadingTitle,
+                    leadingIcon: topBarLeadingIcon,
+                    showsSettings: showsSettings
+                )
+            }
 
             Group {
-                if appState.isSettingsView {
+                if showsSettings && appState.isSettingsView {
                     settingsSurface
                         .transition(
                             .asymmetric(

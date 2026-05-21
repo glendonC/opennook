@@ -72,9 +72,11 @@ public enum NookApp {
 @MainActor
 private final class AppDelegate: NSObject, NSApplicationDelegate {
     private let coordinator: AppCoordinator
+    private let configuration: NookConfiguration
     private var statusItem: NSStatusItem?
 
     init(configuration: NookConfiguration) {
+        self.configuration = configuration
         self.coordinator = AppCoordinator(configuration: configuration)
         super.init()
     }
@@ -98,11 +100,17 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(showNook),
             keyEquivalent: ";"
         ))
-        menu.addItem(NSMenuItem(
-            title: "Settings…",
-            action: #selector(showSettings),
-            keyEquivalent: ","
-        ))
+        // "Settings…" tracks the chrome: dropped when the host disabled Settings, since
+        // there is no Settings UI to open. "Toggle Stay Expanded" is kept regardless —
+        // it's chrome-independent and is the only keep-open control left once the top
+        // bar (and its lock) is hidden.
+        if configuration.showsSettings {
+            menu.addItem(NSMenuItem(
+                title: "Settings…",
+                action: #selector(showSettings),
+                keyEquivalent: ","
+            ))
+        }
         menu.addItem(NSMenuItem(
             title: "Toggle Stay Expanded",
             action: #selector(toggleKeepOpen),

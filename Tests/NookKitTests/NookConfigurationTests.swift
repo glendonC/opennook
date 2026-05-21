@@ -87,4 +87,44 @@ final class NookConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.topBarLeadingTitle(AppState()), "Today")
         XCTAssertNil(configuration.topBarLeadingIcon)
     }
+
+    /// The default configuration ships the full framework chrome — top bar and Settings.
+    func testDefaultConfigurationEnablesChrome() {
+        let configuration = NookConfiguration()
+
+        XCTAssertTrue(configuration.showsTopBar)
+        XCTAssertTrue(configuration.showsSettings)
+    }
+
+    /// A host can switch the top bar and Settings off for a bare expanded surface.
+    func testChromeFlagsAreHostConfigurable() {
+        var configuration = NookConfiguration()
+        configuration.showsTopBar = false
+        configuration.showsSettings = false
+
+        XCTAssertFalse(configuration.showsTopBar)
+        XCTAssertFalse(configuration.showsSettings)
+    }
+
+    /// With Settings disabled, `showSettings()` must not move the surface off the home
+    /// view — there is no Settings UI to show.
+    @MainActor
+    func testShowSettingsKeepsHomeWhenSettingsDisabled() {
+        var configuration = NookConfiguration()
+        configuration.showsSettings = false
+
+        let coordinator = AppCoordinator(configuration: configuration)
+        coordinator.showSettings()
+
+        XCTAssertEqual(coordinator.appState.viewMode, .home)
+    }
+
+    /// With Settings enabled (the default), `showSettings()` moves to the Settings view.
+    @MainActor
+    func testShowSettingsEntersSettingsWhenEnabled() {
+        let coordinator = AppCoordinator(configuration: NookConfiguration())
+        coordinator.showSettings()
+
+        XCTAssertEqual(coordinator.appState.viewMode, .settings)
+    }
 }

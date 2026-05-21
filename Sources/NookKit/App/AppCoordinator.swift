@@ -51,7 +51,9 @@ public final class AppCoordinator: ObservableObject {
                     theme: self.configuration.theme,
                     home: self.configuration.home,
                     topBarLeadingTitle: self.configuration.topBarLeadingTitle,
-                    topBarLeadingIcon: self.configuration.topBarLeadingIcon
+                    topBarLeadingIcon: self.configuration.topBarLeadingIcon,
+                    showsTopBar: self.configuration.showsTopBar,
+                    showsSettings: self.configuration.showsSettings
                 ))
             },
             compactLeading: {
@@ -298,7 +300,14 @@ public final class AppCoordinator: ObservableObject {
         showNook()
     }
 
+    /// Shows the Settings screen. When the host disabled Settings
+    /// (``NookConfiguration/showsSettings`` is `false`) there is no Settings UI, so this
+    /// falls back to showing the home surface and `viewMode` stays `.home`.
     public func showSettings() {
+        guard configuration.showsSettings else {
+            showNook()
+            return
+        }
         appState.showSettings()
         showNook()
     }

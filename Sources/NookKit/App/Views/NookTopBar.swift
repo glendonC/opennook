@@ -23,6 +23,11 @@ struct NookTopBar: View {
     let leadingTitle: (AppState) -> String
     let leadingIcon: String?
 
+    /// Whether the gear (and thus the Settings breadcrumb) is part of the bar. When
+    /// `false` the gear is omitted; `viewMode` never reaches `.settings` so the
+    /// breadcrumb is moot. See ``NookConfiguration/showsSettings``.
+    let showsSettings: Bool
+
     @Environment(\.nookResolvedTheme) private var resolvedTheme
 
     var body: some View {
@@ -52,17 +57,19 @@ struct NookTopBar: View {
                     toggleKeepOpen()
                 }
 
-                HeaderIcon(
-                    systemName: "gearshape",
-                    isActive: appState.isSettingsView,
-                    activeColor: chromeInteractionAccent,
-                    help: "Settings"
-                ) {
-                    withAnimation(.spring(response: 0.38, dampingFraction: 0.84)) {
-                        if appState.isSettingsView {
-                            appState.showHome()
-                        } else {
-                            appState.showSettings()
+                if showsSettings {
+                    HeaderIcon(
+                        systemName: "gearshape",
+                        isActive: appState.isSettingsView,
+                        activeColor: chromeInteractionAccent,
+                        help: "Settings"
+                    ) {
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.84)) {
+                            if appState.isSettingsView {
+                                appState.showHome()
+                            } else {
+                                appState.showSettings()
+                            }
                         }
                     }
                 }

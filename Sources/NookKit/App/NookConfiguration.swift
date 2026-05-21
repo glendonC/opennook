@@ -62,6 +62,21 @@ public struct NookConfiguration {
     /// home still works).
     public var topBarLeadingIcon: String?
 
+    /// Whether the expanded surface renders the framework top bar (leading cluster,
+    /// keep-open lock, gear). Defaults to `true`. Set to `false` for a bare expanded
+    /// surface — a pure glance/widget with no framework chrome.
+    ///
+    /// With the top bar off the gear is gone, so Settings is unreachable from the
+    /// chrome regardless of ``showsSettings``; the keep-open lock is gone too (it lives
+    /// only in the top bar). Both remain reachable via the menu-bar fallback.
+    public var showsTopBar: Bool = true
+
+    /// Whether the gear and the reachable Settings screen are part of the chrome.
+    /// Defaults to `true`. Set to `false` to drop the Settings UI entirely — the gear
+    /// is removed, the menu-bar "Settings…" item is dropped, and the expanded surface
+    /// stays on the home view.
+    public var showsSettings: Bool = true
+
     /// Called when the chrome transitions into the expanded surface (from any source).
     public var onExpand: (() -> Void)?
 
@@ -99,6 +114,8 @@ public struct NookConfiguration {
         theme = NookResolvedTheme.live
         topBarLeadingTitle = { _ in "Home" }
         topBarLeadingIcon = "house"
+        showsTopBar = true
+        showsSettings = true
     }
 
     /// Registers the expanded home surface from a `@ViewBuilder` closure.

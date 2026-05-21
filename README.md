@@ -154,13 +154,16 @@ NookApp.main { MyHomeView() }
 ```
 
 **2. Customize via `NookConfiguration`** when you need more than a home view —
-the compact slots, the chrome theme, and lifecycle hooks:
+the compact slots, the chrome theme, the top bar's leading label/icon, and
+lifecycle hooks:
 
 ```swift
 var configuration = NookConfiguration()
 configuration.setHome { MyHomeView() }
 configuration.setCompactTrailing { MyGlyph() }
 configuration.theme = { appState in MyPalette.resolve(appState) }
+configuration.topBarLeadingTitle = { _ in "Today" }  // default: "Home"
+configuration.topBarLeadingIcon = nil                // default: "house"
 configuration.onExpand = { print("nook expanded") }
 NookApp.main(configuration)
 ```

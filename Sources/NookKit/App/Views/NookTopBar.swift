@@ -19,6 +19,10 @@ struct NookTopBar: View {
     @Binding var isHomeIconHovered: Bool
     let toggleKeepOpen: () -> Void
 
+    /// Host-configurable leading-cluster label and icon (see `NookConfiguration`).
+    let leadingTitle: (AppState) -> String
+    let leadingIcon: String?
+
     @Environment(\.nookResolvedTheme) private var resolvedTheme
 
     var body: some View {
@@ -68,29 +72,41 @@ struct NookTopBar: View {
         .frame(height: 24)
     }
 
-    /// On home the word "Home" stays visible next to the house; in settings (and any other
-    /// future deep view) the label collapses until the user hovers the glyph.
+    /// On home the configured title stays visible next to its icon; in settings (and any
+    /// other future deep view) the label collapses until the user hovers the glyph, which
+    /// doubles as the back-to-home control. Label and icon come from `NookConfiguration`;
+    /// the defaults reproduce the demo's house + "Home".
     private var homeLeadingCluster: some View {
         let showPersistentHomeTitle = appState.isHomeView && !appState.isSettingsView
+        let title = leadingTitle(appState)
 
         return HStack(spacing: 6) {
             if showPersistentHomeTitle {
-                StaticHeaderIcon(systemName: "house")
-                Text("Home")
+                if let leadingIcon {
+                    StaticHeaderIcon(systemName: leadingIcon)
+                }
+                Text(title)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
             } else {
-                HeaderIcon(systemName: "house", isActive: false, activeColor: chromeInteractionAccent, help: "Home") {
+                // Settings (or any deep view): the cluster is the back-to-home control.
+                // With no configured icon, a back chevron keeps that affordance.
+                HeaderIcon(
+                    systemName: leadingIcon ?? "chevron.left",
+                    isActive: false,
+                    activeColor: chromeInteractionAccent,
+                    help: title
+                ) {
                     withAnimation(.spring(response: 0.34, dampingFraction: 0.85)) {
                         appState.showHome()
                     }
                 }
-                .accessibilityLabel("Home")
+                .accessibilityLabel(title)
                 .onHover { isHomeIconHovered = $0 }
 
                 if isHomeIconHovered {
-                    Text("Home")
+                    Text(title)
                         .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(resolvedTheme.secondaryLabel)
                         .lineLimit(1)

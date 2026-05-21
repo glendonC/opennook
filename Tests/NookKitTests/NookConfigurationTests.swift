@@ -69,4 +69,22 @@ final class NookConfigurationTests: XCTestCase {
         XCTAssertNil(coordinator.nook.onCompact)
         XCTAssertNil(coordinator.nook.onHide)
     }
+
+    /// The default top-bar leading cluster must reproduce the demo: house + "Home".
+    func testTopBarLeadingDefaultsMatchTheDemo() {
+        let configuration = NookConfiguration()
+
+        XCTAssertEqual(configuration.topBarLeadingIcon, "house")
+        XCTAssertEqual(configuration.topBarLeadingTitle(AppState()), "Home")
+    }
+
+    /// A host can replace the leading title and drop the icon (e.g. a date-only header).
+    func testTopBarLeadingIsHostConfigurable() {
+        var configuration = NookConfiguration()
+        configuration.topBarLeadingTitle = { _ in "Today" }
+        configuration.topBarLeadingIcon = nil
+
+        XCTAssertEqual(configuration.topBarLeadingTitle(AppState()), "Today")
+        XCTAssertNil(configuration.topBarLeadingIcon)
+    }
 }

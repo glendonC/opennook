@@ -33,6 +33,10 @@ public struct NookExpandedView: View {
     /// Host-registered home content, shown between the top bar and (when toggled) Settings.
     let home: () -> AnyView
 
+    /// Host-configurable top-bar leading label and icon (see `NookConfiguration`).
+    let topBarLeadingTitle: (AppState) -> String
+    let topBarLeadingIcon: String?
+
     @State private var isHomeIconHovered = false
 
     public init(
@@ -42,7 +46,9 @@ public struct NookExpandedView: View {
         hide: @escaping () -> Void,
         resetAllSettings: @escaping () -> Void,
         theme: @escaping (AppState) -> NookResolvedTheme = NookResolvedTheme.live,
-        home: @escaping () -> AnyView = { AnyView(NookPlaceholderHomeView()) }
+        home: @escaping () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
+        topBarLeadingTitle: @escaping (AppState) -> String = { _ in "Home" },
+        topBarLeadingIcon: String? = "house"
     ) {
         self.appState = appState
         self.services = services
@@ -51,6 +57,8 @@ public struct NookExpandedView: View {
         self.resetAllSettings = resetAllSettings
         self.theme = theme
         self.home = home
+        self.topBarLeadingTitle = topBarLeadingTitle
+        self.topBarLeadingIcon = topBarLeadingIcon
     }
 
     private var resolvedTheme: NookResolvedTheme {
@@ -67,7 +75,9 @@ public struct NookExpandedView: View {
                 appState: appState,
                 chromeInteractionAccent: chromeInteractionAccent,
                 isHomeIconHovered: $isHomeIconHovered,
-                toggleKeepOpen: toggleKeepOpen
+                toggleKeepOpen: toggleKeepOpen,
+                leadingTitle: topBarLeadingTitle,
+                leadingIcon: topBarLeadingIcon
             )
 
             Group {

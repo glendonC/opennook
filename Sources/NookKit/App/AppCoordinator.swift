@@ -49,7 +49,9 @@ public final class AppCoordinator: ObservableObject {
                     hide: { [weak self] in self?.hideNook() },
                     resetAllSettings: { [weak self] in self?.resetAllSettingsToDefaults() },
                     theme: self.configuration.theme,
-                    home: self.configuration.home
+                    home: self.configuration.home,
+                    topBarLeadingTitle: self.configuration.topBarLeadingTitle,
+                    topBarLeadingIcon: self.configuration.topBarLeadingIcon
                 ))
             },
             compactLeading: {

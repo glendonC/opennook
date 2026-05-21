@@ -48,6 +48,20 @@ public struct NookConfiguration {
     /// supply a closure returning a host-built ``NookResolvedTheme`` to theme the chrome.
     public var theme: (AppState) -> NookResolvedTheme
 
+    /// The label for the top bar's leading cluster. Defaults to `"Home"` — override it
+    /// so the bar communicates *product* context (a date, a section name) rather than
+    /// the demo's navigation metaphor. The closure receives ``AppState`` for hosts whose
+    /// label depends on it.
+    ///
+    /// The framework top bar, lock/gear controls, and the Settings breadcrumb are
+    /// unaffected — only the leading icon + title are host-configurable.
+    public var topBarLeadingTitle: (AppState) -> String
+
+    /// SF Symbol for the top bar's leading cluster. Defaults to `"house"`. Set to `nil`
+    /// for a title-only cluster (in Settings, a back chevron is then used so returning
+    /// home still works).
+    public var topBarLeadingIcon: String?
+
     /// Called when the chrome transitions into the expanded surface (from any source).
     public var onExpand: (() -> Void)?
 
@@ -83,6 +97,8 @@ public struct NookConfiguration {
         compactLeading = { AnyView(NookCompactLeadingView()) }
         compactTrailing = { AnyView(NookCompactTrailingView()) }
         theme = NookResolvedTheme.live
+        topBarLeadingTitle = { _ in "Home" }
+        topBarLeadingIcon = "house"
     }
 
     /// Registers the expanded home surface from a `@ViewBuilder` closure.

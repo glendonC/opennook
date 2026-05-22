@@ -19,13 +19,19 @@ import UniformTypeIdentifiers
 /// In a non-sandboxed host the security scope is simply inert. `bookmark` is
 /// deliberately opaque `Data` so the strategy can evolve without an API break.
 ///
+/// ``bookmarkKind`` records how the bookmark was captured. This matters under the App
+/// Sandbox: a `.nonScoped` bookmark cannot resolve in a future sandboxed launch even
+/// when the file is right there, so ``ShelfStore``'s purge rule preserves it instead
+/// of silently corroding the shelf. Items persisted by older builds decode with
+/// ``BookmarkKind/unknown`` and are treated like `.nonScoped` for purge purposes.
+///
 /// Under the App Sandbox, *touching the file's contents* — not just resolving the
 /// bookmark — requires bracketing the access with
 /// `startAccessingSecurityScopedResource()`/`stopAccessingSecurityScopedResource()`.
 /// Use ``withResolvedURL(_:)`` for any synchronous read; it does the bracketing.
 /// `resolveURL()` is for path-level use only (display, comparison) and does **not**
-/// start access. Outbound drag of file *contents* into a sandboxed or promise-only
-/// drop target is a v1 limitation — it needs file promises (see ``NookShelfView``).
+/// start access. Outbound drag uses file promises (see ``NookShelfView``) so the read
+/// can hold scope for the duration of the copy.
 public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     /// File name without extension — what the chip label shows.
@@ -36,11 +42,29 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     public let bookmark: Data
     /// `UTType` identifier, for the outbound drag pasteboard.
     public let typeIdentifier: String
+    /// How the bookmark was captured. Drives ``ShelfStore``'s purge rule under the
+    /// sandbox: a `.nonScoped` (or legacy `.unknown`) bookmark that fails to resolve
+    /// is preserved across launches because it may resolve again later.
+    public let bookmarkKind: BookmarkKind
+
+    /// How a bookmark was captured.
+    ///
+    /// - `scoped`: a `.withSecurityScope` bookmark — durable across launches under the
+    ///   App Sandbox.
+    /// - `nonScoped`: a plain bookmark. Resolves fine outside the sandbox; **cannot**
+    ///   resolve in a future sandboxed launch.
+    /// - `unknown`: persisted by a build that predates this tag. Treated like
+    ///   `.nonScoped` for purge — preserved when it fails to resolve.
+    public enum BookmarkKind: String, Codable, Sendable, CaseIterable {
+        case scoped
+        case nonScoped
+        case unknown
+    }
 
     /// Builds an item from a file URL, capturing a bookmark. Returns `nil` if the URL
     /// can't be bookmarked (e.g. it doesn't exist).
     public static func make(from url: URL) -> ShelfItem? {
-        guard let bookmark = Self.bookmarkData(for: url) else { return nil }
+        guard let capture = Self.bookmarkData(for: url) else { return nil }
         let type = UTType(filenameExtension: url.pathExtension)?.identifier
             ?? UTType.data.identifier
         return ShelfItem(
@@ -48,8 +72,9 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
             displayName: url.deletingPathExtension().lastPathComponent,
             fileExtension: url.pathExtension,
             addedAt: Date(),
-            bookmark: bookmark,
-            typeIdentifier: type
+            bookmark: capture.data,
+            typeIdentifier: type,
+            bookmarkKind: capture.kind
         )
     }
 
@@ -102,34 +127,87 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     /// Returns a copy whose bookmark has been re-captured from `url`, or `nil` if a fresh
     /// bookmark can't be made. The caller supplies the already-resolved URL so a heal
     /// pass doesn't resolve the bookmark a second time — see ``ShelfStore``.
+    ///
+    /// Re-capture is also a natural moment to **upgrade** a `.nonScoped`/`.unknown` item
+    /// to `.scoped` when scoped capture now succeeds (e.g. the host left the sandbox
+    /// for a session). The new ``bookmarkKind`` reflects how the *fresh* bookmark was
+    /// captured, not the predecessor's tag.
     func reBookmarked(from url: URL) -> ShelfItem? {
-        guard let fresh = Self.bookmarkData(for: url) else { return nil }
+        guard let capture = Self.bookmarkData(for: url) else { return nil }
         return ShelfItem(
             id: id,
             displayName: displayName,
             fileExtension: fileExtension,
             addedAt: addedAt,
-            bookmark: fresh,
-            typeIdentifier: typeIdentifier
+            bookmark: capture.data,
+            typeIdentifier: typeIdentifier,
+            bookmarkKind: capture.kind
         )
     }
 
-    /// Captures bookmark data for `url`, preferring a security-scoped bookmark and
-    /// falling back to a plain one (security-scoped creation throws when the process
-    /// holds no scoped access to the file, e.g. some non-sandboxed contexts).
-    private static func bookmarkData(for url: URL) -> Data? {
+    /// Captures bookmark data for `url`, reporting how it was captured.
+    ///
+    /// Prefers a security-scoped bookmark and falls back to a plain one (scoped
+    /// creation throws when the process holds no scoped access to the file, e.g. some
+    /// non-sandboxed contexts, or on volumes that don't support scoped bookmarks).
+    /// Returns `nil` only when *both* attempts fail.
+    static func bookmarkData(for url: URL) -> (data: Data, kind: BookmarkKind)? {
         if let scoped = try? url.bookmarkData(
             options: [.withSecurityScope],
             includingResourceValuesForKeys: nil,
             relativeTo: nil
         ) {
-            return scoped
+            return (scoped, .scoped)
         }
-        return try? url.bookmarkData(
+        if let plain = try? url.bookmarkData(
             options: [],
             includingResourceValuesForKeys: nil,
             relativeTo: nil
-        )
+        ) {
+            return (plain, .nonScoped)
+        }
+        return nil
+    }
+
+    // MARK: - Codable (forward-compatible decoding)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, displayName, fileExtension, addedAt, bookmark, typeIdentifier, bookmarkKind
+    }
+
+    /// Custom decoder so JSON written by an older build (no `bookmarkKind` field)
+    /// decodes cleanly to `.unknown` — which the purge rule treats as a non-scoped
+    /// bookmark, preserving it across launches. Same pattern as
+    /// ``NookAppearancePreferences``.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.displayName = try container.decode(String.self, forKey: .displayName)
+        self.fileExtension = try container.decode(String.self, forKey: .fileExtension)
+        self.addedAt = try container.decode(Date.self, forKey: .addedAt)
+        self.bookmark = try container.decode(Data.self, forKey: .bookmark)
+        self.typeIdentifier = try container.decode(String.self, forKey: .typeIdentifier)
+        self.bookmarkKind = try container.decodeIfPresent(BookmarkKind.self, forKey: .bookmarkKind) ?? .unknown
+    }
+
+    /// Explicit memberwise init: needed because the custom `init(from:)` above
+    /// suppresses Swift's synthesized memberwise init.
+    init(
+        id: UUID,
+        displayName: String,
+        fileExtension: String,
+        addedAt: Date,
+        bookmark: Data,
+        typeIdentifier: String,
+        bookmarkKind: BookmarkKind
+    ) {
+        self.id = id
+        self.displayName = displayName
+        self.fileExtension = fileExtension
+        self.addedAt = addedAt
+        self.bookmark = bookmark
+        self.typeIdentifier = typeIdentifier
+        self.bookmarkKind = bookmarkKind
     }
 }
 

@@ -36,6 +36,11 @@ final class SurfaceArbiter {
     /// Granted claims, oldest at the bottom. The top entry is the one on screen.
     private var stack: [Entry] = []
 
+    /// Tokens for claims that are still live. A token is recorded here on grant and
+    /// removed when its claim ends or is invalidated by a module switch. `end` treats a
+    /// token absent from this set as stale and a guaranteed no-op.
+    private var liveTokens: Set<NookSurfaceToken> = []
+
     /// The surface state captured before the first claim took the surface — what the
     /// surface restores to once the stack empties. `nil` while no claim is outstanding.
     private var baseRestoreState: NookState?
@@ -74,6 +79,9 @@ final class SurfaceArbiter {
     /// The priority of the claim currently on screen, or `nil` when idle.
     var topPriority: NookSurfacePriority? { stack.last?.claim.priority }
 
+    /// The set of module ids that currently hold at least one outstanding claim.
+    var presentingModuleIDs: Set<String> { Set(stack.map { $0.claim.moduleID }) }
+
     /// Grants `claim` the surface when it outranks the current holder, the user is not
     /// engaging the surface, and a background module's claim is `.urgent`. The decision
     /// runs on the serial lifecycle chain, so it is made *after* any queued user-driven
@@ -94,17 +102,42 @@ final class SurfaceArbiter {
             let token = NookSurfaceToken(value: nextToken)
             nextToken += 1
             stack.append(Entry(token: token, claim: claim))
+            liveTokens.insert(token)
             await expand()
             granted = token
         }
         return granted
     }
 
+    /// Invalidates every outstanding claim owned by `moduleID` — used when that module
+    /// is being switched away from. Its content is leaving the surface anyway, so the
+    /// claims are dropped (not transferred, not frozen) and their tokens go stale.
+    ///
+    /// This is a synchronous, in-memory policy mutation: it does NOT restore the surface
+    /// (the switch transaction owns surface state for the incoming module) and does NOT
+    /// open its own `runSerial` — it is invoked from inside an already-open serial block.
+    func invalidateClaims(ownedBy moduleID: String) {
+        let dropped = stack.filter { $0.claim.moduleID == moduleID }
+        guard !dropped.isEmpty else { return }
+        for entry in dropped {
+            liveTokens.remove(entry.token)
+        }
+        stack.removeAll { $0.claim.moduleID == moduleID }
+        if stack.isEmpty {
+            baseRestoreState = nil
+        }
+    }
+
     /// Releases the claim for `token`. When it was the last outstanding claim the
     /// surface restores to its pre-presentation state — unless the user has since
     /// engaged it, in which case their state is left as-is.
+    ///
+    /// A token whose module was switched away (or otherwise invalidated) is stale: it is
+    /// no longer in `liveTokens`, and `end` is a guaranteed no-op for it. This prevents a
+    /// torn-down module's drain loop from collapsing the surface under the incoming one.
     func end(_ token: NookSurfaceToken) async {
         await runSerial { [self] in
+            guard liveTokens.remove(token) != nil else { return }
             guard let index = stack.firstIndex(where: { $0.token == token }) else { return }
             stack.remove(at: index)
             // A surviving claim still holds the surface — leave it expanded.

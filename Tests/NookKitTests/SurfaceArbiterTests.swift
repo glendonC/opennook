@@ -116,4 +116,60 @@ final class SurfaceArbiterTests: XCTestCase {
         XCTAssertEqual(harness.state, .compact)
         XCTAssertFalse(harness.arbiter.isPresenting)
     }
+
+    func testEndOfStaleTokenIsNoOp() async {
+        let harness = Harness()
+        harness.state = .compact
+
+        let token = await harness.arbiter.begin(NookSurfaceClaim(moduleID: "A"))
+        XCTAssertNotNil(token)
+        XCTAssertEqual(harness.state, .expanded)
+
+        // The module is switched away: its claims are invalidated, token goes stale.
+        harness.arbiter.invalidateClaims(ownedBy: "A")
+        let transitionsBeforeEnd = harness.transitions.count
+
+        // A stale `end` must not touch the surface — no restore, no transition.
+        await harness.arbiter.end(token!)
+        XCTAssertEqual(harness.transitions.count, transitionsBeforeEnd, "stale end is a no-op")
+        XCTAssertEqual(harness.state, .expanded)
+    }
+
+    func testInvalidateClaimsDropsOnlyTheNamedModule() async {
+        let harness = Harness()
+
+        let a = await harness.arbiter.begin(NookSurfaceClaim(moduleID: "A", priority: .normal))
+        let b = await harness.arbiter.begin(NookSurfaceClaim(moduleID: "B", priority: .urgent))
+        XCTAssertNotNil(a)
+        XCTAssertNotNil(b)
+        XCTAssertEqual(harness.arbiter.presentingModuleIDs, ["A", "B"])
+
+        harness.arbiter.invalidateClaims(ownedBy: "A")
+
+        XCTAssertEqual(harness.arbiter.presentingModuleIDs, ["B"], "only A's claim is dropped")
+        XCTAssertTrue(harness.arbiter.isPresenting)
+
+        // A's now-stale token must be inert.
+        await harness.arbiter.end(a!)
+        XCTAssertEqual(harness.arbiter.presentingModuleIDs, ["B"])
+    }
+
+    func testInvalidatingLastClaimClearsRestoreState() async {
+        let harness = Harness()
+        harness.state = .hidden
+
+        let token = await harness.arbiter.begin(NookSurfaceClaim(moduleID: "A"))
+        XCTAssertNotNil(token)
+
+        harness.arbiter.invalidateClaims(ownedBy: "A")
+        XCTAssertFalse(harness.arbiter.isPresenting)
+
+        // With restore state cleared, the next claim captures the *current* state as
+        // its base. Surface is currently `.expanded`, so a later end restores there
+        // (i.e. no transition), not to the original `.hidden`.
+        let next = await harness.arbiter.begin(NookSurfaceClaim(moduleID: "A"))
+        XCTAssertNotNil(next)
+        await harness.arbiter.end(next!)
+        XCTAssertEqual(harness.state, .expanded, "restore base was re-captured, not the stale .hidden")
+    }
 }

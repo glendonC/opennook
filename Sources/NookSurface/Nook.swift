@@ -34,6 +34,12 @@ import SwiftUI
 ///
 /// Hover side-effects are described by ``NookHoverBehavior``; opening/closing/conversion timing
 /// can be customized through ``transitionConfiguration``.
+///
+/// `Nook` is `@MainActor`-isolated. It drives an `NSWindowController` and publishes
+/// SwiftUI state, both of which are main-thread-only; the isolation makes that a
+/// compiler-checked guarantee instead of a convention and lets every transition share
+/// one serial generation token without a lock.
+@MainActor
 public final class Nook<Expanded, CompactLeading, CompactTrailing>: ObservableObject, NookControllable
 where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// Exposed for callers that need to tweak window-level details (e.g. accessibility, level changes).
@@ -41,9 +47,6 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     public let style: NookStyle
     public let hoverBehavior: NookHoverBehavior
-
-    /// Lazily allocated namespace used for matched-geometry transitions between compact/expanded.
-    @Published public internal(set) var namespace: Namespace.ID?
 
     public var transitionConfiguration = NookTransitionConfiguration()
 
@@ -141,10 +144,17 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     private var closePanelTask: Task<(), Never>?
 
-    /// Monotonic transition token. Each `_expand`/`_compact` bumps it; an earlier
-    /// transition that has since suspended on a `Task.sleep` re-checks the token and
-    /// bails instead of clobbering a newer transition's state. This makes rapid
-    /// hover-in/hover-out resolve cleanly to "the last transition wins."
+    /// The in-flight expand/compact transition, or `nil` when idle. ``runTransition(_:)``
+    /// cancels this before spawning a replacement, so a superseded transition's
+    /// `Task.sleep` throws promptly instead of running to term.
+    private var transitionTask: Task<Void, Never>?
+
+    /// Monotonic transition token. ``runTransition(_:)`` bumps it **synchronously** at
+    /// each entry point — hover, drag, public `expand`/`compact` — so the token reflects
+    /// call order, not the order tasks happen to start running. A transition re-checks
+    /// it via ``isCurrent(_:)`` at its top and after every suspension, and bails if a
+    /// newer one has superseded it. This makes rapid hover-in/hover-out resolve cleanly
+    /// to "the last call wins," even when the unstructured tasks start out of order.
     private var transitionGeneration = 0
 
     private var cancellables = Set<AnyCancellable>()
@@ -275,15 +285,39 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         }
 
         guard let screen = windowController?.window?.screen ?? resolvedScreen else { return }
-        Task { [weak self] in
+        runTransition { [weak self] generation in
             guard let self else { return }
             if hovering {
-                await self._expand(on: screen, skipHide: true)
+                await self._expand(on: screen, skipHide: true, generation: generation)
             } else {
-                await self._compact(on: screen, skipHide: true)
+                await self._compact(on: screen, skipHide: true, generation: generation)
             }
         }
     }
+
+    /// Claims the next transition generation **synchronously**, cancels any in-flight
+    /// transition (and pending close), and runs `body` as the sole tracked transition
+    /// task. `body` receives its generation and must re-check ``isCurrent(_:)`` at its
+    /// top and after every suspension. The returned task completes when `body` does, so
+    /// an `await`ing caller (e.g. `expand()`) sees the transition through to settle.
+    @discardableResult
+    func runTransition(_ body: @escaping @MainActor (_ generation: Int) async -> Void) -> Task<Void, Never> {
+        transitionGeneration &+= 1
+        let generation = transitionGeneration
+        closePanelTask?.cancel()
+        transitionTask?.cancel()
+        let task = Task { @MainActor [weak self] in
+            await body(generation)
+            // Only clear the handle if no newer transition has replaced it.
+            if let self, self.transitionGeneration == generation { self.transitionTask = nil }
+        }
+        transitionTask = task
+        return task
+    }
+
+    /// `true` while `generation` is still the most recent transition — i.e. no newer
+    /// `expand`/`compact`/`hide` has been claimed since.
+    func isCurrent(_ generation: Int) -> Bool { transitionGeneration == generation }
 }
 
 // MARK: - Public lifecycle
@@ -293,14 +327,20 @@ public extension Nook {
     /// target — typically the host's persisted display preference via ``screenProvider``.
     func expand(on screen: NSScreen? = nil) async {
         guard let target = screen ?? resolvedScreen else { return }
-        await _expand(on: target, skipHide: transitionConfiguration.skipIntermediateHides)
+        let skipHide = transitionConfiguration.skipIntermediateHides
+        await runTransition { [weak self] generation in
+            await self?._expand(on: target, skipHide: skipHide, generation: generation)
+        }.value
     }
 
     /// Collapse the chrome to its compact pill. Pass `nil` (the default) to let
     /// ``resolvedScreen`` pick the target.
     func compact(on screen: NSScreen? = nil) async {
         guard let target = screen ?? resolvedScreen else { return }
-        await _compact(on: target, skipHide: transitionConfiguration.skipIntermediateHides)
+        let skipHide = transitionConfiguration.skipIntermediateHides
+        await runTransition { [weak self] generation in
+            await self?._compact(on: target, skipHide: skipHide, generation: generation)
+        }.value
     }
 
     func hide() async {
@@ -355,84 +395,86 @@ public extension Nook {
 }
 
 extension Nook {
-    /// Expand the chrome onto `screen`. The transition runs on the main actor and this
-    /// method `await`s it to completion — including a settle pass that lets the open or
+    /// Expand the chrome onto `screen`. Runs on the main actor and `await`s the
+    /// transition to completion — including a settle pass that lets the open or
     /// conversion animation finish — so an awaited `expand()` returns once the chrome
     /// has visibly arrived, not after an unrelated fixed delay.
-    func _expand(on screen: NSScreen, skipHide: Bool) async {
-        await Task { @MainActor in
-            // Already expanded *on the requested screen* — nothing to do. A different
-            // screen still needs work: the window must move, so fall through to the
-            // rebuild path, which `needsNewWindow` below already handles.
-            if self.state == .expanded, self.windowController?.window?.screen == screen { return }
+    ///
+    /// `generation` is the token claimed synchronously by ``runTransition(_:)``. The
+    /// method bails the instant a newer transition supersedes it: at its top (covering
+    /// a task that was queued but overtaken before it ran) and after each suspension.
+    func _expand(on screen: NSScreen, skipHide: Bool, generation: Int) async {
+        // Superseded before this task even started running.
+        guard isCurrent(generation) else { return }
 
-            // Opening the nook acknowledges any *repeating* peripheral cue — those are
-            // meant to keep nagging until the user looks, so once they're looking we kill
-            // them. A one-shot cue (e.g. the launch shimmer greeting) is allowed to play
-            // through the expand transition so the user actually sees it; the perimeter
-            // stroke renders on expanded chrome just as well as on compact.
-            if self.feedbackEvent?.repeats == true { self.feedbackEvent = nil }
-            if self.pendingFeedback?.repeats == true { self.pendingFeedback = nil }
+        // Already expanded *on the requested screen* — nothing to do. A different
+        // screen still needs work: the window must move, so fall through to the
+        // rebuild path, which `needsNewWindow` below already handles.
+        if state == .expanded, windowController?.window?.screen == screen { return }
 
-            self.closePanelTask?.cancel()
-            self.transitionGeneration &+= 1
-            let generation = self.transitionGeneration
+        // Opening the nook acknowledges any *repeating* peripheral cue — those are
+        // meant to keep nagging until the user looks, so once they're looking we kill
+        // them. A one-shot cue (e.g. the launch shimmer greeting) is allowed to play
+        // through the expand transition so the user actually sees it; the perimeter
+        // stroke renders on expanded chrome just as well as on compact.
+        if feedbackEvent?.repeats == true { feedbackEvent = nil }
+        if pendingFeedback?.repeats == true { pendingFeedback = nil }
 
-            let needsNewWindow = self.state == .hidden || self.windowController?.window?.screen != screen
+        closePanelTask?.cancel()
 
-            if needsNewWindow {
-                self.initializeWindow(screen: screen, orderFront: false)
-                withAnimation(self.effectiveOpeningAnimation) { self.state = .expanded }
-                self.showWindow()
-                try? await Task.sleep(for: Self.openSettleDuration)
-            } else {
-                if !skipHide {
-                    withAnimation(self.effectiveClosingAnimation) { self.state = .hidden }
-                    try? await Task.sleep(for: Self.intermediateHideDuration)
-                    // A newer transition may have superseded us across the sleep.
-                    guard self.transitionGeneration == generation, self.state == .hidden else { return }
-                }
-                withAnimation(self.effectiveConversionAnimation) { self.state = .expanded }
-                try? await Task.sleep(for: Self.conversionSettleDuration)
+        let needsNewWindow = state == .hidden || windowController?.window?.screen != screen
+
+        if needsNewWindow {
+            initializeWindow(screen: screen, orderFront: false)
+            withAnimation(effectiveOpeningAnimation) { state = .expanded }
+            showWindow()
+            try? await Task.sleep(for: Self.openSettleDuration)
+        } else {
+            if !skipHide {
+                withAnimation(effectiveClosingAnimation) { state = .hidden }
+                try? await Task.sleep(for: Self.intermediateHideDuration)
+                // A newer transition may have superseded us across the sleep.
+                guard isCurrent(generation), state == .hidden else { return }
             }
-        }.value
+            withAnimation(effectiveConversionAnimation) { state = .expanded }
+            try? await Task.sleep(for: Self.conversionSettleDuration)
+        }
     }
 
-    /// Collapse the chrome to its compact pill on `screen`. Like ``_expand(on:skipHide:)``
-    /// the transition is awaited to completion on the main actor.
-    func _compact(on screen: NSScreen, skipHide: Bool) async {
+    /// Collapse the chrome to its compact pill on `screen`. Like ``_expand(on:skipHide:generation:)``
+    /// it runs on the main actor, `await`s the transition to completion, and bails on
+    /// supersession by re-checking `generation`.
+    func _compact(on screen: NSScreen, skipHide: Bool, generation: Int) async {
+        guard isCurrent(generation) else { return }
+
         if disableCompactLeading, disableCompactTrailing {
             // No compact content to show — "compact" collapses to a full hide.
             await hide()
             return
         }
 
-        await Task { @MainActor in
-            // Already compact *on the requested screen* — nothing to do. A different
-            // screen still needs the window moved, so fall through to the rebuild path.
-            if self.state == .compact, self.windowController?.window?.screen == screen { return }
+        // Already compact *on the requested screen* — nothing to do. A different
+        // screen still needs the window moved, so fall through to the rebuild path.
+        if state == .compact, windowController?.window?.screen == screen { return }
 
-            self.closePanelTask?.cancel()
-            self.transitionGeneration &+= 1
-            let generation = self.transitionGeneration
+        closePanelTask?.cancel()
 
-            let needsNewWindow = self.state == .hidden || self.windowController?.window?.screen != screen
+        let needsNewWindow = state == .hidden || windowController?.window?.screen != screen
 
-            if needsNewWindow {
-                self.initializeWindow(screen: screen, orderFront: false)
-                withAnimation(self.effectiveOpeningAnimation) { self.state = .compact }
-                self.showWindow()
-                try? await Task.sleep(for: Self.openSettleDuration)
-            } else {
-                if !skipHide {
-                    withAnimation(self.effectiveClosingAnimation) { self.state = .hidden }
-                    try? await Task.sleep(for: Self.intermediateHideDuration)
-                    guard self.transitionGeneration == generation, self.state == .hidden else { return }
-                }
-                withAnimation(self.effectiveConversionAnimation) { self.state = .compact }
-                try? await Task.sleep(for: Self.conversionSettleDuration)
+        if needsNewWindow {
+            initializeWindow(screen: screen, orderFront: false)
+            withAnimation(effectiveOpeningAnimation) { state = .compact }
+            showWindow()
+            try? await Task.sleep(for: Self.openSettleDuration)
+        } else {
+            if !skipHide {
+                withAnimation(effectiveClosingAnimation) { state = .hidden }
+                try? await Task.sleep(for: Self.intermediateHideDuration)
+                guard isCurrent(generation), state == .hidden else { return }
             }
-        }.value
+            withAnimation(effectiveConversionAnimation) { state = .compact }
+            try? await Task.sleep(for: Self.conversionSettleDuration)
+        }
     }
 
     /// `keepVisible` defers the actual hide until the cursor leaves; otherwise we fade and tear down.
@@ -441,6 +483,12 @@ extension Nook {
             completion?()
             return
         }
+
+        // Supersede any in-flight expand/compact: bump the generation so its next
+        // `isCurrent` check fails, and cancel its task so it stops sleeping.
+        transitionGeneration &+= 1
+        transitionTask?.cancel()
+        transitionTask = nil
 
         // `.keepVisible` defers an explicit hide until the cursor leaves the panel — we
         // don't yank the surface out from under an active hover. Poll on the *single*
@@ -473,12 +521,16 @@ extension Nook {
         closePanelTask?.cancel()
         closePanelTask = Task { [weak self] in
             try? await Task.sleep(for: Self.intermediateHideDuration)
-            guard !Task.isCancelled else { return }
-
-            await self?.fadeOutWindow()
-
-            guard !Task.isCancelled else { return }
-            self?.deinitializeWindow()
+            // A cancelled hide — an incoming expand/compact took over — must skip the
+            // teardown, but must still resume the awaiting `hide()` continuation: a
+            // dropped `completion` would wedge that caller (and any serial queue
+            // awaiting it) forever.
+            if !Task.isCancelled {
+                await self?.fadeOutWindow()
+            }
+            if !Task.isCancelled {
+                self?.deinitializeWindow()
+            }
             completion?()
         }
     }
@@ -648,9 +700,10 @@ extension Nook: NookDragDestination {
         isDragInFlight = true
 
         if state == .compact || state == .hidden {
-            let screen = windowController?.window?.screen ?? resolvedScreen
-            if let screen {
-                Task { await _expand(on: screen, skipHide: true) }
+            if let screen = windowController?.window?.screen ?? resolvedScreen {
+                runTransition { [weak self] generation in
+                    await self?._expand(on: screen, skipHide: true, generation: generation)
+                }
             }
         }
         return .copy
@@ -664,20 +717,7 @@ extension Nook: NookDragDestination {
 
         let prior = stateBeforeDrag
         stateBeforeDrag = nil
-
-        guard let prior else { return }
-        let screen = windowController?.window?.screen ?? resolvedScreen
-        guard let screen else { return }
-        Task {
-            switch prior {
-            case .compact:
-                await _compact(on: screen, skipHide: true)
-            case .hidden:
-                _hide()
-            case .expanded:
-                break
-            }
-        }
+        if let prior { restoreStateAfterDrag(prior) }
     }
 
     /// File drop landed. Hand the URLs to the registered callback; if it accepts, leave
@@ -689,21 +729,23 @@ extension Nook: NookDragDestination {
         let prior = stateBeforeDrag
         stateBeforeDrag = nil
 
-        if !accepted, let prior {
-            let screen = windowController?.window?.screen ?? resolvedScreen
-            if let screen {
-                Task {
-                    switch prior {
-                    case .compact:
-                        await _compact(on: screen, skipHide: true)
-                    case .hidden:
-                        _hide()
-                    case .expanded:
-                        break
-                    }
-                }
-            }
-        }
+        if !accepted, let prior { restoreStateAfterDrag(prior) }
         return accepted
+    }
+
+    /// Restore the surface to its pre-drag state after an aborted drag or a rejected
+    /// drop. Shared by ``nookPanelDraggingExited()`` and ``nookPanelPerformDrop(_:)``.
+    private func restoreStateAfterDrag(_ prior: NookState) {
+        switch prior {
+        case .compact:
+            guard let screen = windowController?.window?.screen ?? resolvedScreen else { return }
+            runTransition { [weak self] generation in
+                await self?._compact(on: screen, skipHide: true, generation: generation)
+            }
+        case .hidden:
+            _hide()
+        case .expanded:
+            break
+        }
     }
 }

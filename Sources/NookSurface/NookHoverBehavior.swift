@@ -22,8 +22,5 @@ public struct NookHoverBehavior: OptionSet, Sendable {
     /// Trigger a subtle alignment haptic on hover-state transitions.
     public static let hapticFeedback = NookHoverBehavior(rawValue: 1 << 1)
 
-    /// Drop a deeper shadow while hovering.
-    public static let increaseShadow = NookHoverBehavior(rawValue: 1 << 2)
-
-    public static let all: NookHoverBehavior = [.keepVisible, .hapticFeedback, .increaseShadow]
+    public static let all: NookHoverBehavior = [.keepVisible, .hapticFeedback]
 }

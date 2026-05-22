@@ -34,6 +34,30 @@ public final class AppCoordinator: ObservableObject {
     /// transient presentation ends. Non-`nil` only while a transient takeover is active.
     var transientRestoreState: NookState?
 
+    /// `true` once ``start()`` has run. Guards against a double `start()` registering
+    /// duplicate observers, sinks, and `onReady` callbacks.
+    private var hasStarted = false
+
+    /// Tail of the serial chain that all surface lifecycle transitions
+    /// (expand/compact/hide) run through. Without this, two rapid triggers — a
+    /// double hotkey press, a display change landing mid-show — each spawn an
+    /// independent `Task` whose `await`s interleave, settling the surface in the
+    /// opposite state from the user's last action.
+    private var lifecycleTail: Task<Void, Never>?
+
+    /// Chains `operation` after every previously enqueued lifecycle transition so
+    /// they run strictly in order. The returned task completes when `operation` does.
+    @discardableResult
+    func enqueueLifecycle(_ operation: @escaping @MainActor () async -> Void) -> Task<Void, Never> {
+        let previous = lifecycleTail
+        let task = Task { @MainActor in
+            await previous?.value
+            await operation()
+        }
+        lifecycleTail = task
+        return task
+    }
+
     lazy var nook: Nook<AnyView, AnyView, AnyView> = {
         let nook = Nook<AnyView, AnyView, AnyView>(
             hoverBehavior: [],
@@ -101,6 +125,9 @@ public final class AppCoordinator: ObservableObject {
     }
 
     public func start() {
+        guard !hasStarted else { return }
+        hasStarted = true
+
         NSApp.setActivationPolicy(.accessory)
 
         syncNotchBackdrop()
@@ -115,9 +142,10 @@ public final class AppCoordinator: ObservableObject {
         // Cold-launch greeting: compact the chrome, then fire a one-shot shimmer along the
         // perimeter so the user sees the app is awake. Awaiting `compact()` first puts the
         // nook into a visible state so the event fires immediately instead of queuing.
-        Task { @MainActor in
-            await nook.compact(on: resolveScreen())
-            nook.playFeedback(.shimmer, duration: 1.1)
+        enqueueLifecycle { [weak self] in
+            guard let self else { return }
+            await self.nook.compact(on: self.resolveScreen())
+            self.nook.playFeedback(.shimmer, duration: 1.1)
         }
 
         // Hand the host a post-launch handle on the live coordinator (e.g. for
@@ -150,7 +178,8 @@ public final class AppCoordinator: ObservableObject {
             .sink { [weak self] preference in
                 guard let self else { return }
                 let screen = NookScreenLocator.screen(matching: preference)
-                Task { @MainActor in
+                self.enqueueLifecycle { [weak self] in
+                    guard let self else { return }
                     // Re-place whichever way the chrome is currently showing. A hidden
                     // nook needs nothing — its next expand/compact rebuilds on the new
                     // screen via `screenProvider`.
@@ -197,7 +226,10 @@ public final class AppCoordinator: ObservableObject {
             }
         }
         if status != noErr {
-            appState.errorMessage = "Could not register global hotkey (status \(status))."
+            appState.errorMessage = "That shortcut is unavailable — another app may be using it."
+        } else {
+            // Clear any earlier failure once a registration succeeds.
+            appState.errorMessage = nil
         }
     }
 
@@ -294,20 +326,27 @@ public final class AppCoordinator: ObservableObject {
 
     public func toggleNook() {
         appState.resetTransientStatus()
-        // Decide off the surface's live state, not the mirror — a hover-expanded nook
-        // must toggle closed even though no coordinator call opened it.
-        if nook.state == .expanded {
-            hideNook()
-        } else {
-            showNook()
+        enqueueLifecycle { [weak self] in
+            guard let self else { return }
+            // Decide off the surface's live state *at execution time*, not the mirror
+            // and not when `toggleNook()` was called — a hover-expanded nook must
+            // toggle closed even though no coordinator call opened it, and deciding
+            // before the serial chain reaches us would race other queued transitions.
+            if self.nook.state == .expanded {
+                await self.nook.compact()
+            } else {
+                self.nook.staysExpandedOnHoverExit = self.appState.keepNookOpen
+                await self.nook.expand()
+            }
         }
     }
 
     public func showNook() {
         appState.resetTransientStatus()
-        Task {
-            nook.staysExpandedOnHoverExit = appState.keepNookOpen
-            await nook.expand()
+        enqueueLifecycle { [weak self] in
+            guard let self else { return }
+            self.nook.staysExpandedOnHoverExit = self.appState.keepNookOpen
+            await self.nook.expand()
         }
     }
 
@@ -329,8 +368,8 @@ public final class AppCoordinator: ObservableObject {
     }
 
     public func hideNook() {
-        Task {
-            await nook.compact()
+        enqueueLifecycle { [weak self] in
+            await self?.nook.compact()
         }
     }
 
@@ -356,7 +395,7 @@ public final class AppCoordinator: ObservableObject {
     /// Restores appearance prefs, the global hotkey, keep-open, and expand behavior to
     /// their defaults. The `$hotkey` binding re-registers the shortcut automatically.
     public func resetAllSettingsToDefaults() {
-        appState.keepNookOpen = false
+        // `.default` appearance preferences already carry `keepNookOpen == false`.
         appState.appearancePreferences = .default
         NookAppearanceStore.save(.default)
         appState.replaceHotkey(.default)
@@ -383,24 +422,34 @@ extension AppCoordinator: NookSurfacePresenting {
             .eraseToAnyPublisher()
     }
 
-    /// Snapshots the current state and expands the chrome. A second call while a
-    /// transient presentation is already active is a no-op (the snapshot is kept).
-    public func beginTransientPresentation() async {
-        guard transientRestoreState == nil else { return }
-        transientRestoreState = nook.state
-        await nook.expand()
+    /// Snapshots the current state and expands the chrome. Returns `false` — without
+    /// snapshotting or expanding — when a transient presentation is already active, or
+    /// when the user is engaging the surface. Runs on the serial lifecycle chain, so
+    /// the engagement check happens *after* any queued user-initiated transition, not
+    /// at call time.
+    public func beginTransientPresentation() async -> Bool {
+        var didPresent = false
+        await enqueueLifecycle { [weak self] in
+            guard let self, self.transientRestoreState == nil, !self.isUserEngaged else { return }
+            self.transientRestoreState = self.nook.state
+            await self.nook.expand()
+            didPresent = true
+        }.value
+        return didPresent
     }
 
     /// Restores the snapshotted state — unless the user engaged the surface during the
     /// presentation, in which case their state is left as-is.
     public func endTransientPresentation() async {
-        guard let restore = transientRestoreState else { return }
-        transientRestoreState = nil
-        guard !isUserEngaged else { return }
-        switch restore {
-        case .compact: await nook.compact()
-        case .hidden: await nook.hide()
-        case .expanded: break
-        }
+        await enqueueLifecycle { [weak self] in
+            guard let self, let restore = self.transientRestoreState else { return }
+            self.transientRestoreState = nil
+            guard !self.isUserEngaged else { return }
+            switch restore {
+            case .compact: await self.nook.compact()
+            case .hidden: await self.nook.hide()
+            case .expanded: break
+            }
+        }.value
     }
 }

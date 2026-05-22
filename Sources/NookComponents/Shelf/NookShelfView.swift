@@ -17,9 +17,11 @@ import SwiftUI
 /// into `NookConfiguration.onFileDrop`. Each shelved file can be dragged back out to
 /// Finder or another app.
 ///
-/// > Note: drag-out uses an on-disk file URL, which Finder and most apps accept. A few
-/// > drop targets (Mail compose, some upload widgets) accept only file *promises* — those
-/// > are out of scope for v1, so a drag into them will be rejected.
+/// > Note: drag-out uses an on-disk file URL, which Finder and most apps accept. Two v1
+/// > limitations: drop targets that accept only file *promises* (Mail compose, some
+/// > upload widgets) will reject the drag; and from a *sandboxed* host, dragging file
+/// > contents into another sandboxed target needs file promises too. Both are deferred
+/// > to a promise-based revision. Persisting the shelf across launches works regardless.
 public struct NookShelfView: View {
     @ObservedObject private var store: ShelfStore
     @Environment(\.nookResolvedTheme) private var theme
@@ -120,8 +122,10 @@ private struct ShelfItemChip: View {
 
     @ViewBuilder
     private var icon: some View {
-        if let url = item.resolveURL() {
-            Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+        // `withResolvedURL` brackets security-scoped access for the icon fetch so it
+        // works under the App Sandbox, where a bare resolved URL grants no access.
+        if let fileIcon = item.withResolvedURL({ NSWorkspace.shared.icon(forFile: $0.path) }) {
+            Image(nsImage: fileIcon)
                 .resizable()
                 .frame(width: 34, height: 34)
         } else {

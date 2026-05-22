@@ -6,6 +6,7 @@
 // A copy is included at /LICENSE in the repository root.
 
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 /// Settings row for the global show/hide hotkey. Tap the shortcut to record a new one:
@@ -29,9 +30,15 @@ struct SettingsShortcutRow: View {
                 Text("Show Nook")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(theme.primaryLabel.opacity(0.95))
-                Text(isRecording ? "Press a shortcut — Esc to cancel" : "Global shortcut — click to change")
-                    .font(.system(size: 9, weight: .regular))
-                    .foregroundStyle(theme.tertiaryLabel)
+                if let error = appState.errorMessage {
+                    Text(error)
+                        .font(.system(size: 9, weight: .regular))
+                        .foregroundStyle(Color.orange)
+                } else {
+                    Text(isRecording ? "Press a shortcut — Esc to cancel" : "Global shortcut — click to change")
+                        .font(.system(size: 9, weight: .regular))
+                        .foregroundStyle(theme.tertiaryLabel)
+                }
             }
 
             Spacer(minLength: 8)
@@ -76,7 +83,7 @@ struct SettingsShortcutRow: View {
 
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             // Escape cancels without changing the shortcut.
-            if event.keyCode == 53 {
+            if event.keyCode == UInt16(kVK_Escape) {
                 stopRecording()
                 return nil
             }

@@ -27,7 +27,8 @@ final class NookAppearancePreferencesTests: XCTestCase {
             chromePalette: .light,
             surfaceStyle: .translucent,
             presentation: .floating,
-            hapticFeedbackEnabled: true
+            hapticFeedbackEnabled: true,
+            keepNookOpen: true
         )
 
         let data = try JSONEncoder().encode(original)
@@ -48,5 +49,6 @@ final class NookAppearancePreferencesTests: XCTestCase {
         XCTAssertEqual(decoded.surfaceStyle, .solid)    // default
         XCTAssertEqual(decoded.presentation, .auto)     // default
         XCTAssertFalse(decoded.hapticFeedbackEnabled)   // default
+        XCTAssertFalse(decoded.keepNookOpen)            // default
     }
 }

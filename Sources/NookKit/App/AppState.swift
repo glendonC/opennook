@@ -24,7 +24,19 @@ public final class AppState: ObservableObject {
     /// Which display the Nook chrome appears on. The coordinator projects this onto
     /// the surface (`Nook.screenProvider`) and re-places the chrome when it changes.
     @Published public var displayPreference = NookDisplayPreference.default
-    @Published public var keepNookOpen = false
+
+    /// When on, the expanded nook stays open past hover-exit. Backed by
+    /// ``NookAppearancePreferences/keepNookOpen`` so it persists across launches;
+    /// reading or writing it goes through `appearancePreferences`.
+    public var keepNookOpen: Bool {
+        get { appearancePreferences.keepNookOpen }
+        set {
+            guard newValue != appearancePreferences.keepNookOpen else { return }
+            var preferences = appearancePreferences
+            preferences.keepNookOpen = newValue
+            replaceAppearancePreferences(preferences)
+        }
+    }
 
     /// `true` while the nook surface is expanded. This is a read-only mirror of the
     /// surface's own ``NookState`` — the coordinator binds it to `Nook.$state`, so it

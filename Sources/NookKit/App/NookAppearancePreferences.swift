@@ -9,8 +9,8 @@ import Foundation
 import NookSurface
 import SwiftUI
 
-/// Persistent personalization for the Nook chrome. Values map to Apple-style materials
-/// and system accessibility behavior.
+/// Persistent personalization for the Nook chrome — appearance (materials, palette),
+/// layout, and chrome behavior that should survive across launches.
 public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     /// Follow the macOS appearance, or pin the chrome to dark / light.
     public var chromePalette: NookChromePalette
@@ -28,16 +28,23 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     /// completion signal, never the primary feedback channel.
     public var hapticFeedbackEnabled: Bool
 
+    /// When on, the expanded nook stays open after the pointer leaves instead of
+    /// auto-collapsing on hover-exit (the top-bar lock / Settings "stay expanded"
+    /// toggle). Persisted so a pinned-open nook survives a relaunch.
+    public var keepNookOpen: Bool
+
     public init(
         chromePalette: NookChromePalette = .followSystem,
         surfaceStyle: NookSurfaceStyle = .solid,
         presentation: NookPresentation = .auto,
-        hapticFeedbackEnabled: Bool = false
+        hapticFeedbackEnabled: Bool = false,
+        keepNookOpen: Bool = false
     ) {
         self.chromePalette = chromePalette
         self.surfaceStyle = surfaceStyle
         self.presentation = presentation
         self.hapticFeedbackEnabled = hapticFeedbackEnabled
+        self.keepNookOpen = keepNookOpen
     }
 
     public static let `default` = NookAppearancePreferences()
@@ -47,6 +54,7 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
         case surfaceStyle
         case presentation
         case hapticFeedbackEnabled
+        case keepNookOpen
     }
 
     // Custom decode so JSON written by an older build (missing a later-added field)
@@ -59,6 +67,7 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
         self.surfaceStyle = try container.decodeIfPresent(NookSurfaceStyle.self, forKey: .surfaceStyle) ?? .solid
         self.presentation = try container.decodeIfPresent(NookPresentation.self, forKey: .presentation) ?? .auto
         self.hapticFeedbackEnabled = try container.decodeIfPresent(Bool.self, forKey: .hapticFeedbackEnabled) ?? false
+        self.keepNookOpen = try container.decodeIfPresent(Bool.self, forKey: .keepNookOpen) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -67,6 +76,7 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
         try container.encode(surfaceStyle, forKey: .surfaceStyle)
         try container.encode(presentation, forKey: .presentation)
         try container.encode(hapticFeedbackEnabled, forKey: .hapticFeedbackEnabled)
+        try container.encode(keepNookOpen, forKey: .keepNookOpen)
     }
 }
 

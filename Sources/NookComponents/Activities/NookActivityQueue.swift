@@ -121,12 +121,26 @@ public final class NookActivityQueue: ObservableObject {
             if isSuspended || Task.isCancelled { break }
             guard let activity = dequeue() else { break }
 
-            await presenter.beginTransientPresentation()
+            guard await presenter.beginTransientPresentation() else {
+                // The user grabbed the surface in the window between the engagement
+                // wait and the takeover. Put the activity back at the front and loop:
+                // `waitWhileUserEngaged` parks until they disengage, then we retry.
+                requeue(activity)
+                continue
+            }
             current = activity
             await sleep(activity.dwell)
-            current = nil
+            // Collapse the surface *before* clearing `current`, so the host renders the
+            // activity card through the collapse rather than flashing idle home content.
             await presenter.endTransientPresentation()
+            current = nil
         }
+    }
+
+    /// Returns an activity to the front of the pending queue after a rejected takeover.
+    /// Front insertion preserves FIFO order against same-priority peers on the retry.
+    private func requeue(_ activity: NookActivity) {
+        pending.insert(activity, at: 0)
     }
 
     /// Removes and returns the highest-priority pending activity, FIFO within a priority.

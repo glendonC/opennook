@@ -18,13 +18,25 @@ private final class FakePresenter: NookSurfacePresenting {
     private(set) var beginCount = 0
     private(set) var endCount = 0
 
+    /// When > 0, the next N `beginTransientPresentation()` calls reject the takeover —
+    /// simulating the user grabbing the surface in the pre-takeover race window.
+    var rejectNextBegins = 0
+
     var isUserEngaged: Bool { engagement.value }
 
     var userEngagementChanges: AnyPublisher<Bool, Never> {
         engagement.eraseToAnyPublisher()
     }
 
-    func beginTransientPresentation() async { beginCount += 1 }
+    func beginTransientPresentation() async -> Bool {
+        beginCount += 1
+        if rejectNextBegins > 0 {
+            rejectNextBegins -= 1
+            return false
+        }
+        return !isUserEngaged
+    }
+
     func endTransientPresentation() async { endCount += 1 }
 
     func setEngaged(_ value: Bool) { engagement.send(value) }
@@ -129,6 +141,26 @@ final class NookActivityQueueTests: XCTestCase {
         presenter.setEngaged(false)
         await queue.drainTask?.value
         XCTAssertEqual(presenter.beginCount, 1, "queue recovers and drains after suspend-while-engaged")
+        XCTAssertTrue(queue.pending.isEmpty)
+        XCTAssertNil(queue.current)
+    }
+
+    /// Regression: if the user grabs the surface in the window between the engagement
+    /// wait and the takeover, `beginTransientPresentation()` returns `false`. The queue
+    /// must re-queue the activity and retry, not drop it or render a card over a
+    /// surface it never took.
+    @MainActor
+    func testRequeuesActivityWhenTakeoverRejected() async {
+        let queue = instantQueue()
+        let presenter = FakePresenter()
+        presenter.rejectNextBegins = 1
+        queue.bind(to: presenter)
+
+        queue.enqueue(NookActivity(title: "A"))
+        await queue.drainTask?.value
+
+        XCTAssertEqual(presenter.beginCount, 2, "first takeover rejected, retried once")
+        XCTAssertEqual(presenter.endCount, 1, "presented exactly once, after the retry")
         XCTAssertTrue(queue.pending.isEmpty)
         XCTAssertNil(queue.current)
     }

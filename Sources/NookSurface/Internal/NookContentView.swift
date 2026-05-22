@@ -8,11 +8,10 @@
 
 import SwiftUI
 
-/// Hosts the nook chrome inside the panel's content view. Owns the matched-geometry namespace.
+/// Hosts the nook chrome inside the panel's content view.
 struct NookContentView<Expanded, CompactLeading, CompactTrailing>: View
 where Expanded: View, CompactLeading: View, CompactTrailing: View {
     @ObservedObject private var nook: Nook<Expanded, CompactLeading, CompactTrailing>
-    @Namespace private var namespace
 
     init(nook: Nook<Expanded, CompactLeading, CompactTrailing>) {
         self.nook = nook
@@ -22,10 +21,5 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         NookView(nook: nook)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .animation(nook.effectiveConversionAnimation, value: nook.isHovering)
-            .onAppear {
-                if nook.namespace == nil {
-                    nook.namespace = namespace
-                }
-            }
     }
 }

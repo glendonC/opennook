@@ -27,9 +27,14 @@ public protocol NookSurfacePresenting: AnyObject {
     var userEngagementChanges: AnyPublisher<Bool, Never> { get }
 
     /// Take over the expanded surface for a transient presentation. The arbiter
-    /// snapshots the prior state so ``endTransientPresentation()`` can restore it;
-    /// a no-op if a transient presentation is already in progress.
-    func beginTransientPresentation() async
+    /// snapshots the prior state so ``endTransientPresentation()`` can restore it.
+    ///
+    /// Returns `true` if the takeover succeeded. It returns `false` — without
+    /// snapshotting or expanding — when a transient presentation is already in
+    /// progress, or when the user engaged the surface in the window before the
+    /// takeover ran. A presenter that gets `false` should re-queue and retry rather
+    /// than render as if it owns the surface.
+    func beginTransientPresentation() async -> Bool
 
     /// End the transient presentation, restoring the state captured at
     /// ``beginTransientPresentation()`` — unless the user has since engaged the

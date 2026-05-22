@@ -55,9 +55,9 @@ final class NookConfigurationTests: XCTestCase {
 
         let coordinator = AppCoordinator(configuration: configuration)
 
-        XCTAssertNotNil(coordinator.nook.onExpand)
-        XCTAssertNotNil(coordinator.nook.onCompact)
-        XCTAssertNotNil(coordinator.nook.onHide)
+        XCTAssertNotNil(coordinator.surface.onExpand)
+        XCTAssertNotNil(coordinator.surface.onCompact)
+        XCTAssertNotNil(coordinator.surface.onHide)
     }
 
     /// With no hooks configured, the surface's callbacks stay nil.
@@ -65,9 +65,9 @@ final class NookConfigurationTests: XCTestCase {
     func testCoordinatorLeavesHooksNilWhenUnset() {
         let coordinator = AppCoordinator(configuration: NookConfiguration())
 
-        XCTAssertNil(coordinator.nook.onExpand)
-        XCTAssertNil(coordinator.nook.onCompact)
-        XCTAssertNil(coordinator.nook.onHide)
+        XCTAssertNil(coordinator.surface.onExpand)
+        XCTAssertNil(coordinator.surface.onCompact)
+        XCTAssertNil(coordinator.surface.onHide)
     }
 
     /// The default top-bar leading cluster must reproduce the demo: house + "Home".

@@ -18,8 +18,13 @@ public final class AppCoordinator: ObservableObject {
     public let appState: AppState
     public let services: AppServices
 
+    /// The indirection layer to the active host configuration. The surface's content
+    /// observes this, so a module switch is a re-publish here rather than a rebuild.
+    public let moduleHost: ModuleHost
+
     /// Host-supplied registration: home/compact content, theme, lifecycle hooks.
-    public let configuration: NookConfiguration
+    /// Reads through ``moduleHost`` so it always reflects the active module.
+    public var configuration: NookConfiguration { moduleHost.configuration }
 
     enum NookAppearance {
         static let expandedTopCornerRadius: CGFloat = 19
@@ -66,54 +71,64 @@ public final class AppCoordinator: ObservableObject {
                 bottomCornerRadius: NookAppearance.expandedBottomCornerRadius
             ),
             expanded: {
-                AnyView(NookExpandedView(
+                AnyView(ModuleRouterExpandedView(
+                    moduleHost: self.moduleHost,
                     appState: self.appState,
                     services: self.services,
                     toggleKeepOpen: { [weak self] in self?.toggleKeepNookOpen() },
                     hide: { [weak self] in self?.hideNook() },
-                    resetAllSettings: { [weak self] in self?.resetAllSettingsToDefaults() },
-                    theme: self.configuration.theme,
-                    home: self.configuration.home,
-                    topBarLeadingTitle: self.configuration.topBarLeadingTitle,
-                    topBarLeadingIcon: self.configuration.topBarLeadingIcon,
-                    showsTopBar: self.configuration.showsTopBar,
-                    showsSettings: self.configuration.showsSettings
+                    resetAllSettings: { [weak self] in self?.resetAllSettingsToDefaults() }
                 ))
             },
             compactLeading: {
-                AnyView(NookCompactHost(
+                AnyView(ModuleRouterCompactView(
+                    moduleHost: self.moduleHost,
                     appState: self.appState,
-                    theme: self.configuration.theme,
-                    content: self.configuration.compactLeading
+                    slot: .leading
                 ))
             },
             compactTrailing: {
-                AnyView(NookCompactHost(
+                AnyView(ModuleRouterCompactView(
+                    moduleHost: self.moduleHost,
                     appState: self.appState,
-                    theme: self.configuration.theme,
-                    content: self.configuration.compactTrailing
+                    slot: .trailing
                 ))
             }
         )
-        // Project the host's lifecycle callbacks onto the surface. The hooks fire on the
-        // surface's own state transitions, so hover- and drag-driven changes reach the
-        // host too — not just coordinator-initiated show/hide.
+        // Project the active module's lifecycle callbacks onto the surface. The hooks
+        // fire on the surface's own state transitions, so hover- and drag-driven changes
+        // reach the host too — not just coordinator-initiated show/hide. `bindModuleHost`
+        // keeps these in sync across a module switch.
         nook.onExpand = self.configuration.onExpand
         nook.onCompact = self.configuration.onCompact
         nook.onHide = self.configuration.onHide
         return nook
     }()
 
-    public init(
+    public convenience init(
         appState: AppState = AppState(),
         services: AppServices = AppServices(),
         hotkeyController: HotkeyController = HotkeyController(),
         configuration: NookConfiguration = NookConfiguration()
     ) {
+        self.init(
+            appState: appState,
+            services: services,
+            hotkeyController: hotkeyController,
+            moduleHost: ModuleHost(configuration: configuration)
+        )
+    }
+
+    public init(
+        appState: AppState = AppState(),
+        services: AppServices = AppServices(),
+        hotkeyController: HotkeyController = HotkeyController(),
+        moduleHost: ModuleHost
+    ) {
         self.appState = appState
         self.services = services
         self.hotkeyController = hotkeyController
-        self.configuration = configuration
+        self.moduleHost = moduleHost
 
         bindBackdropSynchronization()
     }

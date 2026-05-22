@@ -18,20 +18,34 @@ import SwiftUI
 /// `App/main.swift`. Both call into the same boot sequence here so behavior
 /// cannot drift between launch surfaces.
 public enum NookApp {
-    /// Boots a notch app with the given ``NookConfiguration``. The default value
-    /// reproduces the framework demo, so `NookApp.main()` is unchanged.
+    /// Boots a multi-module notch app: one host process that owns the notch surface and
+    /// lets the user switch between the registered ``NookModule``s at runtime.
     ///
     /// The OS calls this from the process's main thread at startup, so we assert that
     /// invariant via `MainActor.assumeIsolated` and run the actual setup on the main actor.
-    public static func main(_ configuration: NookConfiguration = NookConfiguration()) {
+    public static func main(_ host: NookHostConfiguration) {
         MainActor.assumeIsolated {
             let app = NSApplication.shared
-            let delegate = AppDelegate(configuration: configuration)
+            let delegate = AppDelegate(host: host)
             app.delegate = delegate
             app.setActivationPolicy(.accessory)
             app.run()
             withExtendedLifetime(delegate) {}
         }
+    }
+
+    /// Boots a notch app with the given ``NookConfiguration``. The default value
+    /// reproduces the framework demo, so `NookApp.main()` is unchanged.
+    ///
+    /// This is the single-module path: the configuration is registered as the lone
+    /// module of a ``NookHostConfiguration``, so a single notch app is just a host with
+    /// one module and no switcher.
+    public static func main(_ configuration: NookConfiguration = NookConfiguration()) {
+        var host = NookHostConfiguration()
+        host.register(
+            NookModuleDescriptor(id: ModuleHost.singleModuleID, displayName: "Nook")
+        ) { configuration }
+        main(host)
     }
 
     /// "Register a view, go" — boots a notch app whose expanded home surface is the
@@ -72,12 +86,13 @@ public enum NookApp {
 @MainActor
 private final class AppDelegate: NSObject, NSApplicationDelegate {
     private let coordinator: AppCoordinator
-    private let configuration: NookConfiguration
+    private let moduleHost: ModuleHost
     private var statusItem: NSStatusItem?
 
-    init(configuration: NookConfiguration) {
-        self.configuration = configuration
-        self.coordinator = AppCoordinator(configuration: configuration)
+    init(host: NookHostConfiguration) {
+        let moduleHost = ModuleHost(registry: host.makeRegistry())
+        self.moduleHost = moduleHost
+        self.coordinator = AppCoordinator(moduleHost: moduleHost)
         super.init()
     }
 
@@ -104,7 +119,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         // there is no Settings UI to open. "Toggle Stay Expanded" is kept regardless —
         // it's chrome-independent and is the only keep-open control left once the top
         // bar (and its lock) is hidden.
-        if configuration.showsSettings {
+        if moduleHost.configuration.showsSettings {
             menu.addItem(NSMenuItem(
                 title: "Settings…",
                 action: #selector(showSettings),

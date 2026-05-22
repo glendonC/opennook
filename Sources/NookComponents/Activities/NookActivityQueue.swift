@@ -41,6 +41,10 @@ public final class NookActivityQueue: ObservableObject {
 
     private weak var presenter: (any NookSurfacePresenting)?
 
+    /// The module this queue presents on behalf of — stamped onto every surface claim so
+    /// the arbiter can gate a background module's activities. Captured at ``bind(to:moduleID:)``.
+    private var moduleID = ""
+
     /// The running drain loop, or `nil` when idle. Internal so tests can await it.
     var drainTask: Task<Void, Never>?
 
@@ -55,8 +59,14 @@ public final class NookActivityQueue: ObservableObject {
 
     /// Connects the queue to the surface it presents through, and starts draining any
     /// already-queued activities. Call once — `NookConfiguration.onReady` is the seam.
-    public func bind(to presenter: any NookSurfacePresenting) {
+    ///
+    /// - Parameter moduleID: the module this queue belongs to, stamped onto its surface
+    ///   claims. When `nil`, the foreground module at bind time is assumed — correct for
+    ///   a single-module host. A multi-module host should pass `context.descriptor.id`
+    ///   so a backgrounded module's activities are gated correctly.
+    public func bind(to presenter: any NookSurfacePresenting, moduleID: String? = nil) {
         self.presenter = presenter
+        self.moduleID = moduleID ?? presenter.activeModuleID
         startDrainingIfNeeded()
     }
 
@@ -121,18 +131,24 @@ public final class NookActivityQueue: ObservableObject {
             if isSuspended || Task.isCancelled { break }
             guard let activity = dequeue() else { break }
 
-            guard await presenter.beginTransientPresentation() else {
-                // The user grabbed the surface in the window between the engagement
-                // wait and the takeover. Put the activity back at the front and loop:
-                // `waitWhileUserEngaged` parks until they disengage, then we retry.
+            let claim = NookSurfaceClaim(moduleID: moduleID, priority: activity.priority.surfacePriority)
+            guard let token = await presenter.beginTransientPresentation(claim) else {
+                // Denied — the user grabbed the surface, or another presenter outranks
+                // this claim. Put the activity back at the front and back off briefly so
+                // a contended surface is retried without spinning.
                 requeue(activity)
+                do {
+                    try await Task.sleep(for: Self.contentionBackoff)
+                } catch {
+                    break  // drain task cancelled (suspend / teardown)
+                }
                 continue
             }
             current = activity
             await sleep(activity.dwell)
             // Collapse the surface *before* clearing `current`, so the host renders the
             // activity card through the collapse rather than flashing idle home content.
-            await presenter.endTransientPresentation()
+            await presenter.endTransientPresentation(token)
             current = nil
         }
     }
@@ -175,4 +191,20 @@ public final class NookActivityQueue: ObservableObject {
     /// disengaged user sees the next activity without a perceptible gap; only ticks
     /// while the user is actively engaging the surface.
     private static let engagementPollInterval: Duration = .milliseconds(200)
+
+    /// How long the drain loop waits after a denied takeover before retrying. Keeps a
+    /// surface contended by another presenter from spinning the loop.
+    private static let contentionBackoff: Duration = .milliseconds(150)
+}
+
+private extension NookActivityPriority {
+    /// Maps an activity's queue priority onto the surface-claim priority the arbiter
+    /// ranks contending presenters by.
+    var surfacePriority: NookSurfacePriority {
+        switch self {
+        case .low: return .ambient
+        case .normal: return .normal
+        case .high: return .urgent
+        }
+    }
 }

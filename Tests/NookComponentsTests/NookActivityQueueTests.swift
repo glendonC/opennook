@@ -17,8 +17,9 @@ private final class FakePresenter: NookSurfacePresenting {
 
     private(set) var beginCount = 0
     private(set) var endCount = 0
+    private var nextToken = 0
 
-    /// When > 0, the next N `beginTransientPresentation()` calls reject the takeover —
+    /// When > 0, the next N `beginTransientPresentation(_:)` calls reject the takeover —
     /// simulating the user grabbing the surface in the pre-takeover race window.
     var rejectNextBegins = 0
 
@@ -28,16 +29,20 @@ private final class FakePresenter: NookSurfacePresenting {
         engagement.eraseToAnyPublisher()
     }
 
-    func beginTransientPresentation() async -> Bool {
+    var activeModuleID = "test.module"
+
+    func beginTransientPresentation(_ claim: NookSurfaceClaim) async -> NookSurfaceToken? {
         beginCount += 1
         if rejectNextBegins > 0 {
             rejectNextBegins -= 1
-            return false
+            return nil
         }
-        return !isUserEngaged
+        guard !isUserEngaged else { return nil }
+        defer { nextToken += 1 }
+        return NookSurfaceToken(value: nextToken)
     }
 
-    func endTransientPresentation() async { endCount += 1 }
+    func endTransientPresentation(_ token: NookSurfaceToken) async { endCount += 1 }
 
     func setEngaged(_ value: Bool) { engagement.send(value) }
 }

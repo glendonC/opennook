@@ -34,9 +34,22 @@ public final class AppCoordinator: ObservableObject {
     var cancellables = Set<AnyCancellable>()
     var accessibilityObserver: NSObjectProtocol?
 
-    /// Surface state captured at `beginTransientPresentation()`, restored when the
-    /// transient presentation ends. Non-`nil` only while a transient takeover is active.
-    var transientRestoreState: NookState?
+    /// Arbitrates the surface between competing transient presenters — the activity
+    /// queues and ambient indicators of every loaded module. Lazy because it captures
+    /// `nook`; layered over ``enqueueLifecycle`` so it serializes nothing itself.
+    lazy var arbiter: SurfaceArbiter = {
+        SurfaceArbiter(
+            isUserEngaged: { [weak self] in self?.isUserEngaged ?? false },
+            activeModuleID: { [weak self] in self?.moduleHost.activeModuleID ?? "" },
+            currentState: { [weak self] in self?.nook.state ?? .hidden },
+            runSerial: { [weak self] operation in
+                await self?.enqueueLifecycle(operation).value
+            },
+            expand: { [weak self] in await self?.nook.expand() },
+            compact: { [weak self] in await self?.nook.compact() },
+            hide: { [weak self] in await self?.nook.hide() }
+        )
+    }()
 
     /// `true` once ``start()`` has run. Guards against a double `start()` registering
     /// duplicate observers, sinks, and `onReady` callbacks.
@@ -505,34 +518,13 @@ extension AppCoordinator: NookSurfacePresenting {
             .eraseToAnyPublisher()
     }
 
-    /// Snapshots the current state and expands the chrome. Returns `false` — without
-    /// snapshotting or expanding — when a transient presentation is already active, or
-    /// when the user is engaging the surface. Runs on the serial lifecycle chain, so
-    /// the engagement check happens *after* any queued user-initiated transition, not
-    /// at call time.
-    public func beginTransientPresentation() async -> Bool {
-        var didPresent = false
-        await enqueueLifecycle { [weak self] in
-            guard let self, self.transientRestoreState == nil, !self.isUserEngaged else { return }
-            self.transientRestoreState = self.nook.state
-            await self.nook.expand()
-            didPresent = true
-        }.value
-        return didPresent
+    /// Grants or denies the claim through the ``SurfaceArbiter``.
+    public func beginTransientPresentation(_ claim: NookSurfaceClaim) async -> NookSurfaceToken? {
+        await arbiter.begin(claim)
     }
 
-    /// Restores the snapshotted state — unless the user engaged the surface during the
-    /// presentation, in which case their state is left as-is.
-    public func endTransientPresentation() async {
-        await enqueueLifecycle { [weak self] in
-            guard let self, let restore = self.transientRestoreState else { return }
-            self.transientRestoreState = nil
-            guard !self.isUserEngaged else { return }
-            switch restore {
-            case .compact: await self.nook.compact()
-            case .hidden: await self.nook.hide()
-            case .expanded: break
-            }
-        }.value
+    /// Releases the claim through the ``SurfaceArbiter``.
+    public func endTransientPresentation(_ token: NookSurfaceToken) async {
+        await arbiter.end(token)
     }
 }

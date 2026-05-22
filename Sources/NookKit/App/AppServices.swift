@@ -8,18 +8,49 @@
 import Foundation
 import SwiftUI
 
-/// A per-module dependency container, threaded into a module's views via the SwiftUI
-/// environment (`\.appServices`).
+/// A key into the per-module ``AppServices`` container.
+///
+/// This is the SwiftUI `EnvironmentKey` pattern applied to dependency injection: a
+/// service is keyed by a *key type* it declares — not by its own runtime type — and the
+/// key carries a `defaultValue` so resolution is total (never optional). A module
+/// declares one key per service it offers:
+///
+/// ```swift
+/// struct ClipboardServiceKey: ServiceKey {
+///     static let defaultValue = ClipboardService()
+/// }
+/// ```
+///
+/// Keying by an explicit type (rather than the service's own type) means the registered
+/// `Value` can be a protocol existential or a struct, and the same concrete type can
+/// back two distinct keys.
+public protocol ServiceKey {
+    /// The type of value this key stores.
+    associatedtype Value
+
+    /// The value ``AppServices/resolve(_:)`` returns when nothing was registered for
+    /// this key — the dependency-injection analogue of `EnvironmentKey.defaultValue`.
+    static var defaultValue: Value { get }
+}
+
+/// A per-module, type-safe dependency container, threaded into a module's views via the
+/// SwiftUI environment (`\.appServices`).
 ///
 /// Each ``NookModule`` gets its own `AppServices` through its ``NookModuleContext``, so
 /// two modules in the same host process never share or collide on services. A module
-/// registers what it needs by type and its views resolve it back the same way:
+/// registers what it needs against a ``ServiceKey`` and its views resolve it back the
+/// same way:
 ///
 /// ```swift
-/// context.services.register(ClipboardService())
-/// // ...in a view:
+/// // A module declares a key and registers an instance when it is constructed:
+/// struct ClipboardServiceKey: ServiceKey {
+///     static let defaultValue = ClipboardService()
+/// }
+/// context.services.register(ClipboardServiceKey.self, ClipboardService())
+///
+/// // ...a view resolves it — non-optional, falling back to the key's default:
 /// @Environment(\.appServices) private var services
-/// let clipboard = services.resolve(ClipboardService.self)
+/// let clipboard = services.resolve(ClipboardServiceKey.self)
 /// ```
 ///
 /// Expected to be used from the main actor: registration happens when a module is
@@ -31,22 +62,32 @@ public final class AppServices {
 
     public init() {}
 
-    /// Registers `service`, keyed by its own type. A later registration of the same
-    /// type replaces the earlier one.
-    public func register<Service>(_ service: Service) {
-        storage[ObjectIdentifier(Service.self)] = service
+    /// Registers `value` for `key`.
+    ///
+    /// A key is meant to be registered exactly once, when the owning module is built;
+    /// registering the same key twice is a programming error and traps in debug builds.
+    /// In release builds the later registration wins.
+    public func register<K: ServiceKey>(_ key: K.Type, _ value: K.Value) {
+        let id = ObjectIdentifier(key)
+        assert(
+            storage[id] == nil,
+            "AppServices: service key \(key) registered twice — register each key once."
+        )
+        storage[id] = value
     }
 
-    /// Returns the registered service of the requested type, or `nil` if none was
-    /// registered.
-    public func resolve<Service>(_ type: Service.Type) -> Service? {
-        storage[ObjectIdentifier(type)] as? Service
+    /// Returns the value registered for `key`, or `key`'s `defaultValue` when nothing
+    /// was registered. Resolution is total: it never returns `nil`.
+    public func resolve<K: ServiceKey>(_ key: K.Type) -> K.Value {
+        storage[ObjectIdentifier(key)] as? K.Value ?? K.defaultValue
     }
 
-    /// Subscript form of ``register(_:)`` / ``resolve(_:)``.
-    public subscript<Service>(_ type: Service.Type) -> Service? {
-        get { storage[ObjectIdentifier(type)] as? Service }
-        set { storage[ObjectIdentifier(type)] = newValue }
+    /// Subscript form of ``register(_:_:)`` / ``resolve(_:)``. Reading falls back to the
+    /// key's `defaultValue`; writing stores the value (bypassing the double-register
+    /// assertion, so a subscript `set` is the way to deliberately replace a value).
+    public subscript<K: ServiceKey>(_ key: K.Type) -> K.Value {
+        get { storage[ObjectIdentifier(key)] as? K.Value ?? K.defaultValue }
+        set { storage[ObjectIdentifier(key)] = newValue }
     }
 }
 

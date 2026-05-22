@@ -39,9 +39,38 @@ struct ModuleHome: View {
     }
 }
 
+/// A trivial service whose only job is to be resolved through `AppServices` — the
+/// counter module's persistence, lifted behind a type so its views need not know how
+/// the count is stored. Not actor-isolated: a `ServiceKey`'s `defaultValue` is
+/// nonisolated (the SwiftUI `EnvironmentKey` pattern), so its backing type must be too.
+final class LaunchTracker: Sendable {
+    let launchCount: Int
+
+    init(launchCount: Int) {
+        self.launchCount = launchCount
+    }
+
+    /// Builds a tracker from a module's isolated defaults, bumping the persisted count.
+    static func bumping(_ defaults: UserDefaults) -> LaunchTracker {
+        let next = defaults.integer(forKey: "launchCount") + 1
+        defaults.set(next, forKey: "launchCount")
+        return LaunchTracker(launchCount: next)
+    }
+
+    /// The default used when no `LaunchTracker` was registered for the key.
+    static let unregistered = LaunchTracker(launchCount: 0)
+}
+
+/// The `ServiceKey` the counter module registers its `LaunchTracker` against. Resolving
+/// `LaunchTrackerKey.self` is total — it falls back to `defaultValue` if unregistered.
+struct LaunchTrackerKey: ServiceKey {
+    static let defaultValue: LaunchTracker = .unregistered
+}
+
 /// A module that carries its own product state — a launch counter persisted in the
-/// module's isolated `UserDefaults` suite. Shows the full `NookModule` protocol; the
-/// simpler modules below register a `NookConfiguration` closure directly.
+/// module's isolated `UserDefaults` suite, exposed to its views through the type-safe
+/// `AppServices` container keyed by `LaunchTrackerKey`. Shows the full `NookModule`
+/// protocol; the simpler modules below register a `NookConfiguration` closure directly.
 @MainActor
 final class CounterModule: NookModule {
     static let moduleDescriptor = NookModuleDescriptor(
@@ -53,28 +82,37 @@ final class CounterModule: NookModule {
 
     let descriptor = CounterModule.moduleDescriptor
     private let context: NookModuleContext
-    private let launchCount: Int
 
     init(context: NookModuleContext) {
         self.context = context
-        let previous = context.defaults.integer(forKey: "launchCount")
-        self.launchCount = previous + 1
-        context.defaults.set(launchCount, forKey: "launchCount")
+        // Build the service from the module's isolated defaults and register it in the
+        // module's own `AppServices` bag under its `ServiceKey`. The module's views
+        // resolve it back with `services.resolve(LaunchTrackerKey.self)`.
+        let tracker = LaunchTracker.bumping(context.defaults)
+        context.services.register(LaunchTrackerKey.self, tracker)
     }
 
     func makeConfiguration() -> NookConfiguration {
-        let count = launchCount
         var configuration = NookConfiguration()
-        configuration.setHome {
-            ModuleHome(
-                headline: "Counter module",
-                detail: "Opened \(count) time\(count == 1 ? "" : "s") — persisted in this module's own suite.",
-                symbol: "number"
-            )
-        }
+        configuration.setHome { CounterHome() }
         configuration.topBarLeadingTitle = { _ in "Counter" }
         configuration.topBarLeadingIcon = "number"
         return configuration
+    }
+}
+
+/// The counter module's home view. It resolves the launch count out of the module's
+/// `AppServices` bag — never optional, thanks to `LaunchTrackerKey.defaultValue`.
+struct CounterHome: View {
+    @Environment(\.appServices) private var services
+
+    var body: some View {
+        let count = services.resolve(LaunchTrackerKey.self).launchCount
+        ModuleHome(
+            headline: "Counter module",
+            detail: "Opened \(count) time\(count == 1 ? "" : "s") — count resolved from this module's AppServices.",
+            symbol: "number"
+        )
     }
 }
 

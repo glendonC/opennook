@@ -13,6 +13,11 @@ import SwiftUI
 /// App-wide coordinator. Owns the long-running state, constructs the notch chrome,
 /// and exposes the lifecycle vocabulary (show/hide/toggle, reset-settings) that views
 /// and the menu-bar fallback call into.
+///
+/// `@MainActor`-isolated: the coordinator drives `Nook`/`NSWindow` chrome, holds the
+/// `@Published` ``AppState``, and arbitrates transient surface presenters — every one
+/// of which is main-actor work. Conforms to ``NookSurfacePresenting`` so transient
+/// presenters (e.g. ``NookActivityQueue``) can take over the surface through it.
 @MainActor
 public final class AppCoordinator: ObservableObject {
     public let appState: AppState
@@ -209,6 +214,9 @@ public final class AppCoordinator: ObservableObject {
         weak var coordinator: AppCoordinator?
     }
 
+    /// Single-module convenience — wraps `configuration` as a lone-module ``ModuleHost``
+    /// so a downstream that just wants a coordinator for one ``NookConfiguration`` does
+    /// not have to construct the host plumbing manually.
     public convenience init(
         appState: AppState = AppState(),
         hotkeyController: HotkeyController = HotkeyController(),
@@ -221,6 +229,8 @@ public final class AppCoordinator: ObservableObject {
         )
     }
 
+    /// Multi-module entry — pass a fully built ``ModuleHost`` (e.g. from
+    /// `NookHostConfiguration.makeRegistry()`).
     public convenience init(
         appState: AppState = AppState(),
         hotkeyController: HotkeyController = HotkeyController(),
@@ -277,6 +287,10 @@ public final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Brings the coordinator online: sets the activation policy, syncs the chrome
+    /// backdrop, registers global hotkeys, installs the surface bindings, plays the
+    /// cold-launch shimmer, and fires the active module's `onReady`. Idempotent —
+    /// safe to call more than once.
     public func start() {
         guard !hasStarted else { return }
         hasStarted = true
@@ -759,6 +773,9 @@ public final class AppCoordinator: ObservableObject {
 
     // MARK: - Nook lifecycle
 
+    /// Toggles the expanded/compact state of the surface based on its live state at the
+    /// moment the transition reaches the head of the serial lifecycle chain. A
+    /// hover-expanded nook collapses; a compact nook expands.
     public func toggleNook() {
         appState.resetTransientStatus()
         enqueueLifecycle { [weak self] in
@@ -778,6 +795,8 @@ public final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Expands the surface and marks the open as user-initiated, so a subsequent transient
+    /// presenter is gated by ``isUserEngaged``.
     public func showNook() {
         appState.resetTransientStatus()
         enqueueLifecycle { [weak self] in
@@ -788,6 +807,7 @@ public final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Switches to the home view and expands the surface.
     public func showHome() {
         appState.showHome()
         showNook()
@@ -805,6 +825,8 @@ public final class AppCoordinator: ObservableObject {
         showNook()
     }
 
+    /// Compacts the surface back into the pill. Clears the user-initiated-open flag
+    /// synchronously so any subsequent transient presenter is no longer gated.
     public func hideNook() {
         enqueueLifecycle { [weak self] in
             guard let self else { return }
@@ -813,6 +835,9 @@ public final class AppCoordinator: ObservableObject {
         }
     }
 
+    /// Flips the persisted "stay expanded on hover-exit" preference and projects the new
+    /// value onto the surface immediately. Backed by ``NookAppearancePreferences/keepNookOpen``,
+    /// so the choice survives across launches.
     public func toggleKeepNookOpen() {
         appState.keepNookOpen.toggle()
         surface.staysExpandedOnHoverExit = appState.keepNookOpen

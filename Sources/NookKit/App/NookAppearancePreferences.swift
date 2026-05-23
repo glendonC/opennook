@@ -47,6 +47,8 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
         self.keepNookOpen = keepNookOpen
     }
 
+    /// Framework defaults — what `NookApp.main()` ships if the host has never written
+    /// preferences.
     public static let `default` = NookAppearancePreferences()
 
     private enum CodingKeys: String, CodingKey {
@@ -80,6 +82,8 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     }
 }
 
+/// Pins the chrome palette to follow macOS or to a fixed light/dark — independent of
+/// the wallpaper-aware ``NookSurfaceStyle``.
 public enum NookChromePalette: String, Codable, Sendable, CaseIterable {
     case followSystem
     case dark

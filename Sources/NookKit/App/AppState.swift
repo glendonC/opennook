@@ -8,6 +8,12 @@
 import Combine
 import Foundation
 
+/// Which framework chrome screen is filling the expanded surface — the active module's
+/// home view, or the framework Settings panel.
+///
+/// `NookExpandedView` routes off this. When the host disabled Settings
+/// (``NookTopBarConfiguration/showsSettings``), ``settings`` is unreachable and
+/// ``AppCoordinator/showSettings()`` falls back to ``home``.
 public enum NookViewMode: Equatable, Sendable {
     case home
     case settings
@@ -36,9 +42,23 @@ public struct HotkeyRegistrationFailure: Equatable, Sendable {
 /// Mutable, observable state shared between the coordinator and views.
 /// Holds chrome-level concerns (view mode, appearance, keep-open, visibility) — product
 /// data lives in whatever model layer a downstream fork adds on top.
+///
+/// **Swap point for product state.** A downstream fork that needs cross-view product
+/// state has two clean options: add `@Published` properties alongside the chrome ones
+/// here (simplest), or hold product state in its own type reachable via ``AppServices``
+/// (better separation, scales across multi-module hosts).
 public final class AppState: ObservableObject {
+    /// Which framework chrome screen the expanded surface is showing. Written via
+    /// ``showHome()``/``showSettings()``; observed by `NookExpandedView`.
     @Published public private(set) var viewMode: NookViewMode = .home
+
+    /// Persisted appearance personalization (palette, surface style, presentation,
+    /// haptics, keep-open). Assigning replaces the whole value — use
+    /// ``replaceAppearancePreferences(_:)`` to also persist the change.
     @Published public var appearancePreferences = NookAppearancePreferences.default
+
+    /// The user-configured global show/hide shortcut. Persisted to `UserDefaults` only
+    /// when written through ``replaceHotkey(_:)``.
     @Published public var hotkey = NookHotkey.default
 
     /// Which display the Nook chrome appears on. The coordinator projects this onto
@@ -104,12 +124,17 @@ public final class AppState: ObservableObject {
     /// panel — kept as a hook-point for downstream consumers that want drop targets.
     @Published public var isDragInFlight: Bool = false
 
+    /// Loads the persisted appearance, hotkey, and display preferences from
+    /// `UserDefaults`. Any missing or unreadable entry falls back to its `.default`.
     public init() {
         appearancePreferences = NookAppearanceStore.load()
         hotkey = NookHotkeyStore.load()
         displayPreference = NookDisplayStore.load()
     }
 
+    /// Replaces ``appearancePreferences`` and writes the new value to `UserDefaults`. A
+    /// no-op when the value is unchanged. Prefer this over assigning the property
+    /// directly — direct assignment skips persistence.
     public func replaceAppearancePreferences(_ preferences: NookAppearancePreferences) {
         guard preferences != appearancePreferences else {
             return
@@ -118,6 +143,8 @@ public final class AppState: ObservableObject {
         NookAppearanceStore.save(preferences)
     }
 
+    /// Replaces ``hotkey`` and persists. The coordinator's hotkey-registration sink
+    /// picks up the change and re-registers the global shortcut.
     public func replaceHotkey(_ hotkey: NookHotkey) {
         guard hotkey != self.hotkey else {
             return
@@ -126,6 +153,8 @@ public final class AppState: ObservableObject {
         NookHotkeyStore.save(hotkey)
     }
 
+    /// Replaces ``displayPreference`` and persists. The coordinator re-places the
+    /// chrome on the newly chosen display.
     public func replaceDisplayPreference(_ preference: NookDisplayPreference) {
         guard preference != displayPreference else {
             return
@@ -142,16 +171,23 @@ public final class AppState: ObservableObject {
         viewMode == .settings
     }
 
+    /// Switches the chrome to the home view and clears ``errorMessage``.
     public func showHome() {
         viewMode = .home
         resetTransientStatus()
     }
 
+    /// Switches the chrome to the Settings screen and clears ``errorMessage``. The host's
+    /// ``NookTopBarConfiguration/showsSettings`` flag is enforced by
+    /// ``AppCoordinator/showSettings()``, not here.
     public func showSettings() {
         viewMode = .settings
         resetTransientStatus()
     }
 
+    /// Clears ``errorMessage``. Called on every show/toggle so a stale transient message
+    /// can't bleed into the next session. Durable hotkey-registration failures live on
+    /// ``hotkeyRegistrationFailures`` and are not cleared here.
     public func resetTransientStatus() {
         errorMessage = nil
     }

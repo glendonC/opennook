@@ -116,4 +116,54 @@ final class SystemVolumeObserverTests: XCTestCase {
         observer.rebindForTesting()
         XCTAssertEqual(observer.volume, 0, "losing the default device resets to a silent baseline")
     }
+
+    // MARK: - CoreAudio listener add/remove balance
+
+    /// Every `AudioObjectAddPropertyListenerBlock` call the observer makes must be
+    /// paired with a `AudioObjectRemovePropertyListenerBlock`. The observer's
+    /// `deinit` does this for the lifetime case; `tearDownForTesting()` mirrors it
+    /// here so a test can verify the balance directly.
+    @MainActor
+    func testListenerAddRemoveBalanceAcrossRebinds() {
+        let reader = FakeVolumeReader()
+        let observer = SystemVolumeObserver(reader: reader)
+
+        // Init: +1 default-device listener + 2 device listeners (volume, mute) = 3 Adds.
+        XCTAssertEqual(observer.addedListenerCountForTesting, 3)
+        XCTAssertEqual(observer.removedListenerCountForTesting, 0)
+
+        // A rebind must remove the two device listeners and re-add a fresh pair, so
+        // adds increase by 2 and removes by 2 — net no leak.
+        reader.device = AudioDeviceID(2)
+        observer.rebindForTesting()
+        XCTAssertEqual(observer.addedListenerCountForTesting, 5)
+        XCTAssertEqual(observer.removedListenerCountForTesting, 2)
+
+        // Rebind to "no default device": removes the current pair, adds none. Drift OK.
+        reader.device = nil
+        observer.rebindForTesting()
+        XCTAssertEqual(observer.addedListenerCountForTesting, 5)
+        XCTAssertEqual(observer.removedListenerCountForTesting, 4)
+
+        // Final teardown removes the system-object default-device listener.
+        observer.tearDownForTesting()
+        XCTAssertEqual(
+            observer.addedListenerCountForTesting,
+            observer.removedListenerCountForTesting,
+            "every Add must be paired with a Remove — no listener leak across the lifecycle"
+        )
+    }
+
+    /// A teardown after a rebind that left a live device-pair removes the full set
+    /// (default-device + the live device pair) cleanly.
+    @MainActor
+    func testTearDownRemovesAllOutstandingListeners() {
+        let reader = FakeVolumeReader()
+        let observer = SystemVolumeObserver(reader: reader)
+        observer.tearDownForTesting()
+        XCTAssertEqual(
+            observer.addedListenerCountForTesting,
+            observer.removedListenerCountForTesting
+        )
+    }
 }

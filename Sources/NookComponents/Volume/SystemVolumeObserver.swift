@@ -72,6 +72,14 @@ public final class SystemVolumeObserver: ObservableObject {
     private var volumeListener: ListenerBlock?
     private var muteListener: ListenerBlock?
 
+    /// Internal counters: number of `AudioObjectAddPropertyListenerBlock` and
+    /// `AudioObjectRemovePropertyListenerBlock` calls the observer has made over its
+    /// lifetime. Used by the test suite to verify add/remove balance — every Add must
+    /// be paired with a Remove. Atomic-int-safe because the observer is `@MainActor`
+    /// and all mutations are on the main actor.
+    var addedListenerCountForTesting: Int = 0
+    var removedListenerCountForTesting: Int = 0
+
     /// - Parameter reader: how the observer queries the device, volume, and mute state.
     ///   Defaults to the real CoreAudio implementation; tests inject a fake.
     public init(reader: VolumeReading = CoreAudioVolumeReader()) {
@@ -119,6 +127,21 @@ public final class SystemVolumeObserver: ObservableObject {
         rebindToDefaultDevice()
     }
 
+    /// Test-only seam: runs the same listener teardown `deinit` does, but on the
+    /// main actor so it can bump the test counters. Idempotent — calling it twice
+    /// will only decrement once for any listener it actually removed.
+    func tearDownForTesting() {
+        removeDeviceListeners()
+        if let listener = defaultDeviceListener {
+            var address = Self.address(kAudioHardwarePropertyDefaultOutputDevice)
+            AudioObjectRemovePropertyListenerBlock(
+                AudioObjectID(kAudioObjectSystemObject), &address, DispatchQueue.main, listener
+            )
+            defaultDeviceListener = nil
+            removedListenerCountForTesting += 1
+        }
+    }
+
     /// Re-points the observer at the current default output device, moving the volume
     /// and mute listeners onto it. Called on launch and whenever the default changes.
     private func rebindToDefaultDevice() {
@@ -141,10 +164,12 @@ public final class SystemVolumeObserver: ObservableObject {
         var volumeAddress = Self.address(kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput)
         AudioObjectAddPropertyListenerBlock(device, &volumeAddress, DispatchQueue.main, onChange)
         volumeListener = onChange
+        addedListenerCountForTesting += 1
 
         var muteAddress = Self.address(kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput)
         AudioObjectAddPropertyListenerBlock(device, &muteAddress, DispatchQueue.main, onChange)
         muteListener = onChange
+        addedListenerCountForTesting += 1
 
         refresh()
     }
@@ -158,6 +183,7 @@ public final class SystemVolumeObserver: ObservableObject {
             AudioObjectID(kAudioObjectSystemObject), &address, DispatchQueue.main, onChange
         )
         defaultDeviceListener = onChange
+        addedListenerCountForTesting += 1
     }
 
     private func removeDeviceListeners() {
@@ -169,10 +195,12 @@ public final class SystemVolumeObserver: ObservableObject {
         if let listener = volumeListener {
             var address = Self.address(kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput)
             AudioObjectRemovePropertyListenerBlock(deviceID, &address, DispatchQueue.main, listener)
+            removedListenerCountForTesting += 1
         }
         if let listener = muteListener {
             var address = Self.address(kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput)
             AudioObjectRemovePropertyListenerBlock(deviceID, &address, DispatchQueue.main, listener)
+            removedListenerCountForTesting += 1
         }
         volumeListener = nil
         muteListener = nil

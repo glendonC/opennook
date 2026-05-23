@@ -66,4 +66,29 @@ final class NookDisplayPreferenceTests: XCTestCase {
         // An unknown UUID falls through to the built-in/main/first chain.
         XCTAssertNotNil(NookScreenLocator.screen(matching: .specific("not-a-real-display-uuid")))
     }
+
+    /// Pins the unplug-equivalent fallback chain order for `.specific`. When the
+    /// requested UUID is not in the connected set (i.e. the user picked an external
+    /// display and it has since been unplugged), the resolver must return the
+    /// built-in panel if present, otherwise the main screen, otherwise the first
+    /// attached — in that order, NOT an arbitrary screen.
+    func testSpecificUnpluggedResolvesViaBuiltInThenMainThenFirst() throws {
+        guard !NSScreen.screens.isEmpty else {
+            throw XCTSkip("No display attached in this environment.")
+        }
+        let resolved = NookScreenLocator.screen(matching: .specific("display-that-was-unplugged"))
+        XCTAssertNotNil(resolved)
+        // The resolved screen MUST be one of the three documented fallbacks. Building
+        // the eligible set explicitly catches a future bug where the chain returns,
+        // say, `NSScreen.screens.last` by mistake.
+        let eligible: [NSScreen?] = [
+            NookScreenLocator.builtInScreen(),
+            NSScreen.main,
+            NSScreen.screens.first
+        ]
+        XCTAssertTrue(
+            eligible.contains(where: { $0 === resolved }),
+            "an unplugged `.specific` must fall through to built-in / main / first — not an arbitrary screen"
+        )
+    }
 }

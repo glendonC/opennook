@@ -196,4 +196,32 @@ public final class HotkeyController {
     private func dispatchHandler(forCarbonID carbonID: UInt32) {
         handlersByCarbonID[carbonID]?()
     }
+
+    // MARK: - Test seam
+
+    /// String ids currently registered. Internal-only — for the test suite to assert
+    /// that `register`, `unregister`, `unregisterAll` keep the dictionary honest
+    /// independent of whether `RegisterEventHotKey` actually fired (it can fail in
+    /// some test environments, e.g. CI without an app context).
+    var registeredIDsForTesting: Set<String> {
+        Set(registrations.keys)
+    }
+
+    /// Number of distinct Carbon hotkey ids minted so far. Used by tests to prove
+    /// that re-registering the same string id MINTS A FRESH Carbon id rather than
+    /// reusing one (which would risk a stale Carbon event resolving to the new
+    /// handler).
+    var carbonIDsMintedForTesting: UInt32 {
+        nextCarbonID - 1
+    }
+
+    /// Invokes the handler associated with `id` exactly as a pressed hotkey would,
+    /// without requiring a Carbon event. Used by tests to verify the dispatch table
+    /// is wired correctly. Returns `true` if a handler ran.
+    @discardableResult
+    func fireForTesting(id: String) -> Bool {
+        guard let registration = registrations[id] else { return false }
+        registration.handler()
+        return true
+    }
 }

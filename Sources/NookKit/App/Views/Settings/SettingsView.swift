@@ -58,7 +58,7 @@ struct SettingsView: View {
                 SettingsGroupedPanel {
                     VStack(spacing: 0) {
                         SettingsShortcutRow(appState: appState)
-                        if !appState.hotkeyRegistrationFailures.keys.filter({ $0 != "toggle" }).isEmpty {
+                        if !appState.hotkeyRegistrationFailures.keys.filter({ $0 != NookHotkeyIDs.toggle }).isEmpty {
                             SettingsInsetDivider()
                             SettingsHotkeyFailureRow(appState: appState)
                         }

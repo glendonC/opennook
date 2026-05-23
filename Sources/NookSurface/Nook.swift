@@ -723,10 +723,10 @@ extension Nook {
 
     /// The layer of the hosting view inside the panel. Layer-level fades run here so the
     /// `NSWindow` itself (and its shadow/vibrancy compositing) stays at full alpha.
+    ///
+    /// Pure: `wantsLayer` is set once in `initializeWindow`, so this is just a lookup.
     var hostingLayer: CALayer? {
-        guard let view = windowController?.window?.contentView else { return nil }
-        view.wantsLayer = true
-        return view.layer
+        windowController?.window?.contentView?.layer
     }
 }
 
@@ -738,7 +738,14 @@ private extension Nook {
         menubarHeight = screen.menubarHeight
         layoutForm = presentation.isFloating(screenHasNotch: screen.hasNotch) ? .floating : .notch
 
-        let hostingView = NSHostingView(rootView: NookContentView(nook: self))
+        // Two modifiers used to live on a `NookContentView` shim: a full-bleed
+        // top-anchored frame and a conversion animation on hover. Inlining the
+        // shim removes a one-line passthrough that earned its keep only as a
+        // named type — `NSHostingView` is the only consumer.
+        let rootView = NookView(nook: self)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .animation(effectiveConversionAnimation, value: isHovering)
+        let hostingView = NSHostingView(rootView: rootView)
         hostingView.wantsLayer = true
         hostingView.translatesAutoresizingMaskIntoConstraints = false
 

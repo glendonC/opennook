@@ -428,7 +428,9 @@ public final class AppCoordinator: ObservableObject {
     // MARK: - Global hotkey
 
     /// String id of the global show/hide registration in ``HotkeyController``.
-    private static let toggleHotkeyID = "toggle"
+    /// Hoisted to ``NookHotkeyIDs/toggle`` so view code can reference it without a
+    /// magic-string literal that could drift.
+    private static var toggleHotkeyID: String { NookHotkeyIDs.toggle }
 
     /// Registers the current `appState.hotkey` as the global show/hide shortcut.
     /// Skipped while the user is mid-recording so the old shortcut can't fire.
@@ -462,15 +464,16 @@ public final class AppCoordinator: ObservableObject {
         for descriptor in moduleHost.descriptors {
             guard let hotkey = descriptor.hotkey else { continue }
             let id = descriptor.id
+            let registrationID = NookHotkeyIDs.module(id)
             let status = hotkeyController.register(
-                "module.\(id)",
+                registrationID,
                 keyCode: hotkey.keyCode,
                 modifiers: hotkey.carbonModifiers
             ) { [weak self] in
                 Task { @MainActor in self?.switchModule(to: id) }
             }
             recordHotkeyOutcome(
-                id: "module.\(id)",
+                id: registrationID,
                 status: status,
                 shortcutName: descriptor.displayName,
                 hotkey: hotkey
@@ -479,14 +482,14 @@ public final class AppCoordinator: ObservableObject {
 
         if let cycle = moduleHost.cycleHotkey {
             let status = hotkeyController.register(
-                "cycle",
+                NookHotkeyIDs.cycle,
                 keyCode: cycle.keyCode,
                 modifiers: cycle.carbonModifiers
             ) { [weak self] in
                 Task { @MainActor in self?.cycleModule() }
             }
             recordHotkeyOutcome(
-                id: "cycle",
+                id: NookHotkeyIDs.cycle,
                 status: status,
                 shortcutName: "Cycle Modules",
                 hotkey: cycle
@@ -511,17 +514,18 @@ public final class AppCoordinator: ObservableObject {
 
     /// Keeps the live hotkey registration in sync with `appState`: re-register when the
     /// user picks a new shortcut, and suspend registration entirely while recording.
+    ///
+    /// Combined into a single sink so a recording-finished event (which fires both
+    /// `$hotkey` and `$isRecordingHotkey` on the same runloop turn) re-registers
+    /// once, not twice — and the durable failure channel records one outcome per
+    /// user action instead of two.
     private func bindHotkeyRegistration() {
         appState.$hotkey
-            .dropFirst()
+            .combineLatest(appState.$isRecordingHotkey)
+            .dropFirst()  // skip the cold-launch publish of initial values
+            .removeDuplicates(by: { $0 == $1 })
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.registerGlobalHotkey() }
-            .store(in: &cancellables)
-
-        appState.$isRecordingHotkey
-            .dropFirst()
-            .receive(on: RunLoop.main)
-            .sink { [weak self] isRecording in
+            .sink { [weak self] _, isRecording in
                 guard let self else { return }
                 if isRecording {
                     self.hotkeyController.unregister(Self.toggleHotkeyID)
@@ -533,7 +537,12 @@ public final class AppCoordinator: ObservableObject {
     }
 
     private func bindBackdropSynchronization() {
+        // `dropFirst` skips the cold-launch publish of the current preferences:
+        // `start()` calls `syncNotchBackdrop()` directly so the backdrop is correct
+        // before any window appears, and we don't want this sink to fire again on the
+        // same value the moment the subscription installs.
         appState.$appearancePreferences
+            .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.syncNotchBackdrop() }
             .store(in: &cancellables)

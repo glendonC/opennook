@@ -61,12 +61,10 @@ public final class ModuleHost: ObservableObject {
     /// The active module's isolated context.
     public var activeContext: NookModuleContext? { registry.context(for: activeModuleID) }
 
-    /// Used only if a context somehow can't be resolved — the active module is always
-    /// registered, so in practice ``activeServices`` returns the module's own bag.
-    private let fallbackServices = AppServices()
-
     /// The active module's service bag — what the surface binds to `\.appServices`.
-    public var activeServices: AppServices { activeContext?.services ?? fallbackServices }
+    /// Falls back to an empty bag in the impossible case that no context can be resolved
+    /// (the active module is always registered, so in practice this branch is unreachable).
+    public var activeServices: AppServices { activeContext?.services ?? AppServices() }
 
     /// `true` when more than one module is registered — i.e. a switcher is meaningful.
     public var isMultiModule: Bool { registry.descriptors.count > 1 }

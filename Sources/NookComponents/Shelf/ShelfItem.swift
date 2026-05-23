@@ -33,10 +33,13 @@ import UniformTypeIdentifiers
 /// start access. Outbound drag uses file promises (see ``NookShelfView``) so the read
 /// can hold scope for the duration of the copy.
 public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
+    /// Stable id minted at shelf-add time. Never reused; survives bookmark re-capture.
     public let id: UUID
     /// File name without extension — what the chip label shows.
     public let displayName: String
+    /// File extension without the leading dot, e.g. `"pdf"`. Empty for extensionless files.
     public let fileExtension: String
+    /// When the file was shelved.
     public let addedAt: Date
     /// Bookmark data resolving back to the file. Opaque by design.
     public let bookmark: Data

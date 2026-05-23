@@ -110,16 +110,19 @@ public final class ShelfStore: ObservableObject {
         return true
     }
 
+    /// Removes `item` from the shelf and persists.
     public func remove(_ item: ShelfItem) {
         remove(id: item.id)
     }
 
+    /// Removes the item with `id` from the shelf and persists. No-op when no item matches.
     public func remove(id: ShelfItem.ID) {
         let before = items.count
         items.removeAll { $0.id == id }
         if items.count != before { persist() }
     }
 
+    /// Empties the shelf and persists.
     public func clear() {
         guard !items.isEmpty else { return }
         items.removeAll()

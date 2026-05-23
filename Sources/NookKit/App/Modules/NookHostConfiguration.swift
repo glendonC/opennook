@@ -38,6 +38,8 @@ public struct NookHostConfiguration: Sendable {
     /// (`"Nook"` / nil) so an unconfigured host renders the demo strings.
     public var branding: NookHostBranding = .default
 
+    /// Builds an empty host. Register at least one module via ``register(_:factory:)``
+    /// or ``register(_:configuration:)`` before passing to `NookApp.main(_:)`.
     public init() {}
 
     /// Registers a module by descriptor and factory. The factory receives the module's

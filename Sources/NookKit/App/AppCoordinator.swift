@@ -20,6 +20,8 @@ import SwiftUI
 /// presenters (e.g. ``NookActivityQueue``) can take over the surface through it.
 @MainActor
 public final class AppCoordinator: ObservableObject {
+    /// Framework-global, observable chrome state — appearance preferences, hotkey,
+    /// display preference, visibility mirror, view mode.
     public let appState: AppState
 
     /// The indirection layer to the active host configuration. The surface's content
@@ -888,6 +890,8 @@ extension AppCoordinator: NookSurfacePresenting {
         userInitiatedOpen || surface.isHovering
     }
 
+    /// Emits whenever ``isUserEngaged`` changes — the merge of the user-intent flag and
+    /// the surface's hover publisher, deduplicated.
     public var userEngagementChanges: AnyPublisher<Bool, Never> {
         userInitiatedOpenSubject
             .combineLatest(surface.isHoveringPublisher)

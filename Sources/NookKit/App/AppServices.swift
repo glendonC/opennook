@@ -102,6 +102,13 @@ private struct AppServicesEnvironmentKey: EnvironmentKey {
 }
 
 public extension EnvironmentValues {
+    /// The active module's ``AppServices`` bag, injected into the module's views by the
+    /// router. Resolve a registered service with ``AppServices/resolve(_:)``:
+    ///
+    /// ```swift
+    /// @Environment(\.appServices) private var services
+    /// let clipboard = services.resolve(ClipboardServiceKey.self)
+    /// ```
     var appServices: AppServices {
         get { self[AppServicesEnvironmentKey.self] }
         set { self[AppServicesEnvironmentKey.self] = newValue }

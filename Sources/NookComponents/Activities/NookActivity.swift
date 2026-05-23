@@ -24,17 +24,22 @@ public enum NookActivityPriority: Int, Comparable, Sendable {
 /// duplicates that share a ``coalescingKey``, and presents each one in turn by briefly
 /// taking over the expanded surface for ``dwell``.
 public struct NookActivity: Identifiable, Sendable {
+    /// Stable id minted at construction. Used by ``NookActivityQueue/cancel(_:)``.
     public let id: UUID
 
     /// Activities sharing a non-`nil` key collapse: enqueuing one drops any pending
     /// peer with the same key (keep-latest). `nil` means "never coalesce".
     public var coalescingKey: String?
 
+    /// Relative urgency. The queue drains higher priorities first.
     public var priority: NookActivityPriority
+    /// Headline string shown on the activity card.
     public var title: String
+    /// Optional secondary line below ``title``.
     public var subtitle: String?
     /// SF Symbol name shown on the activity card.
     public var systemImage: String?
+    /// Accent applied to ``systemImage``.
     public var tint: Color
     /// How long the activity holds the expanded surface before yielding it back.
     public var dwell: Duration

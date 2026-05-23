@@ -38,15 +38,34 @@ public struct NookHostConfiguration: Sendable {
     /// Registers a module by descriptor and factory. The factory receives the module's
     /// isolated ``NookModuleContext`` and is run lazily — only when the module is first
     /// activated, not at registration time.
+    ///
+    /// Traps on a duplicate `descriptor.id`. A module id keys persistence (the
+    /// `UserDefaults` suite `"opennook.module.<id>"` and the per-module container
+    /// folder), the switcher entry, the arbiter's per-module claim invalidation, and
+    /// the direct-jump hotkey registration. Two registrations under the same id would
+    /// collide on every one of those silently — the second factory becomes dead code,
+    /// the persistence suites alias, and the switcher renders two indistinguishable
+    /// entries — so we fail fast at the setup site (a `main.swift` programming bug)
+    /// rather than ship the corruption into production.
     public mutating func register(
         _ descriptor: NookModuleDescriptor,
         factory: @escaping @Sendable @MainActor (NookModuleContext) -> NookModule
     ) {
+        precondition(
+            !entries.contains(where: { $0.descriptor.id == descriptor.id }),
+            "NookHostConfiguration: duplicate module id '\(descriptor.id)'. " +
+                "Module ids must be unique within a host — they key persistence, the " +
+                "switcher entry, the per-module hotkey, and the arbiter's claim " +
+                "invalidation."
+        )
         entries.append(NookModuleRegistry.Registration(descriptor: descriptor, factory: factory))
     }
 
     /// Registers a module that is just a ``NookConfiguration`` with no extra product
     /// state — the configuration is wrapped in a ``ClosureModule``.
+    ///
+    /// Inherits the duplicate-id `precondition` from the factory overload it delegates
+    /// to.
     public mutating func register(
         _ descriptor: NookModuleDescriptor,
         configuration: @escaping @Sendable @MainActor () -> NookConfiguration

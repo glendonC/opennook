@@ -121,7 +121,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         // there is no Settings UI to open. "Toggle Stay Expanded" is kept regardless —
         // it's chrome-independent and is the only keep-open control left once the top
         // bar (and its lock) is hidden.
-        if moduleHost.configuration.showsSettings {
+        if moduleHost.configuration.topBar.showsSettings {
             menu.addItem(NSMenuItem(
                 title: "Settings…",
                 action: #selector(showSettings),

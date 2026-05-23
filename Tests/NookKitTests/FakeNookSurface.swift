@@ -48,11 +48,11 @@ final class FakeNookSurface: NookSurfaceDriving {
         dragSubject.removeDuplicates().eraseToAnyPublisher()
     }
 
-    var onExpand: (() -> Void)?
-    var onCompact: (() -> Void)?
-    var onHide: (() -> Void)?
-    var onFileDrop: (([URL]) -> Bool)?
-    var screenProvider: (() -> NSScreen?)?
+    var onExpand: (@MainActor () -> Void)?
+    var onCompact: (@MainActor () -> Void)?
+    var onHide: (@MainActor () -> Void)?
+    var onFileDrop: (@MainActor ([URL]) -> Bool)?
+    var screenProvider: (@MainActor () -> NSScreen?)?
     var staysExpandedOnHoverExit: Bool = false
     var presentation: NookPresentation = .auto
     var chromeAppearance: NSAppearance?

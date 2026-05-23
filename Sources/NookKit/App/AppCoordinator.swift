@@ -650,7 +650,7 @@ public final class AppCoordinator: ObservableObject {
     /// (``NookConfiguration/showsSettings`` is `false`) there is no Settings UI, so this
     /// falls back to showing the home surface and `viewMode` stays `.home`.
     public func showSettings() {
-        guard configuration.showsSettings else {
+        guard configuration.topBar.showsSettings else {
             showNook()
             return
         }

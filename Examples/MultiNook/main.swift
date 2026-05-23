@@ -97,8 +97,8 @@ final class CounterModule: NookModule {
     func makeConfiguration() -> NookConfiguration {
         var configuration = NookConfiguration()
         configuration.setHome { CounterHome() }
-        configuration.topBarLeadingTitle = { _ in "Counter" }
-        configuration.topBarLeadingIcon = "number"
+        configuration.topBar.leadingTitle = { _ in "Counter" }
+        configuration.topBar.leadingIcon = "number"
         return configuration
     }
 }
@@ -128,8 +128,8 @@ func clockConfiguration() -> NookConfiguration {
             symbol: "clock"
         )
     }
-    configuration.topBarLeadingTitle = { _ in "Clock" }
-    configuration.topBarLeadingIcon = "clock"
+    configuration.topBar.leadingTitle = { _ in "Clock" }
+    configuration.topBar.leadingIcon = "clock"
     return configuration
 }
 
@@ -143,8 +143,8 @@ func notesConfiguration() -> NookConfiguration {
             symbol: "note.text"
         )
     }
-    configuration.topBarLeadingTitle = { _ in "Notes" }
-    configuration.topBarLeadingIcon = "note.text"
+    configuration.topBar.leadingTitle = { _ in "Notes" }
+    configuration.topBar.leadingIcon = "note.text"
     return configuration
 }
 

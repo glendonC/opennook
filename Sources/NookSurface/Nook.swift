@@ -42,8 +42,28 @@ import SwiftUI
 @MainActor
 public final class Nook<Expanded, CompactLeading, CompactTrailing>: ObservableObject, NookControllable
 where Expanded: View, CompactLeading: View, CompactTrailing: View {
-    /// Exposed for callers that need to tweak window-level details (e.g. accessibility, level changes).
-    public var windowController: NSWindowController?
+    /// The chrome's window controller, or `nil` while hidden. Public so observers can
+    /// read window-level state (e.g. for diagnostics or accessibility). The setter is
+    /// internal — replacing the controller from outside would tear the panel out from
+    /// under the in-flight transition arbiter. Use ``configureWindow(_:)`` for the
+    /// narrow case of poking the live window directly.
+    public internal(set) var windowController: NSWindowController?
+
+    /// Applies a configuration block to the currently-mounted `NSWindow`, if one
+    /// exists. Use for window-level tweaks the framework doesn't already expose
+    /// directly (e.g. an accessibility identifier, a custom window level for a niche
+    /// use case). Returns `false` when the chrome is hidden and there's no live
+    /// window to configure.
+    ///
+    /// This is the narrow replacement for the old "set `windowController` yourself"
+    /// pattern, which let a host accidentally tear the panel out from under the
+    /// transition arbiter.
+    @discardableResult
+    public func configureWindow(_ apply: (NSWindow) -> Void) -> Bool {
+        guard let window = windowController?.window else { return false }
+        apply(window)
+        return true
+    }
 
     public let style: NookStyle
     public let hoverBehavior: NookHoverBehavior
@@ -56,7 +76,11 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// consulted on every `expand`/`compact` with a `nil` screen, on hover-driven
     /// transitions, and whenever the display set changes. Returning `nil` falls
     /// through to the window's current screen, then the system's main screen.
-    public var screenProvider: (() -> NSScreen?)?
+    ///
+    /// Explicitly `@MainActor`-isolated because it touches `NSScreen` and is invoked
+    /// from `@MainActor` paths — the annotation makes that contract explicit to a
+    /// host setting it from a non-isolated context.
+    public var screenProvider: (@MainActor () -> NSScreen?)?
 
     /// How the chrome presents itself — notch-fused, free-floating, or `.auto` (notch on
     /// a notched display, floating elsewhere). See ``NookPresentation``.
@@ -74,8 +98,11 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     let expandedContent: Expanded
     let compactLeadingContent: CompactLeading
     let compactTrailingContent: CompactTrailing
-    @Published var disableCompactLeading: Bool = false
-    @Published var disableCompactTrailing: Bool = false
+    /// Construction-time flags set by the no-compact convenience init. Immutable so
+    /// they can't be flipped mid-flight and trip the view's transition heuristics —
+    /// the no-compact case is a build-time choice, not runtime state.
+    let disableCompactLeading: Bool
+    let disableCompactTrailing: Bool
 
     /// Current lifecycle state. Host apps can observe this directly (it's `@Published`)
     /// or react through the ``onExpand`` / ``onCompact`` / ``onHide`` callbacks — the
@@ -110,18 +137,20 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// hands the raw URLs to this callback. It does not interpret, store, or copy the
     /// files. Whatever the URLs *mean* — a shelf, an import flow, a no-op — is entirely the
     /// app layer's concern; the engine never sees it.
-    public var onFileDrop: (([URL]) -> Bool)?
+    ///
+    /// `@MainActor`-isolated: invoked from the surface's main-actor drag pipeline.
+    public var onFileDrop: (@MainActor ([URL]) -> Bool)?
 
     /// Fired when the chrome transitions **into** the expanded surface — from any source:
     /// a host-called `expand`, a hover-grow, or a file drag auto-expanding the panel.
-    public var onExpand: (() -> Void)?
+    public var onExpand: (@MainActor () -> Void)?
 
     /// Fired when the chrome transitions **into** the compact pill.
-    public var onCompact: (() -> Void)?
+    public var onCompact: (@MainActor () -> Void)?
 
     /// Fired when the chrome transitions **into** the hidden state. Note the cold-launch
     /// sequence collapses to compact, so `onHide` only fires on a genuine hide afterwards.
-    public var onHide: (() -> Void)?
+    public var onHide: (@MainActor () -> Void)?
 
     /// Authoritative state of the in-flight file-drag session. The whole session — the
     /// pre-drag `NookState` snapshot and whether a drag is over the panel at all — lives
@@ -193,6 +222,33 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         self.expandedContent = expanded()
         self.compactLeadingContent = compactLeading()
         self.compactTrailingContent = compactTrailing()
+        self.disableCompactLeading = false
+        self.disableCompactTrailing = false
+
+        observeScreenParameters()
+        observeStateForPendingFeedback()
+        observeStateForLifecycleHooks()
+    }
+
+    /// Internal designated init for the no-compact-content case. The `disableCompact*`
+    /// flags are stored as `let` so they can't drift at runtime — the no-compact case
+    /// is a build-time choice.
+    private init(
+        hoverBehavior: NookHoverBehavior,
+        style: NookStyle,
+        expanded: @escaping () -> Expanded,
+        compactLeading: @escaping () -> CompactLeading,
+        compactTrailing: @escaping () -> CompactTrailing,
+        disableCompactLeading: Bool,
+        disableCompactTrailing: Bool
+    ) {
+        self.hoverBehavior = hoverBehavior
+        self.style = style
+        self.expandedContent = expanded()
+        self.compactLeadingContent = compactLeading()
+        self.compactTrailingContent = compactTrailing()
+        self.disableCompactLeading = disableCompactLeading
+        self.disableCompactTrailing = disableCompactTrailing
 
         observeScreenParameters()
         observeStateForPendingFeedback()
@@ -210,10 +266,10 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             style: style,
             expanded: expanded,
             compactLeading: { EmptyView() },
-            compactTrailing: { EmptyView() }
+            compactTrailing: { EmptyView() },
+            disableCompactLeading: true,
+            disableCompactTrailing: true
         )
-        self.disableCompactLeading = true
-        self.disableCompactTrailing = true
     }
 
     var effectiveOpeningAnimation: Animation { transitionConfiguration.openingAnimation ?? style.openingAnimation }

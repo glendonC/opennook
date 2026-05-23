@@ -54,37 +54,11 @@ public struct NookConfiguration: Sendable {
     /// supply a closure returning a host-built ``NookResolvedTheme`` to theme the chrome.
     public var theme: @Sendable @MainActor (AppState) -> NookResolvedTheme
 
-    /// The label for the top bar's leading cluster. Defaults to `"Home"` — override it
-    /// so the bar communicates *product* context (a date, a section name) rather than
-    /// the demo's navigation metaphor. The closure receives ``AppState`` for hosts whose
-    /// label depends on it.
-    ///
-    /// The framework top bar, lock/gear controls, and the Settings breadcrumb are
-    /// unaffected — only the leading icon + title are host-configurable.
-    /// `@Sendable` (so a `NookConfiguration` is `Sendable`) but not `@MainActor`: this
-    /// closure derives a label string and touches no main-actor-only state, so it stays
-    /// callable from any context.
-    public var topBarLeadingTitle: @Sendable (AppState) -> String
-
-    /// SF Symbol for the top bar's leading cluster. Defaults to `"house"`. Set to `nil`
-    /// for a title-only cluster (in Settings, a back chevron is then used so returning
-    /// home still works).
-    public var topBarLeadingIcon: String?
-
-    /// Whether the expanded surface renders the framework top bar (leading cluster,
-    /// keep-open lock, gear). Defaults to `true`. Set to `false` for a bare expanded
-    /// surface — a pure glance/widget with no framework chrome.
-    ///
-    /// With the top bar off the gear is gone, so Settings is unreachable from the
-    /// chrome regardless of ``showsSettings``; the keep-open lock is gone too (it lives
-    /// only in the top bar). Both remain reachable via the menu-bar fallback.
-    public var showsTopBar: Bool = true
-
-    /// Whether the gear and the reachable Settings screen are part of the chrome.
-    /// Defaults to `true`. Set to `false` to drop the Settings UI entirely — the gear
-    /// is removed, the menu-bar "Settings…" item is dropped, and the expanded surface
-    /// stays on the home view.
-    public var showsSettings: Bool = true
+    /// Top-bar configuration — leading cluster (title/icon), and the two visibility
+    /// flags for the top bar and the Settings UI. Grouped so the related knobs
+    /// travel together and future top-bar settings land here cleanly. See
+    /// ``NookTopBarConfiguration``.
+    public var topBar: NookTopBarConfiguration
 
     /// Called when the chrome transitions into the expanded surface (from any source).
     ///
@@ -127,10 +101,7 @@ public struct NookConfiguration: Sendable {
         // the `theme` slot is `@Sendable`, and a closure that captures nothing and just
         // forwards to the `@MainActor` `live(appState:)` satisfies that cleanly.
         theme = { NookResolvedTheme.live(appState: $0) }
-        topBarLeadingTitle = { _ in "Home" }
-        topBarLeadingIcon = "house"
-        showsTopBar = true
-        showsSettings = true
+        topBar = .default
     }
 
     /// Registers the expanded home surface from a `@ViewBuilder` closure.
@@ -159,4 +130,58 @@ public struct NookConfiguration: Sendable {
     ) {
         compactTrailing = { AnyView(content()) }
     }
+}
+
+/// The framework top bar's host-configurable surface — the leading cluster
+/// (title / icon), plus the two flags that strip the bar or the Settings UI for
+/// hosts that want a bare glance/widget chrome.
+///
+/// These knobs travel together because every one of them is "should the top bar
+/// look like X." Grouping them keeps ``NookConfiguration`` from accreting four loose
+/// fields, and gives future top-bar settings a natural home.
+public struct NookTopBarConfiguration: Sendable {
+    /// Whether the expanded surface renders the framework top bar (leading cluster,
+    /// keep-open lock, gear). Defaults to `true`. Set to `false` for a bare expanded
+    /// surface — a pure glance/widget with no framework chrome.
+    ///
+    /// With the top bar off the gear is gone, so Settings is unreachable from the
+    /// chrome regardless of ``showsSettings``; the keep-open lock is gone too (it
+    /// lives only in the top bar). Both remain reachable via the menu-bar fallback.
+    public var showsTopBar: Bool
+
+    /// Whether the gear and the reachable Settings screen are part of the chrome.
+    /// Defaults to `true`. Set to `false` to drop the Settings UI entirely — the gear
+    /// is removed, the menu-bar "Settings…" item is dropped, and the expanded
+    /// surface stays on the home view.
+    public var showsSettings: Bool
+
+    /// The label for the top bar's leading cluster. Defaults to `"Home"` — override
+    /// so the bar communicates *product* context (a date, a section name) rather
+    /// than the demo's navigation metaphor. The closure receives ``AppState`` for
+    /// hosts whose label depends on it.
+    ///
+    /// `@Sendable` (so a `NookTopBarConfiguration` is `Sendable`) but not
+    /// `@MainActor`: this closure derives a label string and touches no main-actor-
+    /// only state, so it stays callable from any context.
+    public var leadingTitle: @Sendable (AppState) -> String
+
+    /// SF Symbol for the top bar's leading cluster. Defaults to `"house"`. Set to
+    /// `nil` for a title-only cluster (in Settings, a back chevron is then used so
+    /// returning home still works).
+    public var leadingIcon: String?
+
+    public init(
+        showsTopBar: Bool = true,
+        showsSettings: Bool = true,
+        leadingTitle: @escaping @Sendable (AppState) -> String = { _ in "Home" },
+        leadingIcon: String? = "house"
+    ) {
+        self.showsTopBar = showsTopBar
+        self.showsSettings = showsSettings
+        self.leadingTitle = leadingTitle
+        self.leadingIcon = leadingIcon
+    }
+
+    /// The framework-demo defaults — top bar on, Settings on, "Home" with house glyph.
+    public static let `default` = NookTopBarConfiguration()
 }

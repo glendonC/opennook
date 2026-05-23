@@ -34,14 +34,9 @@ public struct NookExpandedView: View {
     /// Host-registered home content, shown between the top bar and (when toggled) Settings.
     let home: @Sendable @MainActor () -> AnyView
 
-    /// Host-configurable top-bar leading label and icon (see `NookConfiguration`).
-    let topBarLeadingTitle: (AppState) -> String
-    let topBarLeadingIcon: String?
-
-    /// Whether the framework top bar and Settings screen are part of the chrome
-    /// (see ``NookConfiguration/showsTopBar`` / ``NookConfiguration/showsSettings``).
-    let showsTopBar: Bool
-    let showsSettings: Bool
+    /// The framework top bar's host-configurable surface — leading cluster, top-bar
+    /// visibility, Settings visibility. See ``NookTopBarConfiguration``.
+    let topBar: NookTopBarConfiguration
 
     @State private var isHomeIconHovered = false
 
@@ -54,10 +49,7 @@ public struct NookExpandedView: View {
         theme: @escaping @Sendable @MainActor (AppState) -> NookResolvedTheme
             = { NookResolvedTheme.live(appState: $0) },
         home: @escaping @Sendable @MainActor () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
-        topBarLeadingTitle: @escaping (AppState) -> String = { _ in "Home" },
-        topBarLeadingIcon: String? = "house",
-        showsTopBar: Bool = true,
-        showsSettings: Bool = true
+        topBar: NookTopBarConfiguration = .default
     ) {
         self.appState = appState
         self.services = services
@@ -66,10 +58,7 @@ public struct NookExpandedView: View {
         self.resetAllSettings = resetAllSettings
         self.theme = theme
         self.home = home
-        self.topBarLeadingTitle = topBarLeadingTitle
-        self.topBarLeadingIcon = topBarLeadingIcon
-        self.showsTopBar = showsTopBar
-        self.showsSettings = showsSettings
+        self.topBar = topBar
     }
 
     private var resolvedTheme: NookResolvedTheme {
@@ -82,20 +71,20 @@ public struct NookExpandedView: View {
 
     public var body: some View {
         VStack(spacing: 8) {
-            if showsTopBar {
+            if topBar.showsTopBar {
                 NookTopBar(
                     appState: appState,
                     chromeInteractionAccent: chromeInteractionAccent,
                     isHomeIconHovered: $isHomeIconHovered,
                     toggleKeepOpen: toggleKeepOpen,
-                    leadingTitle: topBarLeadingTitle,
-                    leadingIcon: topBarLeadingIcon,
-                    showsSettings: showsSettings
+                    leadingTitle: topBar.leadingTitle,
+                    leadingIcon: topBar.leadingIcon,
+                    showsSettings: topBar.showsSettings
                 )
             }
 
             Group {
-                if showsSettings && appState.isSettingsView {
+                if topBar.showsSettings && appState.isSettingsView {
                     settingsSurface
                         .transition(
                             .asymmetric(

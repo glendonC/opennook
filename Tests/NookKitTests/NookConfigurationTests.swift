@@ -78,36 +78,36 @@ final class NookConfigurationTests: XCTestCase {
     func testTopBarLeadingDefaultsMatchTheDemo() {
         let configuration = NookConfiguration()
 
-        XCTAssertEqual(configuration.topBarLeadingIcon, "house")
-        XCTAssertEqual(configuration.topBarLeadingTitle(AppState()), "Home")
+        XCTAssertEqual(configuration.topBar.leadingIcon, "house")
+        XCTAssertEqual(configuration.topBar.leadingTitle(AppState()), "Home")
     }
 
     /// A host can replace the leading title and drop the icon (e.g. a date-only header).
     func testTopBarLeadingIsHostConfigurable() {
         var configuration = NookConfiguration()
-        configuration.topBarLeadingTitle = { _ in "Today" }
-        configuration.topBarLeadingIcon = nil
+        configuration.topBar.leadingTitle = { _ in "Today" }
+        configuration.topBar.leadingIcon = nil
 
-        XCTAssertEqual(configuration.topBarLeadingTitle(AppState()), "Today")
-        XCTAssertNil(configuration.topBarLeadingIcon)
+        XCTAssertEqual(configuration.topBar.leadingTitle(AppState()), "Today")
+        XCTAssertNil(configuration.topBar.leadingIcon)
     }
 
     /// The default configuration ships the full framework chrome — top bar and Settings.
     func testDefaultConfigurationEnablesChrome() {
         let configuration = NookConfiguration()
 
-        XCTAssertTrue(configuration.showsTopBar)
-        XCTAssertTrue(configuration.showsSettings)
+        XCTAssertTrue(configuration.topBar.showsTopBar)
+        XCTAssertTrue(configuration.topBar.showsSettings)
     }
 
     /// A host can switch the top bar and Settings off for a bare expanded surface.
     func testChromeFlagsAreHostConfigurable() {
         var configuration = NookConfiguration()
-        configuration.showsTopBar = false
-        configuration.showsSettings = false
+        configuration.topBar.showsTopBar = false
+        configuration.topBar.showsSettings = false
 
-        XCTAssertFalse(configuration.showsTopBar)
-        XCTAssertFalse(configuration.showsSettings)
+        XCTAssertFalse(configuration.topBar.showsTopBar)
+        XCTAssertFalse(configuration.topBar.showsSettings)
     }
 
     /// With Settings disabled, `showSettings()` must not move the surface off the home
@@ -115,7 +115,7 @@ final class NookConfigurationTests: XCTestCase {
     @MainActor
     func testShowSettingsKeepsHomeWhenSettingsDisabled() {
         var configuration = NookConfiguration()
-        configuration.showsSettings = false
+        configuration.topBar.showsSettings = false
 
         let coordinator = AppCoordinator(configuration: configuration)
         coordinator.showSettings()

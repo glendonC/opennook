@@ -38,10 +38,7 @@ struct ModuleRouterExpandedView: View {
                 resetAllSettings: resetAllSettings,
                 theme: configuration.theme,
                 home: configuration.home,
-                topBarLeadingTitle: configuration.topBarLeadingTitle,
-                topBarLeadingIcon: configuration.topBarLeadingIcon,
-                showsTopBar: configuration.showsTopBar,
-                showsSettings: configuration.showsSettings
+                topBar: configuration.topBar
             )
             // Identity tracks the active module so a switch tears down the old content
             // and inserts the new — letting the transition cross-fade rather than diff

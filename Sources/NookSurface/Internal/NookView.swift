@@ -200,16 +200,9 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             }
         }
         .frame(height: nook.notchSize.height)
-        .onChange(of: nook.disableCompactLeading) { _ in
-            if nook.disableCompactLeading {
-                compactLeadingWidth = 0
-            }
-        }
-        .onChange(of: nook.disableCompactTrailing) { _ in
-            if nook.disableCompactTrailing {
-                compactTrailingWidth = 0
-            }
-        }
+        // `disableCompactLeading/Trailing` are construction-time `let`s on `Nook` —
+        // they cannot change at runtime, so no `.onChange` reconciliation is needed.
+        // The compact widths are reset to 0 on the (hidden) transition path itself.
     }
 
     private func expandedContent() -> some View {

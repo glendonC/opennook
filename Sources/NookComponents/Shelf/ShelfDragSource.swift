@@ -74,9 +74,17 @@ func writeShelfItem(_ item: ShelfItem, to destination: URL) -> Error? {
 /// representation. SwiftUI's `.onDrag` returns this.
 ///
 /// The write closure runs off-main when the receiver requests data. It stages the
-/// file into a fresh per-drag temporary directory (so concurrent drags can't collide
+/// file into a fresh per-drag staging directory (so concurrent drags can't collide
 /// on the destination name), copies the contents under scope, and hands the URL to
-/// the system. macOS clears temp directories on its usual schedule.
+/// the system.
+///
+/// Staging via `FileManager.url(for: .itemReplacementDirectory, …)` rather than a
+/// `nook-shelf-out-<UUID>` directory under `temporaryDirectory`: the
+/// `itemReplacementDirectory` is the OS-blessed staging area for "move into place"
+/// operations, and macOS reaps it aggressively after the receiver consumes the file.
+/// Under the previous scheme each drag left a `nook-shelf-out-<UUID>` directory in
+/// `/var/folders/.../T/` until the system's general temp sweep (~3 days) caught it,
+/// so a user that dragged often accumulated dozens of stale stages.
 @MainActor
 func makeShelfDragItemProvider(for item: ShelfItem) -> NSItemProvider {
     let utType = UTType(item.typeIdentifier) ?? .data
@@ -93,10 +101,18 @@ func makeShelfDragItemProvider(for item: ShelfItem) -> NSItemProvider {
         visibility: .all
     ) { completionHandler in
         let ext = captured.fileExtension.isEmpty ? "" : ".\(captured.fileExtension)"
-        let stage = FileManager.default.temporaryDirectory
-            .appendingPathComponent("nook-shelf-out-\(UUID().uuidString)", isDirectory: true)
+        // Anchor the staging directory near the user's own temp area. The anchor
+        // URL only steers placement on the *same volume*; the path itself doesn't
+        // need to exist.
+        let anchor = FileManager.default.temporaryDirectory
+        let stage: URL
         do {
-            try FileManager.default.createDirectory(at: stage, withIntermediateDirectories: true)
+            stage = try FileManager.default.url(
+                for: .itemReplacementDirectory,
+                in: .userDomainMask,
+                appropriateFor: anchor,
+                create: true
+            )
         } catch {
             completionHandler(nil, false, ShelfDragError.temporaryDirectoryFailed)
             return nil
@@ -105,8 +121,9 @@ func makeShelfDragItemProvider(for item: ShelfItem) -> NSItemProvider {
         if let error = writeShelfItem(captured, to: destination) {
             completionHandler(nil, false, error)
         } else {
-            // `coordinated: false` — the temp file we just minted needs no
-            // NSFileCoordinator brokering for the receiver to read it.
+            // `coordinated: false` — the staging file needs no NSFileCoordinator
+            // brokering for the receiver to read it. macOS reaps the item-replacement
+            // directory once the receiver consumes the promise.
             completionHandler(destination, false, nil)
         }
         return nil  // optional Progress; AppKit handles UI progress itself

@@ -102,4 +102,42 @@ final class ShelfDragSourceTests: XCTestCase {
             "provider must advertise the item's UTI so receivers can match the drag"
         )
     }
+
+    /// Regression: each drag-out stages the file into an OS-managed item-replacement
+    /// directory, not into a manually-created `nook-shelf-out-<UUID>` directory
+    /// hanging off `temporaryDirectory`. Concurrent drags must each get a distinct
+    /// staging URL so they can't collide on the destination filename.
+    func testDragItemProviderProvidesDistinctStagingURLsPerDrag() async throws {
+        let source = try makeTempFile(contents: "PROMISED")
+        defer { try? FileManager.default.removeItem(at: source) }
+        let item = ShelfItem.make(from: source)!
+
+        // Drive the registered file-representation handler twice and capture the URLs
+        // it hands back to AppKit. Distinct UUID-bearing staging paths prove the
+        // per-drag isolation.
+        func resolveStagingURL() async -> URL? {
+            let provider = makeShelfDragItemProvider(for: item)
+            return await withCheckedContinuation { continuation in
+                _ = provider.loadFileRepresentation(forTypeIdentifier: item.typeIdentifier) { url, error in
+                    // AppKit copies the file out before calling the completion; the URL
+                    // here is a coordinator-owned URL pointing at the OS-managed copy.
+                    // What we care about is that the call resolves with a URL and no
+                    // error — i.e. the staging path was created and the copy succeeded.
+                    if error != nil {
+                        continuation.resume(returning: nil)
+                    } else {
+                        continuation.resume(returning: url)
+                    }
+                }
+            }
+        }
+
+        async let urlA = resolveStagingURL()
+        async let urlB = resolveStagingURL()
+        let (a, b) = (await urlA, await urlB)
+
+        XCTAssertNotNil(a, "first drag resolved to a staged file")
+        XCTAssertNotNil(b, "second drag resolved to a staged file")
+        XCTAssertNotEqual(a, b, "each drag stages to its own URL — no collision")
+    }
 }

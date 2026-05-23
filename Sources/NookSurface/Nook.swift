@@ -520,18 +520,23 @@ extension Nook {
         // Superseded before this task even started running.
         guard isCurrent(generation) else { return }
 
-        // Already expanded *on the requested screen* — nothing to do. A different
-        // screen still needs work: the window must move, so fall through to the
-        // rebuild path, which `needsNewWindow` below already handles.
-        if state == .expanded, windowController?.window?.screen == screen { return }
-
         // Opening the nook acknowledges any *repeating* peripheral cue — those are
         // meant to keep nagging until the user looks, so once they're looking we kill
         // them. A one-shot cue (e.g. the launch shimmer greeting) is allowed to play
         // through the expand transition so the user actually sees it; the perimeter
         // stroke renders on expanded chrome just as well as on compact.
+        //
+        // This runs BEFORE the same-screen early return below: a second `expand()`
+        // on an already-expanded surface still acknowledges the cue. The earlier
+        // ordering returned without clearing, so a repeating shimmer kept nagging
+        // after a same-screen re-expand.
         if feedbackEvent?.repeats == true { feedbackEvent = nil }
         if pendingFeedback?.repeats == true { pendingFeedback = nil }
+
+        // Already expanded *on the requested screen* — nothing to do. A different
+        // screen still needs work: the window must move, so fall through to the
+        // rebuild path, which `needsNewWindow` below already handles.
+        if state == .expanded, windowController?.window?.screen == screen { return }
 
         let needsNewWindow = state == .hidden || windowController?.window?.screen != screen
 
@@ -540,6 +545,9 @@ extension Nook {
             withAnimation(effectiveOpeningAnimation) { state = .expanded }
             showWindow()
             try? await Task.sleep(for: openSettleDuration)
+            // A screen-parameter change during the settle could have rebuilt the
+            // window underneath us; bail rather than return success on a defunct view.
+            guard isCurrent(generation) else { return }
         } else {
             if !skipHide {
                 withAnimation(effectiveClosingAnimation) { state = .hidden }
@@ -549,6 +557,7 @@ extension Nook {
             }
             withAnimation(effectiveConversionAnimation) { state = .expanded }
             try? await Task.sleep(for: conversionSettleDuration)
+            guard isCurrent(generation) else { return }
         }
     }
 
@@ -578,6 +587,7 @@ extension Nook {
             withAnimation(effectiveOpeningAnimation) { state = .compact }
             showWindow()
             try? await Task.sleep(for: openSettleDuration)
+            guard isCurrent(generation) else { return }
         } else {
             if !skipHide {
                 withAnimation(effectiveClosingAnimation) { state = .hidden }
@@ -586,6 +596,7 @@ extension Nook {
             }
             withAnimation(effectiveConversionAnimation) { state = .compact }
             try? await Task.sleep(for: conversionSettleDuration)
+            guard isCurrent(generation) else { return }
         }
     }
 

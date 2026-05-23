@@ -373,7 +373,6 @@ public final class AppCoordinator: ObservableObject {
     private func performSwitch(to id: String) async {
         let outgoingID = moduleHost.activeModuleID
         guard id != outgoingID, moduleHost.registry.descriptor(for: id) != nil else { return }
-        let outgoingModule = moduleHost.registry.module(for: outgoingID)
 
         // 1. Invalidate outgoing claims FIRST — stale-token safety is now the contract
         //    the off-chain quiesce drain relies on.
@@ -409,12 +408,21 @@ public final class AppCoordinator: ObservableObject {
         }
 
         // 8. Quiesce drain — off the serial chain, with a hard timeout.
-        if let outgoingModule {
-            enqueueSwitchTail { [weak self] in
-                await Self.runWithTimeout(Self.switchAwayTimeout, label: "prepareForSwitchAway[\(outgoingID)]") {
-                    await outgoingModule.prepareForSwitchAway()
-                }
-                _ = self  // retain coordinator across the drain
+        //
+        //    Capture the Sendable `outgoingID` only and re-resolve the module instance
+        //    inside the closure. The drain runs on the main actor (the closure body is
+        //    `@MainActor`), so the lookup is in-thread; capturing the `any NookModule`
+        //    reference would force a non-Sendable value across the `@Sendable` closure
+        //    boundary for no real benefit. As a bonus, if a third rapid switch unloaded
+        //    the outgoing module before the drain runs, the re-resolve returns `nil` and
+        //    the drain is a clean no-op — which is exactly what we'd want anyway.
+        guard moduleHost.registry.isLoaded(outgoingID) else { return }
+        enqueueSwitchTail { [weak self] in
+            guard let self,
+                  let outgoingModule = self.moduleHost.registry.module(for: outgoingID)
+            else { return }
+            await Self.runWithTimeout(Self.switchAwayTimeout, label: "prepareForSwitchAway[\(outgoingID)]") {
+                await outgoingModule.prepareForSwitchAway()
             }
         }
     }
@@ -422,15 +430,22 @@ public final class AppCoordinator: ObservableObject {
     /// Runs `work` under a hard deadline. Past `timeout` the work task is cancelled and
     /// the timeout is logged via `print` — the coordinator does not fail the switch.
     ///
+    /// `work` is `@MainActor` because every caller in `AppCoordinator` is — most notably
+    /// the `prepareForSwitchAway` drain in ``performSwitch(to:)``, which calls a
+    /// main-actor module method. Pinning the work closure to the main actor here lets
+    /// the caller capture main-actor-isolated references (the resolved `NookModule`
+    /// instance) without producing a non-`Sendable` capture warning on the outer
+    /// `@Sendable` closure.
+    ///
     /// The arbiter's stale-token guard makes an abandoned `prepareForSwitchAway` safe:
     /// any `endTransientPresentation` it issues against an invalidated claim is a
     /// no-op on the surface.
     private static func runWithTimeout(
         _ timeout: Duration,
         label: String,
-        _ work: @escaping @Sendable () async -> Void
+        _ work: @escaping @MainActor @Sendable () async -> Void
     ) async {
-        let workTask = Task(operation: work)
+        let workTask = Task { @MainActor in await work() }
         let timerTask = Task<Bool, Never> {
             (try? await Task.sleep(for: timeout)) != nil
         }

@@ -1,0 +1,76 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. A small reproduction beats a long description —
+        if you can, attach a minimal example (one `main.swift`) or point at a
+        commit.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened
+      description: One or two sentences. What did you expect, what did you see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        Concrete steps. Ideally a minimal SwiftPM project or a tweak to one of
+        the `Examples/*`. Include the exact `swift run …` invocation.
+      placeholder: |
+        1. swift run HelloNook
+        2. Hover the notch
+        3. …
+    validations:
+      required: true
+
+  - type: input
+    id: opennook-version
+    attributes:
+      label: OpenNook version
+      description: Tag, branch, or commit SHA.
+      placeholder: "main @ 59170e3"
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "14.4 (23E214)"
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      description: Apple Silicon vs Intel, notched display vs not.
+      placeholder: "M2 MacBook Pro 14\" (notched), external Studio Display"
+    validations:
+      required: true
+
+  - type: input
+    id: swift-version
+    attributes:
+      label: Swift toolchain
+      description: Output of `swift --version`.
+      placeholder: "swift-driver version: 1.90.x Apple Swift version 5.10"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Crash reports, Console output, or a short screen recording.
+      render: shell
+    validations:
+      required: false

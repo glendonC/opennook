@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/glendonC/opennook/discussions
+    about: For open-ended questions, design discussions, or "how do I…?" — use Discussions, not Issues.
+  - name: Security vulnerability
+    url: https://github.com/glendonC/opennook/security/advisories/new
+    about: Please report security issues privately, not in public issues. See SECURITY.md.

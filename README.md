@@ -171,7 +171,7 @@ configuration.topBar.showsSettings = true             // false drops the gear (t
 
 // Lifecycle hooks.
 configuration.onExpand    = { print("nook expanded") }
-configuration.onCompact   = { /* fires once at cold-launch boot, then per transition */ }
+configuration.onCompact   = { /* user dismissed / hover-exit collapsed the nook */ }
 configuration.onHide      = { /* nook went hidden */ }
 configuration.onFileDrop  = { urls in /* accept/reject dropped files */ true }
 configuration.onReady     = { coordinator in /* post-launch handle for components */ }
@@ -181,11 +181,6 @@ NookApp.main(configuration)
 
 Your views read the resolved palette from the `\.nookResolvedTheme`
 environment value and shared services from `\.appServices`.
-
-> Cold-launch quirk: `onCompact` fires once at boot when the coordinator
-> performs its initial compact, *before* any user transition. Wire side
-> effects through a "first fire is the launch" guard if you need
-> user-only semantics.
 
 **3. Add your state and services.** `AppState`
 (`Sources/NookKit/App/AppState.swift`) holds chrome state — add product state

@@ -553,6 +553,55 @@ final class AppCoordinatorTests: XCTestCase {
     /// Recorder opened and then cancelled without changing the key collapses through
     /// `.suspended` → `.bound(unchanged)` — exactly one restore registration after the
     /// unregister.
+    // MARK: - Cold-launch onCompact suppression
+
+    /// Regression: the cold-launch compact in `start()` is a boot artifact, not a
+    /// user-driven dismiss. A host wiring `onCompact = { /* user collapsed */ }`
+    /// must not see that hook fire on launch. The fix nils onCompact for the
+    /// duration of the cold-launch compact and restores it before any further
+    /// transition can run.
+    func testColdLaunchCompactDoesNotFireHostOnCompact() async throws {
+        final class CompactCountingModule: NookModule {
+            let descriptor: NookModuleDescriptor
+            let counter: Counter
+            init(id: String, counter: Counter) {
+                self.descriptor = NookModuleDescriptor(id: id, displayName: id, backgroundPolicy: .stayResident)
+                self.counter = counter
+            }
+            func makeConfiguration() -> NookConfiguration {
+                var configuration = NookConfiguration()
+                let c = counter
+                configuration.onCompact = { c.value += 1 }
+                return configuration
+            }
+            func prepareForSwitchAway() async {}
+        }
+        final class Counter { var value = 0 }
+
+        let counter = Counter()
+        let module = CompactCountingModule(id: "A", counter: counter)
+        let surface = FakeNookSurface()
+        var host = NookHostConfiguration()
+        let m = module
+        host.register(m.descriptor) { _ in m }
+        host.defaultModule = "A"
+        let coordinator = AppCoordinator(
+            moduleHost: ModuleHost(registry: host.makeRegistry()),
+            surface: surface
+        )
+
+        coordinator.start()
+        await coordinator.drainLifecycleForTesting()
+        XCTAssertEqual(counter.value, 0, "cold-launch compact did not fire host onCompact")
+        XCTAssertEqual(surface.state, .compact, "but the surface IS compact")
+
+        // A subsequent user-driven compact fires it normally — the suppression is
+        // strictly for the boot transition.
+        await surface.expand(on: nil)
+        await surface.compact(on: nil)
+        XCTAssertEqual(counter.value, 1, "post-boot compact fires onCompact normally")
+    }
+
     func testHotkeyRecorderOpenedAndCancelledIsBoundedRoundTrip() async throws {
         let log = ExpandLog()
         let a = SpyModule(id: "A", expandLog: log)

@@ -264,8 +264,14 @@ public struct CoreAudioVolumeReader: VolumeReading {
     }
 
     /// Reads the device's output volume — the main-element scalar if it has one,
-    /// otherwise the average of the per-channel scalars. The main-vs-channel decision is
-    /// delegated to ``resolveVolumeFallback(mainScalar:channelScalars:)``.
+    /// otherwise the average of every per-channel scalar the device advertises. The
+    /// main-vs-channel decision is delegated to
+    /// ``resolveVolumeFallback(mainScalar:channelScalars:)``.
+    ///
+    /// The per-channel pass enumerates the channels from the device's actual output
+    /// stream configuration (``outputChannelCount(for:)``) rather than the previous
+    /// hard-coded `{1, 2}` — a 5.1 or 7.1 device's volume control lives on channels
+    /// 3-6 (center, LFE, rears) and the old probe missed them entirely.
     public func readVolume(_ device: AudioDeviceID) -> Double? {
         var mainScalar: Double?
         var mainAddress = SystemVolumeObserver.address(
@@ -280,11 +286,16 @@ public struct CoreAudioVolumeReader: VolumeReading {
         }
 
         var channelScalars: [Double] = []
-        for channel in [UInt32(1), UInt32(2)] {
+        let channelCount = Self.outputChannelCount(for: device)
+        // Probe at least channels 1+2 — even when the stream-configuration probe fails
+        // or reports zero, stereo is the common case and we want the fallback path
+        // unchanged for it.
+        let upperBound = max(channelCount, 2)
+        for channel in 1...upperBound {
             var channelAddress = AudioObjectPropertyAddress(
                 mSelector: kAudioDevicePropertyVolumeScalar,
                 mScope: kAudioObjectPropertyScopeOutput,
-                mElement: channel
+                mElement: UInt32(channel)
             )
             guard AudioObjectHasProperty(device, &channelAddress) else { continue }
             var value = Float32(0)
@@ -294,6 +305,30 @@ public struct CoreAudioVolumeReader: VolumeReading {
             }
         }
         return resolveVolumeFallback(mainScalar: mainScalar, channelScalars: channelScalars)
+    }
+
+    /// Total output channel count across every output stream on `device`, or `0` if
+    /// the stream configuration is unreadable. Used to size the per-channel volume
+    /// probe so multi-channel devices (5.1, 7.1, pro interfaces) aren't silently
+    /// stereo-clipped.
+    static func outputChannelCount(for device: AudioDeviceID) -> Int {
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyStreamConfiguration,
+            mScope: kAudioObjectPropertyScopeOutput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var size: UInt32 = 0
+        guard AudioObjectGetPropertyDataSize(device, &address, 0, nil, &size) == noErr, size > 0 else {
+            return 0
+        }
+        let bufferList = UnsafeMutableRawPointer.allocate(byteCount: Int(size), alignment: MemoryLayout<AudioBufferList>.alignment)
+        defer { bufferList.deallocate() }
+        guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, bufferList) == noErr else {
+            return 0
+        }
+        let list = bufferList.assumingMemoryBound(to: AudioBufferList.self)
+        let buffers = UnsafeMutableAudioBufferListPointer(list)
+        return buffers.reduce(0) { $0 + Int($1.mNumberChannels) }
     }
 
     public func readMute(_ device: AudioDeviceID) -> Bool {

@@ -281,7 +281,11 @@ public final class AppCoordinator: ObservableObject {
         guard !hasStarted else { return }
         hasStarted = true
 
-        NSApp.setActivationPolicy(.accessory)
+        // `NSApplication.shared` — not the `NSApp` global. The global is nil until the
+        // app object is first materialized; a unit-test process that constructs the
+        // coordinator without ever calling `NSApplication.shared.run()` traps on
+        // `NSApp.setActivationPolicy`. The shared accessor materializes lazily.
+        NSApplication.shared.setActivationPolicy(.accessory)
 
         syncNotchBackdrop()
         configureNotchAnimations()
@@ -297,9 +301,18 @@ public final class AppCoordinator: ObservableObject {
         // Cold-launch greeting: compact the chrome, then fire a one-shot shimmer along the
         // perimeter so the user sees the app is awake. Awaiting `compact()` first puts the
         // nook into a visible state so the event fires immediately instead of queuing.
+        //
+        // The cold-launch compact suppresses the host's `onCompact` hook for this one
+        // transition — it is a boot artifact, not a user-driven collapse, and a host
+        // wiring `onCompact = { /* user dismissed the nook */ }` would otherwise fire
+        // on launch every time. Restored synchronously inside the same serial step so
+        // any subsequent hover- or coordinator-driven compact fires the hook normally.
         enqueueLifecycle { [weak self] in
             guard let self else { return }
+            let savedOnCompact = self.surface.onCompact
+            self.surface.onCompact = nil
             await self.surface.compact(on: self.resolveScreen())
+            self.surface.onCompact = savedOnCompact
             self.surface.playFeedback(.shimmer, duration: 1.1)
         }
 

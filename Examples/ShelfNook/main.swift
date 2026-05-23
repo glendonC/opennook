@@ -24,11 +24,9 @@ NookApp.main {
 
     var configuration = NookConfiguration()
     configuration.setHome { NookShelfView(store: shelf) }
-    configuration.onFileDrop = { urls in
-        // `onFileDrop` is delivered by the main-actor `Nook` surface, so it always
-        // arrives on the main actor; assume that isolation to reach the main-actor
-        // `ShelfStore.accept`.
-        MainActor.assumeIsolated { shelf.accept(urls) }
-    }
+    // `NookConfiguration.onFileDrop` is typed `@Sendable @MainActor ([URL]) -> Bool`
+    // — the closure runs on the main actor, so it can call `ShelfStore.accept`
+    // directly without any `assumeIsolated` hop.
+    configuration.onFileDrop = { urls in shelf.accept(urls) }
     return configuration
 }

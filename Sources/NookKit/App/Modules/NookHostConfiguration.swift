@@ -68,12 +68,23 @@ public struct NookHostConfiguration: Sendable {
 
     /// Builds the live registry. The default module is the explicit choice when set and
     /// still registered, otherwise the first registered module.
+    ///
+    /// Traps on an empty configuration: `NookHostConfiguration` is the multi-module
+    /// entry point and is meaningless with zero registrations. An empty registry's
+    /// `activeModuleID` resolves to `""`, which the arbiter treats as "background
+    /// module" for every claim — denying everything that isn't `.urgent`. That is a
+    /// silent bug; failing fast at registration time surfaces it. Single-module hosts
+    /// should use ``NookConfiguration`` directly, not `NookHostConfiguration`.
     @MainActor
     public func makeRegistry() -> NookModuleRegistry {
+        precondition(
+            !entries.isEmpty,
+            "NookHostConfiguration: register at least one module before makeRegistry(). " +
+                "For single-module apps, use NookConfiguration with NookApp.main(_:) instead."
+        )
         let registeredIDs = Set(entries.map { $0.descriptor.id })
         let defaultID = explicitDefault.flatMap { registeredIDs.contains($0) ? $0 : nil }
-            ?? entries.first?.descriptor.id
-            ?? ""
+            ?? entries.first!.descriptor.id
         return NookModuleRegistry(
             registrations: entries,
             defaultModuleID: defaultID,

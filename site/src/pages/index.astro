@@ -569,20 +569,20 @@ const carouselLines = [
       .page::before {
         content: '';
         position: absolute;
-        inset: 0 0 45%;
+        inset: 0;
         z-index: 0;
         pointer-events: none;
         background:
-          radial-gradient(circle at 18% 12%, rgba(110, 150, 210, 0.16) 0, transparent 42%),
-          radial-gradient(circle at 82% 18%, rgba(210, 130, 90, 0.14) 0, transparent 38%),
-          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.35) 0, transparent 55%);
+          radial-gradient(ellipse 80% 55% at 18% 0%, rgba(110, 150, 210, 0.14) 0, transparent 70%),
+          radial-gradient(ellipse 70% 50% at 82% 8%, rgba(210, 130, 90, 0.1) 0, transparent 65%),
+          radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 255, 255, 0.28) 0, transparent 72%);
       }
 
       html[data-palette='dark'] .page::before {
         background:
-          radial-gradient(circle at 18% 12%, rgba(90, 130, 200, 0.12) 0, transparent 42%),
-          radial-gradient(circle at 82% 18%, rgba(200, 110, 70, 0.1) 0, transparent 38%),
-          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.04) 0, transparent 55%);
+          radial-gradient(ellipse 80% 55% at 18% 0%, rgba(90, 130, 200, 0.1) 0, transparent 70%),
+          radial-gradient(ellipse 70% 50% at 82% 8%, rgba(200, 110, 70, 0.08) 0, transparent 65%),
+          radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255, 255, 255, 0.03) 0, transparent 72%);
       }
 
       /* ---- NOOK HOST ---- */

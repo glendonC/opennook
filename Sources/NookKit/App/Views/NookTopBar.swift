@@ -59,11 +59,34 @@ struct NookTopBar: View {
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(resolvedTheme.quaternaryLabel)
 
+                // Long breadcrumbs (e.g. a host composing two levels of
+                // hierarchy into one string) get hard-cut by SwiftUI without
+                // an ellipsis once the trailing characters can't fit even the
+                // "…" itself. A trailing fade-out mask reads as "more text
+                // beyond" without resizing the chrome per route; the `.help`
+                // tooltip recovers the full string for the rare case a user
+                // needs to read the truncated tail. The frame fills the
+                // remaining HStack space (between the chevron and the
+                // trailing icon cluster) so the fade region sits over empty
+                // space for short labels and over the truncation point for
+                // long ones.
                 Text(breadcrumb)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
-                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .mask(
+                        HStack(spacing: 0) {
+                            Rectangle()
+                            LinearGradient(
+                                colors: [.black, .clear],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .frame(width: 16)
+                        }
+                    )
+                    .help(breadcrumb)
                     .transition(.opacity.combined(with: .offset(x: -4)))
             }
 

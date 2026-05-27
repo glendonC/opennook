@@ -29,6 +29,21 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         nook.layoutForm == .floating
     }
 
+    /// Residual safe-area insets the host's expanded view can read via
+    /// ``EnvironmentValues/nookContentInsets``. `.zero` while compact or hidden —
+    /// no host expanded content is rendered in those states. The expanded value
+    /// is the geometric clearance left over after the chrome's own paddings;
+    /// see ``NookContentInsets/expanded(form:topCornerRadius:bottomCornerRadius:chromeSafeAreaInset:)``.
+    private var contentInsets: NookContentInsets {
+        guard nook.state == .expanded else { return .zero }
+        return NookContentInsets.expanded(
+            form: nook.layoutForm,
+            topCornerRadius: nook.style.topCornerRadius,
+            bottomCornerRadius: nook.style.bottomCornerRadius,
+            chromeSafeAreaInset: safeAreaInset
+        )
+    }
+
     private var expandedCornerRadii: (top: CGFloat, bottom: CGFloat) {
         (top: nook.style.topCornerRadius, bottom: nook.style.bottomCornerRadius)
     }
@@ -212,6 +227,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         HStack(spacing: 0) {
             if nook.state == .expanded {
                 nook.expandedContent
+                    .environment(\.nookContentInsets, contentInsets)
                     .transition(.blur(intensity: 6).combined(with: .scale(y: 0.72, anchor: .top)).combined(with: .opacity))
             }
         }

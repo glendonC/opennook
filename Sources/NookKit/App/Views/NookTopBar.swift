@@ -5,6 +5,7 @@
 // you may not use this file except in compliance with the License.
 // A copy is included at /LICENSE in the repository root.
 
+import NookSurface
 import SwiftUI
 
 /// Topbar for the expanded notch.
@@ -30,10 +31,17 @@ struct NookTopBar: View {
 
     @Environment(\.nookResolvedTheme) private var resolvedTheme
 
+    /// Curve-derived safe-area insets from the chrome. The leading/trailing
+    /// icon clusters pad themselves by these so the lock/gear glyphs don't sit
+    /// right under the panel's top corner curvature when a host configures a
+    /// larger ``NookStyle/topCornerRadius`` than the default.
+    @Environment(\.nookContentInsets) private var contentInsets
+
     var body: some View {
         HStack(spacing: 8) {
             homeLeadingCluster
                 .fixedSize(horizontal: true, vertical: false)
+                .padding(.leading, contentInsets.leading)
 
             if appState.isSettingsView {
                 Image(systemName: "chevron.right")
@@ -89,6 +97,7 @@ struct NookTopBar: View {
                 }
             }
             .fixedSize(horizontal: true, vertical: false)
+            .padding(.trailing, contentInsets.trailing)
         }
         .frame(height: 24)
         .animation(.easeOut(duration: 0.18), value: appState.moduleBreadcrumb)

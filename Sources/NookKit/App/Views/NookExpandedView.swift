@@ -6,6 +6,7 @@
 // A copy is included at /LICENSE in the repository root.
 
 import AppKit
+import NookSurface
 import SwiftUI
 
 /// Top-level expanded notch surface. Renders the framework chrome — top bar plus the
@@ -39,6 +40,13 @@ public struct NookExpandedView: View {
     let topBar: NookTopBarConfiguration
 
     @State private var isHomeIconHovered = false
+
+    /// Insets injected by the chrome (`NookSurface`) relative to this view's
+    /// outer frame. The VStack below sits inside ``NookLayout/edgePadding``, so
+    /// re-inject a reduced copy of the insets for the top-bar and the host's
+    /// home/settings surface to read — they see clearance relative to their
+    /// own frame, not the outer one.
+    @Environment(\.nookContentInsets) private var outerContentInsets
 
     public init(
         appState: AppState,
@@ -104,6 +112,7 @@ public struct NookExpandedView: View {
             }
             .animation(.spring(response: 0.38, dampingFraction: 0.84), value: appState.viewMode)
         }
+        .environment(\.nookContentInsets, outerContentInsets.reducingBy(NookLayout.edgePadding))
         .frame(width: NookLayout.width)
         .padding(NookLayout.edgePadding)
         .environment(\.nookResolvedTheme, resolvedTheme)

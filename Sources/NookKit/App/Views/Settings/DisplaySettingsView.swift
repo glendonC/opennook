@@ -26,10 +26,6 @@ struct DisplaySettingsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text("Display")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(theme.secondaryLabel)
-
             Picker("Display", selection: selectionBinding) {
                 Text("Built-in display").tag(Self.builtInTag)
                 Text("Display with active menu bar").tag(Self.mainTag)

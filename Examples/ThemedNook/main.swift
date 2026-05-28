@@ -27,7 +27,11 @@ enum SunsetTheme {
             quaternaryLabel: Color(red: 1.0, green: 0.62, blue: 0.46).opacity(0.50),
             subtleFill: Color.white.opacity(0.08),
             subtleStroke: Color.white.opacity(0.16),
-            headerInactiveIcon: Color(red: 1.0, green: 0.70, blue: 0.55).opacity(0.55)
+            headerInactiveIcon: Color(red: 1.0, green: 0.70, blue: 0.55).opacity(0.55),
+            // `accent` tints the chrome's interactive controls (lock, gear, focus rings)
+            // instead of the system blue; `fontDesign` restyles the chrome's typography.
+            accent: Color(red: 1.0, green: 0.55, blue: 0.30),
+            fontDesign: .rounded
         )
     }
 }

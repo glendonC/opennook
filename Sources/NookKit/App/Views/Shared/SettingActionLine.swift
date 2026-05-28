@@ -45,7 +45,7 @@ public struct SettingActionLine: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(size: 12, weight: .regular))
-                        .foregroundStyle(theme.primaryLabel)
+                        .foregroundStyle(isHovering ? accent : theme.primaryLabel)
 
                     Text(detail)
                         .font(.system(size: 11, weight: .regular))
@@ -55,8 +55,8 @@ public struct SettingActionLine: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, 5)
-            .background(isHovering ? theme.subtleFill : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }

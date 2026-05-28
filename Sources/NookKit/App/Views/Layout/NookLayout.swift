@@ -15,12 +15,13 @@ import SwiftUI
 /// between the home and settings surfaces. Building your own notch app, you set whatever
 /// width your content needs — or drop the `.frame(width:)` entirely and let it size to
 /// content. Nothing in the framework requires a fixed width.
-enum NookLayout {
-    /// Demo expanded-surface width. Comfortable for the settings panels; notch apps
+public enum NookLayout {
+    /// Default expanded-surface width, used when a host does not set
+    /// ``NookConfiguration/expandedWidth``. Comfortable for the settings panels; notch apps
     /// commonly sit in the 500–650 pt range (boring.notch 640, NotchDrop 600).
-    static let width: CGFloat = 520
-    static let edgePadding: CGFloat = 8
-    static let compactSlotSize: CGFloat = 24
+    public static let width: CGFloat = 520
+    public static let edgePadding: CGFloat = 8
+    public static let compactSlotSize: CGFloat = 24
 
     /// Maximum width allowed for the topbar's module-breadcrumb label.
     ///
@@ -29,5 +30,5 @@ enum NookLayout {
     /// to the leading pre-notch region so it doesn't visually split across
     /// the notch. Sized for the default 520pt chrome with a ~200pt M-series
     /// notch, leaving room for the chevron and a few characters of headroom.
-    static let breadcrumbMaxWidth: CGFloat = 140
+    public static let breadcrumbMaxWidth: CGFloat = 140
 }

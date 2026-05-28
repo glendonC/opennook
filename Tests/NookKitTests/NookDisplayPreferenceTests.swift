@@ -91,4 +91,89 @@ final class NookDisplayPreferenceTests: XCTestCase {
             "an unplugged `.specific` must fall through to built-in / main / first — not an arbitrary screen"
         )
     }
+
+    // MARK: - Headless fallback-chain policy
+
+    // These exercise `NookScreenLocator.resolveIndex` directly against synthetic display
+    // sets, so the fallback-chain order is verified on CI even with no display attached
+    // (the `screen(matching:)` tests above XCTSkip on headless runners).
+
+    private typealias Candidate = NookScreenLocator.DisplayCandidate
+
+    func testResolveReturnsNilWhenNoDisplays() {
+        XCTAssertNil(NookScreenLocator.resolveIndex(preference: .builtIn, displays: [], mainIndex: nil))
+        XCTAssertNil(NookScreenLocator.resolveIndex(preference: .main, displays: [], mainIndex: 2))
+        XCTAssertNil(NookScreenLocator.resolveIndex(preference: .specific("x"), displays: [], mainIndex: 0))
+    }
+
+    func testSpecificResolvesToMatchingUUID() {
+        let displays = [
+            Candidate(uuid: "built-in", isBuiltIn: true),
+            Candidate(uuid: "external-A", isBuiltIn: false),
+            Candidate(uuid: "external-B", isBuiltIn: false),
+        ]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .specific("external-B"), displays: displays, mainIndex: 1),
+            2
+        )
+    }
+
+    func testSpecificUnpluggedFallsToBuiltInThenMainThenFirst() {
+        let withBuiltIn = [
+            Candidate(uuid: "external-A", isBuiltIn: false),
+            Candidate(uuid: "built-in", isBuiltIn: true),
+        ]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .specific("gone"), displays: withBuiltIn, mainIndex: 0),
+            1, "no UUID match → built-in"
+        )
+
+        let noBuiltIn = [
+            Candidate(uuid: "external-A", isBuiltIn: false),
+            Candidate(uuid: "external-B", isBuiltIn: false),
+        ]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .specific("gone"), displays: noBuiltIn, mainIndex: 1),
+            1, "no built-in → main"
+        )
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .specific("gone"), displays: noBuiltIn, mainIndex: nil),
+            0, "no built-in, no main → first"
+        )
+    }
+
+    func testBuiltInModeFallsToMainThenFirst() {
+        let noBuiltIn = [
+            Candidate(uuid: "external-A", isBuiltIn: false),
+            Candidate(uuid: "external-B", isBuiltIn: false),
+        ]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .builtIn, displays: noBuiltIn, mainIndex: 1),
+            1, "no built-in → main"
+        )
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .builtIn, displays: noBuiltIn, mainIndex: nil),
+            0, "no built-in, no main → first"
+        )
+    }
+
+    func testMainModeFallsToBuiltInThenFirst() {
+        let displays = [
+            Candidate(uuid: "external-A", isBuiltIn: false),
+            Candidate(uuid: "built-in", isBuiltIn: true),
+        ]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .main, displays: displays, mainIndex: 0),
+            0, "main is honored first"
+        )
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .main, displays: displays, mainIndex: nil),
+            1, "no main → built-in"
+        )
+        let noBuiltIn = [Candidate(uuid: "external-A", isBuiltIn: false)]
+        XCTAssertEqual(
+            NookScreenLocator.resolveIndex(preference: .main, displays: noBuiltIn, mainIndex: nil),
+            0, "no main, no built-in → first"
+        )
+    }
 }

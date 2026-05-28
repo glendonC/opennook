@@ -27,21 +27,20 @@ struct SettingsDataCommandRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 12) {
+            HStack(alignment: .center, spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(iconTint)
-                    .frame(width: 26, height: 26)
-                    .background(iconPlate, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .frame(width: 18)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundStyle(titleTint)
                         .multilineTextAlignment(.leading)
                     Text(subtitle)
-                        .font(.system(size: 9, weight: .regular))
-                        .foregroundStyle(theme.secondaryLabel.opacity(0.95))
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
                 }
@@ -50,15 +49,10 @@ struct SettingsDataCommandRow: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(theme.quaternaryLabel)
+                    .foregroundStyle(isHovering ? iconTint : theme.quaternaryLabel)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 9)
-            .background(rowFill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .stroke(rowStroke, lineWidth: 1)
-            )
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { isHovering = $0 }
@@ -67,40 +61,18 @@ struct SettingsDataCommandRow: View {
     private var iconTint: Color {
         switch style {
         case .standard:
-            theme.primaryLabel.opacity(0.92)
+            isHovering ? theme.accent : theme.headerInactiveIcon
         case .destructive:
             Color.red.opacity(0.92)
-        }
-    }
-
-    private var iconPlate: Color {
-        switch style {
-        case .standard:
-            theme.subtleFill.opacity(isHovering ? 1 : 0.72)
-        case .destructive:
-            Color.red.opacity(isHovering ? 0.22 : 0.14)
         }
     }
 
     private var titleTint: Color {
         switch style {
         case .standard:
-            theme.primaryLabel
+            isHovering ? theme.accent : theme.primaryLabel
         case .destructive:
             Color.red.opacity(0.95)
-        }
-    }
-
-    private var rowFill: Color {
-        theme.subtleFill.opacity(isHovering ? 0.42 : 0.22)
-    }
-
-    private var rowStroke: Color {
-        switch style {
-        case .standard:
-            theme.subtleStroke.opacity(isHovering ? 0.55 : 0.38)
-        case .destructive:
-            Color.red.opacity(isHovering ? 0.45 : 0.28)
         }
     }
 }

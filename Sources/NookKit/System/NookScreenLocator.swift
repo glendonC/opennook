@@ -63,32 +63,79 @@ public enum NookScreenLocator {
         }
     }
 
+    /// A display abstracted to just what the fallback chain needs, so the resolution
+    /// *policy* can be unit-tested without a live `NSScreen` (which is unavailable on
+    /// headless CI). The AppKit path builds these from `NSScreen.screens`.
+    public struct DisplayCandidate: Equatable, Sendable {
+        /// Stable display UUID, or `nil` for displays that expose none.
+        public let uuid: String?
+        /// `true` for the Mac's built-in panel.
+        public let isBuiltIn: Bool
+
+        public init(uuid: String?, isBuiltIn: Bool) {
+            self.uuid = uuid
+            self.isBuiltIn = isBuiltIn
+        }
+    }
+
+    /// Pure fallback-chain policy: pick the index into `displays` that satisfies
+    /// `preference`, degrading rather than vanishing when the chosen display is gone.
+    ///
+    /// - `.specific`: the matching UUID, else built-in → main → first.
+    /// - `.builtIn`: built-in → main → first.
+    /// - `.main`: main → built-in → first.
+    ///
+    /// Returns `nil` only when `displays` is empty. `mainIndex` is the index of the
+    /// system's main display within `displays` (the AppKit path derives it from
+    /// `NSScreen.main`); `nil` if unknown.
+    public static func resolveIndex(
+        preference: NookDisplayPreference,
+        displays: [DisplayCandidate],
+        mainIndex: Int?
+    ) -> Int? {
+        guard !displays.isEmpty else { return nil }
+        let builtInIndex = displays.firstIndex { $0.isBuiltIn }
+        let builtInThenMainThenFirst = builtInIndex ?? mainIndex ?? 0
+
+        switch preference.mode {
+        case .specific:
+            if let uuid = preference.displayUUID,
+               let match = displays.firstIndex(where: { $0.uuid == uuid }) {
+                return match
+            }
+            return builtInThenMainThenFirst
+        case .builtIn:
+            return builtInThenMainThenFirst
+        case .main:
+            return mainIndex ?? builtInIndex ?? 0
+        }
+    }
+
     /// Resolve a preference to a concrete screen.
     ///
     /// The fallback chain keeps the chrome on-screen even when the chosen display is
     /// unplugged: a `.specific` display that isn't attached, or a `.builtIn` request on a
     /// desktop Mac, both degrade to built-in → main → first-attached rather than vanishing.
-    /// Returns `nil` only when no display is attached at all.
+    /// Returns `nil` only when no display is attached at all. The policy lives in
+    /// ``resolveIndex(preference:displays:mainIndex:)`` so it stays testable headlessly.
     public static func screen(matching preference: NookDisplayPreference) -> NSScreen? {
-        switch preference.mode {
-        case .specific:
-            if let uuid = preference.displayUUID,
-               let match = NSScreen.screens.first(where: { Self.uuid(for: $0) == uuid }) {
-                return match
-            }
-            return builtInScreen() ?? NSScreen.main ?? NSScreen.screens.first
-        case .builtIn:
-            return builtInScreen() ?? NSScreen.main ?? NSScreen.screens.first
-        case .main:
-            return NSScreen.main ?? builtInScreen() ?? NSScreen.screens.first
+        let screens = NSScreen.screens
+        let candidates = screens.map { DisplayCandidate(uuid: Self.uuid(for: $0), isBuiltIn: isBuiltIn($0)) }
+        let mainIndex = NSScreen.main.flatMap { screens.firstIndex(of: $0) }
+        guard let index = resolveIndex(preference: preference, displays: candidates, mainIndex: mainIndex) else {
+            return nil
         }
+        return screens[index]
+    }
+
+    /// Whether a screen is the Mac's built-in panel.
+    private static func isBuiltIn(_ screen: NSScreen) -> Bool {
+        guard let id = displayID(for: screen) else { return false }
+        return CGDisplayIsBuiltin(id) != 0
     }
 
     /// The Mac's built-in panel, if one is attached.
     public static func builtInScreen() -> NSScreen? {
-        NSScreen.screens.first { screen in
-            guard let id = displayID(for: screen) else { return false }
-            return CGDisplayIsBuiltin(id) != 0
-        }
+        NSScreen.screens.first(where: isBuiltIn)
     }
 }

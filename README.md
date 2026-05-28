@@ -262,10 +262,12 @@ you need a few extra pieces - most of them tiny, none of them magic.
   used by `NookModuleContext.makeDefault` to name on-disk containers and
   per-module `UserDefaults` suites, so pick before you ship.
 - **Persistence suites.** `NookKit` writes its own preferences into
-  `UserDefaults.standard` under the `nook.*` prefix; `NookComponents.Shelf`
-  writes `nook.shelf.items`. If you're using `NookHostConfiguration`, each
-  module gets its own `UserDefaults` suite via `NookModuleContext`. Don't
-  collide host product state with `nook.*` keys.
+  `UserDefaults.standard` under the `opennook.*` prefix (`opennook.appearance.v1`,
+  `opennook.display.v1`, `opennook.hotkey.v1`, `opennook.module.default`);
+  `NookComponents.Shelf` writes `nook.shelf.items`. If you're using
+  `NookHostConfiguration`, each module gets its own `UserDefaults` suite via
+  `NookModuleContext`. Don't collide host product state with the `opennook.*`
+  or `nook.shelf.*` keys.
 - **Entitlements.** The minimum that lets every framework feature work
   inside the App Sandbox: `com.apple.security.app-sandbox`,
   `com.apple.security.files.user-selected.read-write` (shelf drag-in),

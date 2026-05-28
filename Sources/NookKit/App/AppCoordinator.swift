@@ -185,7 +185,7 @@ public final class AppCoordinator: ObservableObject {
     ) -> Nook<AnyView, AnyView, AnyView> {
         Nook<AnyView, AnyView, AnyView>(
             hoverBehavior: [],
-            style: NookStyle(
+            style: moduleHost.configuration.style ?? NookStyle(
                 topCornerRadius: NookAppearance.expandedTopCornerRadius,
                 bottomCornerRadius: NookAppearance.expandedBottomCornerRadius
             ),
@@ -562,18 +562,19 @@ public final class AppCoordinator: ObservableObject {
     // MARK: - Chrome / backdrop
 
     /// Softer springs than NookSurface's bouncy defaults — smoother expand/compact with
-    /// less overshoot.
+    /// less overshoot. A host can override the whole set via
+    /// ``NookConfiguration/transitions``; otherwise these defaults apply.
     func configureNotchAnimations() {
-        surface.transitionConfiguration.openingAnimation = .spring(
-            response: 0.52, dampingFraction: 0.88, blendDuration: 0.12
-        )
-        surface.transitionConfiguration.closingAnimation = .spring(
-            response: 0.46, dampingFraction: 0.93, blendDuration: 0.10
-        )
-        surface.transitionConfiguration.conversionAnimation = .spring(
-            response: 0.54, dampingFraction: 0.86, blendDuration: 0.12
-        )
+        surface.transitionConfiguration = configuration.transitions ?? AppCoordinator.defaultTransitions
     }
+
+    /// The framework's default chrome animation curves, used when a host does not supply
+    /// ``NookConfiguration/transitions``.
+    static let defaultTransitions = NookTransitionConfiguration(
+        openingAnimation: .spring(response: 0.52, dampingFraction: 0.88, blendDuration: 0.12),
+        closingAnimation: .spring(response: 0.46, dampingFraction: 0.93, blendDuration: 0.10),
+        conversionAnimation: .spring(response: 0.54, dampingFraction: 0.86, blendDuration: 0.12)
+    )
 
     // MARK: - Global hotkey
 

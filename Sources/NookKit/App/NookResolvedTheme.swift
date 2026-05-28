@@ -27,12 +27,27 @@ public struct NookResolvedTheme: Sendable {
 
     public var headerInactiveIcon: Color
 
+    /// The interactive tint for chrome controls — the active lock/gear glyphs, focus rings,
+    /// and the surface `.tint`. Defaults to the macOS system accent (`controlAccentColor`)
+    /// so the chrome matches the user's system unless a host overrides it. Set this in a
+    /// custom palette to make the chrome track *your* brand color instead of system blue.
+    public var accent: Color
+
+    /// Font design applied across the chrome's own text (top bar, compact pill, the default
+    /// home placeholder). Defaults to `.default`; set `.rounded`, `.serif`, or `.monospaced`
+    /// to restyle the chrome's typography without supplying a full home view. Host-supplied
+    /// content controls its own fonts.
+    public var fontDesign: Font.Design
+
     /// Memberwise initializer. Host apps building a custom palette construct one
     /// directly and feed it to ``NookConfiguration/theme``; the framework's own
     /// palette is produced by ``resolve(preferences:effectiveColorScheme:reduceTransparency:)``.
     ///
     /// Every color should be an explicit black/white-at-opacity value — see the type
     /// note above on why system-adaptive colors render wrong on the nook's panel.
+    ///
+    /// `accent` and `fontDesign` default to the system accent and `.default` so existing
+    /// callers keep their behavior; pass them to brand the chrome.
     public init(
         primaryLabel: Color,
         secondaryLabel: Color,
@@ -40,7 +55,9 @@ public struct NookResolvedTheme: Sendable {
         quaternaryLabel: Color,
         subtleFill: Color,
         subtleStroke: Color,
-        headerInactiveIcon: Color
+        headerInactiveIcon: Color,
+        accent: Color = Color(nsColor: .controlAccentColor),
+        fontDesign: Font.Design = .default
     ) {
         self.primaryLabel = primaryLabel
         self.secondaryLabel = secondaryLabel
@@ -49,6 +66,8 @@ public struct NookResolvedTheme: Sendable {
         self.subtleFill = subtleFill
         self.subtleStroke = subtleStroke
         self.headerInactiveIcon = headerInactiveIcon
+        self.accent = accent
+        self.fontDesign = fontDesign
     }
 
     public static func resolve(

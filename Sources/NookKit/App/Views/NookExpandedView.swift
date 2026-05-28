@@ -35,9 +35,17 @@ public struct NookExpandedView: View {
     /// Host-registered home content, shown between the top bar and (when toggled) Settings.
     let home: @Sendable @MainActor () -> AnyView
 
+    /// Host-registered Settings content. `nil` uses the framework's built-in Settings UI.
+    /// See ``NookConfiguration/settings``.
+    let settings: (@Sendable @MainActor () -> AnyView)?
+
     /// The framework top bar's host-configurable surface — leading cluster, top-bar
     /// visibility, Settings visibility. See ``NookTopBarConfiguration``.
     let topBar: NookTopBarConfiguration
+
+    /// Fixed width for the expanded surface. Host apps set this through
+    /// ``NookConfiguration/expandedWidth``; the default is ``NookLayout/width``.
+    let width: CGFloat
 
     @State private var isHomeIconHovered = false
 
@@ -57,7 +65,9 @@ public struct NookExpandedView: View {
         theme: @escaping @Sendable @MainActor (AppState) -> NookResolvedTheme
             = { NookResolvedTheme.live(appState: $0) },
         home: @escaping @Sendable @MainActor () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
-        topBar: NookTopBarConfiguration = .default
+        settings: (@Sendable @MainActor () -> AnyView)? = nil,
+        topBar: NookTopBarConfiguration = .default,
+        width: CGFloat = NookLayout.width
     ) {
         self.appState = appState
         self.services = services
@@ -66,7 +76,9 @@ public struct NookExpandedView: View {
         self.resetAllSettings = resetAllSettings
         self.theme = theme
         self.home = home
+        self.settings = settings
         self.topBar = topBar
+        self.width = width
     }
 
     private var resolvedTheme: NookResolvedTheme {
@@ -74,7 +86,7 @@ public struct NookExpandedView: View {
     }
 
     private var chromeInteractionAccent: Color {
-        Color(nsColor: .controlAccentColor)
+        resolvedTheme.accent
     }
 
     public var body: some View {
@@ -113,7 +125,7 @@ public struct NookExpandedView: View {
             .animation(.spring(response: 0.38, dampingFraction: 0.84), value: appState.viewMode)
         }
         .environment(\.nookContentInsets, outerContentInsets.reducingBy(NookLayout.edgePadding))
-        .frame(width: NookLayout.width)
+        .frame(width: width)
         .padding(NookLayout.edgePadding)
         .environment(\.nookResolvedTheme, resolvedTheme)
         .environment(\.appServices, services)
@@ -126,7 +138,8 @@ public struct NookExpandedView: View {
         // desaturates accent-tinted controls. Forcing `.active` makes the chrome paint as
         // if focused without changing key-window behaviour.
         .environment(\.controlActiveState, .active)
-        .tint(.accentColor)
+        .tint(resolvedTheme.accent)
+        .fontDesign(resolvedTheme.fontDesign)
         .preferredColorScheme(appState.appearancePreferences.chromeColorSchemeOverride)
         .onChange(of: appState.viewMode) { _ in
             isHomeIconHovered = false
@@ -140,11 +153,16 @@ public struct NookExpandedView: View {
         home()
     }
 
+    @ViewBuilder
     private var settingsSurface: some View {
-        SettingsView(
-            appState: appState,
-            onToggleKeepOpen: toggleKeepOpen,
-            onResetAllSettings: resetAllSettings
-        )
+        if let settings {
+            settings()
+        } else {
+            SettingsView(
+                appState: appState,
+                onToggleKeepOpen: toggleKeepOpen,
+                onResetAllSettings: resetAllSettings
+            )
+        }
     }
 }

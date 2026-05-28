@@ -42,8 +42,14 @@ public struct NookResolvedTheme: Sendable {
     public var subtleFill: Color
     public var subtleStroke: Color
     public var headerInactiveIcon: Color
+    public var accent: Color          // interactive tint; defaults to the system accent
+    public var fontDesign: Font.Design // chrome typography; defaults to .default
 }
 ```
+
+`accent` and `fontDesign` default to the macOS system accent and `.default`, so
+the memberwise initializer is source-compatible with palettes that only set the
+label/fill slots - you only pass them when you want to brand the chrome.
 
 Read it in a view with the SwiftUI environment:
 
@@ -112,6 +118,68 @@ user preferences if you want it to - for example, picking different tints for
 light vs dark chrome.
 
 The full working example is at `Examples/ThemedNook/main.swift`.
+
+## Accent and font design
+
+The chrome's interactive controls - the keep-open lock, the gear, focus rings,
+the surface `.tint`, and peripheral feedback cues - draw from `theme.accent`.
+It defaults to the macOS system accent (`controlAccentColor`), so out of the box
+the chrome matches the user's system. Set it in your palette to make those
+controls track your brand color instead:
+
+```swift
+NookResolvedTheme(
+    primaryLabel: ..., secondaryLabel: ..., tertiaryLabel: ...,
+    quaternaryLabel: ..., subtleFill: ..., subtleStroke: ...,
+    headerInactiveIcon: ...,
+    accent: Color(red: 1.0, green: 0.45, blue: 0.2), // sunset orange
+    fontDesign: .rounded
+)
+```
+
+`fontDesign` restyles the chrome's own typography (top bar, compact pill, the
+default home placeholder) - pass `.rounded`, `.serif`, or `.monospaced`. Content
+you register supplies its own fonts.
+
+## Chrome shape, animation, and width
+
+Three surface-level knobs live on `NookConfiguration` (each `nil` by default,
+meaning "use the framework's value"):
+
+```swift
+var configuration = NookConfiguration()
+
+// Corner radii: the rounding into the notch arch and where the panel meets the
+// wallpaper. See NookStyle.
+configuration.style = NookStyle(topCornerRadius: 14, bottomCornerRadius: 28)
+
+// Expand / collapse / convert animation curves. If you slow these down, also
+// set `animationDuration` so awaited expand()/compact() return once the chrome
+// has visibly arrived.
+configuration.transitions = NookTransitionConfiguration(
+    openingAnimation: .spring(response: 0.6, dampingFraction: 0.8),
+    animationDuration: 0.6
+)
+
+// Fixed expanded width (the chrome is content-driven; this just pins a stable
+// width so the panel doesn't resize between home and Settings).
+configuration.expandedWidth = 600
+
+NookApp.main(configuration)
+```
+
+## Custom Settings surface
+
+The gear opens the framework's built-in Settings screen. To replace it with
+your own, register a Settings view - it stays reachable via the gear as long as
+`topBar.showsSettings` is on, and reads `AppState` from the environment:
+
+```swift
+configuration.setSettings { MyProductSettingsView() }
+```
+
+Leave it unset to keep the built-in Settings UI; set
+`topBar.showsSettings = false` to drop the Settings screen entirely.
 
 ## User-facing appearance preferences
 

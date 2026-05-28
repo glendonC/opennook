@@ -204,6 +204,13 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// `.expanded` transition because the user has by then acknowledged the surface directly.
     private var pendingFeedback: NookFeedbackEvent?
 
+    /// Auto-clears a one-shot `feedbackEvent` once it has finished playing. Without this the
+    /// overlay's `TimelineView(.animation)` keeps ticking at 60fps forever after the cue ends
+    /// (it only renders `Color.clear`, but the timeline never stops). Nilling the event lets
+    /// `NookFeedbackOverlay` take its `else` branch and drop the timeline from the tree.
+    /// Repeating cues are exempt — they're meant to run until acknowledged.
+    private var feedbackClearTask: Task<Void, Never>?
+
     /// The in-flight transition — expand, compact, *or hide* — or `nil` when idle.
     /// ``runTransition(_:)`` cancels this before spawning a replacement, so a superseded
     /// transition's `Task.sleep` throws promptly instead of running to term. The hide
@@ -296,7 +303,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             .sink { [weak self] newState in
                 guard let self, newState != .hidden, let pending = self.pendingFeedback else { return }
                 self.pendingFeedback = nil
-                self.feedbackEvent = pending
+                self.setFeedbackEvent(pending)
             }
             .store(in: &cancellables)
     }
@@ -507,13 +514,35 @@ public extension Nook {
             // Chrome is visible (either as compact pill or expanded surface) — fire
             // immediately. The shimmer overlay strokes the same `NookShape` perimeter in
             // both states, so the visual reads on either.
-            feedbackEvent = event
+            setFeedbackEvent(event)
             pendingFeedback = nil
         case .hidden:
             // Boot race or user-hidden: queue for the next visible transition. The overlay
             // can't paint without chrome, but we don't want to drop the request entirely
             // because the cue's whole job is "tell the user when they're not looking."
             pendingFeedback = event
+        }
+    }
+}
+
+extension Nook {
+    /// Publishes `event` to the overlay and, for one-shot cues, arms a clear once the cue has
+    /// finished so the overlay's `TimelineView` is torn down instead of ticking forever. Any
+    /// prior pending clear is cancelled first so a fresh event always wins.
+    func setFeedbackEvent(_ event: NookFeedbackEvent) {
+        feedbackClearTask?.cancel()
+        feedbackEvent = event
+
+        guard !event.repeats, event.duration > 0 else { return }
+        let duration = event.duration
+        let id = event.id
+        feedbackClearTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+            guard !Task.isCancelled, let self else { return }
+            // Only clear if this is still the event we armed for — a newer cue (which cancels
+            // this task) or a repeating cue must not be nilled out from under the overlay.
+            if self.feedbackEvent?.id == id { self.feedbackEvent = nil }
+            self.feedbackClearTask = nil
         }
     }
 }

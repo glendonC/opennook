@@ -52,7 +52,7 @@ struct SettingsShortcutRow: View {
                         .padding(.horizontal, 10)
                         .frame(minHeight: 22)
                         .background(theme.subtleFill.opacity(0.7), in: Capsule())
-                        .overlay(Capsule().stroke(Color.accentColor.opacity(0.6), lineWidth: 1))
+                        .overlay(Capsule().stroke(theme.accent.opacity(0.6), lineWidth: 1))
                 } else {
                     HStack(spacing: 4) {
                         ForEach(Array(appState.hotkey.displaySymbols.enumerated()), id: \.offset) { _, symbol in

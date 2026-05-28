@@ -38,7 +38,9 @@ struct ModuleRouterExpandedView: View {
                 resetAllSettings: resetAllSettings,
                 theme: configuration.theme,
                 home: configuration.home,
-                topBar: configuration.topBar
+                settings: configuration.settings,
+                topBar: configuration.topBar,
+                width: configuration.expandedWidth ?? NookLayout.width
             )
             // Identity tracks the active module so a switch tears down the old content
             // and inserts the new — letting the transition cross-fade rather than diff
@@ -49,6 +51,7 @@ struct ModuleRouterExpandedView: View {
         // The switcher reads `\.nookResolvedTheme`; NookExpandedView re-sets it for its
         // own subtree, so this only reaches the switcher bar.
         .environment(\.nookResolvedTheme, configuration.theme(appState))
+        .fontDesign(configuration.theme(appState).fontDesign)
         // Host-product identity (About card, show-hide hotkey label) lives on
         // `ModuleHost`; surface it here so any nested chrome view can read it without
         // an init-time plumb. Applied at the router so it covers both the switcher and

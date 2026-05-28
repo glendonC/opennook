@@ -5,6 +5,7 @@
 // you may not use this file except in compliance with the License.
 // A copy is included at /LICENSE in the repository root.
 
+import NookSurface
 import SwiftUI
 
 /// The host-app registration seam — everything a notch app customizes without forking
@@ -54,11 +55,35 @@ public struct NookConfiguration: Sendable {
     /// supply a closure returning a host-built ``NookResolvedTheme`` to theme the chrome.
     public var theme: @Sendable @MainActor (AppState) -> NookResolvedTheme
 
+    /// Replaces the built-in Settings surface (reached via the gear) with host content.
+    /// `nil` (the default) uses the framework Settings UI. Use ``setSettings(_:)`` to set
+    /// it from a `@ViewBuilder`. Gated by ``NookTopBarConfiguration/showsSettings`` like
+    /// the built-in screen; the host view reads ``AppState`` via `@EnvironmentObject`.
+    public var settings: (@Sendable @MainActor () -> AnyView)? = nil
+
     /// Top-bar configuration — leading cluster (title/icon), and the two visibility
     /// flags for the top bar and the Settings UI. Grouped so the related knobs
     /// travel together and future top-bar settings land here cleanly. See
     /// ``NookTopBarConfiguration``.
     public var topBar: NookTopBarConfiguration
+
+    /// Overrides the chrome's corner radii — the small rounding into the notch arch and
+    /// the larger rounding where the panel meets the wallpaper. `nil` (the default) uses
+    /// the framework's radii, tuned to sit well under the menu bar on notched MacBooks.
+    /// See ``NookStyle``.
+    public var style: NookStyle? = nil
+
+    /// Overrides the expand / collapse / compact↔expanded animation curves. `nil` (the
+    /// default) uses the framework's soft springs. Supply a ``NookTransitionConfiguration``
+    /// to retune or to slow the chrome down (set its `animationDuration` so awaited
+    /// `expand()`/`compact()` still return once the chrome has visibly arrived).
+    public var transitions: NookTransitionConfiguration? = nil
+
+    /// Fixed width, in points, for the expanded surface. `nil` (the default) uses the
+    /// framework width (520pt). The chrome is content-driven and sizes to fit; this only
+    /// pins a stable width so the panel doesn't resize when switching between the home
+    /// and Settings surfaces.
+    public var expandedWidth: CGFloat? = nil
 
     /// Called when the chrome transitions into the expanded surface (from any source).
     ///
@@ -129,6 +154,16 @@ public struct NookConfiguration: Sendable {
         @ViewBuilder _ content: @escaping @Sendable @MainActor () -> Content
     ) {
         compactTrailing = { AnyView(content()) }
+    }
+
+    /// Registers a custom Settings surface from a `@ViewBuilder` closure, replacing the
+    /// framework's built-in Settings screen. Reachable via the gear (keep
+    /// ``NookTopBarConfiguration/showsSettings`` on); the content can read ``AppState``
+    /// through `@EnvironmentObject`.
+    public mutating func setSettings<Content: View & Sendable>(
+        @ViewBuilder _ content: @escaping @Sendable @MainActor () -> Content
+    ) {
+        settings = { AnyView(content()) }
     }
 }
 

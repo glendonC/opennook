@@ -15,8 +15,10 @@ import SwiftUI
 /// in the 0...1 range. The shimmer is a `LinearGradient` whose `startPoint` / `endPoint` slide
 /// across the unit square so a 0.5-unit-wide bright band moves from off-screen leading to
 /// off-screen trailing — masked onto a stroked ``NookShape`` so only the chrome's perimeter
-/// receives light. Once `progress` hits 1 the overlay collapses to `Color.clear`, which lets
-/// SwiftUI drop it from the view tree until the next event lands.
+/// receives light. Once `progress` hits 1 the overlay renders `Color.clear`; the model then
+/// nils ``Nook/feedbackEvent`` (see ``Nook/setFeedbackEvent(_:)``) so this whole branch — and
+/// its `TimelineView` — drops from the view tree until the next event lands. Repeating cues
+/// keep the timeline alive by design.
 ///
 /// Because the animation is a pure function of `(now, startedAt, duration)`, no `@State`
 /// reset choreography is needed when a new event preempts an in-flight one — bumping

@@ -186,4 +186,46 @@ final class NookSurfaceConcurrencyTests: XCTestCase {
         await nook.hide()
         XCTAssertEqual(nook.state, .hidden)
     }
+
+    // MARK: - Peripheral feedback lifecycle
+
+    private func feedbackEvent(duration: TimeInterval, repeats: Bool) -> NookFeedbackEvent {
+        NookFeedbackEvent(
+            id: UUID(), startedAt: Date(), effect: .shimmer, duration: duration,
+            tint: .white, respectsReduceMotion: true, repeats: repeats
+        )
+    }
+
+    /// A one-shot cue must auto-clear once it has finished, otherwise the overlay's
+    /// `TimelineView(.animation)` keeps ticking at 60fps forever rendering `Color.clear`.
+    func testOneShotFeedbackClearsAfterDuration() async {
+        let nook = makeNook()
+        nook.setFeedbackEvent(feedbackEvent(duration: 0.05, repeats: false))
+        XCTAssertNotNil(nook.feedbackEvent)
+
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertNil(nook.feedbackEvent, "finished one-shot cue must clear so the timeline tears down")
+    }
+
+    /// A repeating cue is meant to nag until acknowledged, so it must persist past its
+    /// per-cycle duration.
+    func testRepeatingFeedbackPersists() async {
+        let nook = makeNook()
+        nook.setFeedbackEvent(feedbackEvent(duration: 0.05, repeats: true))
+
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertNotNil(nook.feedbackEvent, "repeating cue must keep running until acknowledged")
+    }
+
+    /// A new cue cancels the prior cue's pending clear, so the first event's timer can't
+    /// nil out the replacement.
+    func testNewFeedbackSupersedesPriorClear() async {
+        let nook = makeNook()
+        nook.setFeedbackEvent(feedbackEvent(duration: 0.05, repeats: false))
+        let second = feedbackEvent(duration: 1.0, repeats: false)
+        nook.setFeedbackEvent(second)
+
+        try? await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertEqual(nook.feedbackEvent?.id, second.id, "the first cue's clear must not nil the second")
+    }
 }

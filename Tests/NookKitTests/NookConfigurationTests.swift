@@ -8,6 +8,7 @@
 import SwiftUI
 import XCTest
 @testable import NookKit
+import NookSurface
 
 // `@MainActor`: the configuration's content and theme closures are main-actor
 // isolated (they build SwiftUI views and resolve the chrome palette), so the tests
@@ -130,5 +131,73 @@ final class NookConfigurationTests: XCTestCase {
         coordinator.showSettings()
 
         XCTAssertEqual(coordinator.appState.viewMode, .settings)
+    }
+
+    // MARK: - Surface customization seams
+
+    /// The default configuration leaves every surface-appearance override unset, so the
+    /// framework's own style / animations / width / Settings apply.
+    func testDefaultConfigurationHasNoSurfaceOverrides() {
+        let configuration = NookConfiguration()
+        XCTAssertNil(configuration.style)
+        XCTAssertNil(configuration.transitions)
+        XCTAssertNil(configuration.expandedWidth)
+        XCTAssertNil(configuration.settings)
+    }
+
+    /// The framework theme defaults the interaction accent to the system accent and the
+    /// chrome font design to `.default`, preserving the pre-seam look.
+    func testDefaultThemeAccentAndFontDesignMatchSystem() {
+        let theme = NookResolvedTheme.resolve(
+            preferences: .default, effectiveColorScheme: .dark, reduceTransparency: false
+        )
+        XCTAssertEqual(theme.accent, Color(nsColor: .controlAccentColor))
+        XCTAssertEqual(theme.fontDesign, .default)
+    }
+
+    /// A host palette can override the accent and font design; both round-trip intact.
+    func testCustomAccentAndFontDesignArePreserved() {
+        let theme = NookResolvedTheme(
+            primaryLabel: .white, secondaryLabel: .white, tertiaryLabel: .white,
+            quaternaryLabel: .white, subtleFill: .white, subtleStroke: .white,
+            headerInactiveIcon: .white, accent: .pink, fontDesign: .rounded
+        )
+        XCTAssertEqual(theme.accent, .pink)
+        XCTAssertEqual(theme.fontDesign, .rounded)
+    }
+
+    /// A host-supplied transition configuration replaces the framework defaults on the
+    /// surface; `animationDuration` is the observable distinguishing field.
+    @MainActor
+    func testCustomTransitionsReachTheSurface() {
+        var configuration = NookConfiguration()
+        configuration.transitions = NookTransitionConfiguration(animationDuration: 1.23)
+
+        let coordinator = AppCoordinator(configuration: configuration)
+        coordinator.configureNotchAnimations()
+
+        XCTAssertEqual(coordinator.surface.transitionConfiguration.animationDuration, 1.23)
+    }
+
+    /// With no override, the framework's default soft springs apply (non-nil opening
+    /// curve, and no custom duration).
+    @MainActor
+    func testDefaultTransitionsApplyWhenUnset() {
+        let coordinator = AppCoordinator(configuration: NookConfiguration())
+        coordinator.configureNotchAnimations()
+
+        XCTAssertNotNil(coordinator.surface.transitionConfiguration.openingAnimation)
+        XCTAssertNil(coordinator.surface.transitionConfiguration.animationDuration)
+    }
+
+    /// `setSettings` installs a host Settings surface; absent it, the slot stays nil so
+    /// the built-in Settings UI is used.
+    func testSettingsSeamIsHostConfigurable() {
+        var configuration = NookConfiguration()
+        XCTAssertNil(configuration.settings)
+
+        configuration.setSettings { Text("Custom settings") }
+        XCTAssertNotNil(configuration.settings)
+        _ = configuration.settings?()
     }
 }

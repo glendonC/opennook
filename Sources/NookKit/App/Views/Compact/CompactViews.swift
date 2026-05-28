@@ -52,8 +52,10 @@ struct NookCompactHost<Content: View>: View {
     let content: () -> Content
 
     var body: some View {
-        content()
-            .environment(\.nookResolvedTheme, theme(appState))
+        let resolved = theme(appState)
+        return content()
+            .environment(\.nookResolvedTheme, resolved)
+            .fontDesign(resolved.fontDesign)
             // Match the expanded surface: host-registered compact content gets `AppState`
             // as an `@EnvironmentObject` so it can observe chrome state directly.
             .environmentObject(appState)

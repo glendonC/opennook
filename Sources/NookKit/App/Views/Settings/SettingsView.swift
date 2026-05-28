@@ -6,17 +6,30 @@
 // A copy is included at /LICENSE in the repository root.
 
 import AppKit
+import NookSurface
 import SwiftUI
 
 /// Top-level Settings surface, rendered when the expanded nook is in `.settings` mode.
-/// Composes the per-section panels (Appearance, Shortcut & nook, Data, About) into
-/// one scrolling stack. Each section panel is its own file under `Views/Settings/`.
+/// Composes the per-section groups (Appearance, Display, Shortcut & nook, Data, About)
+/// into one scrolling stack. Each section's content is its own file under `Views/Settings/`.
+///
+/// Layout is deliberately flat: section label, then content, on one shared left margin
+/// (aligned with the top bar via `\.nookContentInsets`), separated by whitespace only —
+/// no card fills, no rules.
 struct SettingsView: View {
     @ObservedObject var appState: AppState
     let onToggleKeepOpen: () -> Void
     let onResetAllSettings: () -> Void
 
     @Environment(\.nookResolvedTheme) private var theme
+
+    /// Curve-derived leading/trailing insets from the chrome. Matching them here aligns the
+    /// section labels and rows with the top bar's leading cluster on a notched display.
+    @Environment(\.nookContentInsets) private var contentInsets
+
+    /// Which sections are expanded. In-memory for the session; Appearance opens by default
+    /// so the surface isn't a wall of collapsed headers on first entry.
+    @State private var expandedSections: Set<String> = ["Appearance"]
 
     /// Caps Settings height from the main display so rows scroll instead of clipping below the notch panel.
     private var settingsScrollMaxHeight: CGFloat {
@@ -29,7 +42,7 @@ struct SettingsView: View {
     }
 
     private var chromeInteractionAccent: Color {
-        Color(nsColor: .controlAccentColor)
+        theme.accent
     }
 
     /// Flip the haptic preference and fire one pulse on the way *on* so the user feels
@@ -43,26 +56,21 @@ struct SettingsView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: true) {
-            VStack(alignment: .leading, spacing: 12) {
-                SettingsSectionLabel("Appearance")
-                SettingsGroupedPanel {
+            VStack(alignment: .leading, spacing: 16) {
+                section("Appearance") {
                     AppearanceSettingsSection(appState: appState)
                 }
 
-                SettingsSectionLabel("Display")
-                SettingsGroupedPanel {
+                section("Display") {
                     DisplaySettingsSection(appState: appState)
                 }
 
-                SettingsSectionLabel("Shortcut & nook")
-                SettingsGroupedPanel {
-                    VStack(spacing: 0) {
+                section("Shortcut & nook") {
+                    VStack(alignment: .leading, spacing: 12) {
                         SettingsShortcutRow(appState: appState)
                         if !appState.hotkeyRegistrationFailures.keys.filter({ $0 != NookHotkeyIDs.toggle }).isEmpty {
-                            SettingsInsetDivider()
                             SettingsHotkeyFailureRow(appState: appState)
                         }
-                        SettingsInsetDivider()
                         SettingActionLine(
                             icon: appState.keepNookOpen ? "pin.fill" : "pin",
                             title: "Stay expanded",
@@ -70,7 +78,6 @@ struct SettingsView: View {
                             accent: chromeInteractionAccent,
                             action: onToggleKeepOpen
                         )
-                        SettingsInsetDivider()
                         SettingActionLine(
                             icon: appState.appearancePreferences.hapticFeedbackEnabled ? "hand.tap.fill" : "hand.tap",
                             title: "Haptic feedback",
@@ -83,8 +90,7 @@ struct SettingsView: View {
                     }
                 }
 
-                SettingsSectionLabel("Data")
-                SettingsGroupedPanel {
+                section("Data") {
                     SettingsDataCommandRow(
                         title: "Reset All Settings",
                         subtitle: "Theme, surface, layout, display, hotkey, stay expanded",
@@ -94,14 +100,87 @@ struct SettingsView: View {
                     )
                 }
 
-                SettingsSectionLabel("About")
-                SettingsGroupedPanel {
+                section("About") {
                     SettingsAboutCard()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, contentInsets.leading)
+            .padding(.trailing, contentInsets.trailing)
             .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity, maxHeight: settingsScrollMaxHeight, alignment: .leading)
+    }
+
+    /// A collapsible section bound to ``expandedSections``: a disclosure header, and — when
+    /// open — the content indented under a connector hairline.
+    @ViewBuilder
+    private func section<Content: View>(
+        _ title: String,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        SettingsDisclosureSection(
+            title: title,
+            isExpanded: Binding(
+                get: { expandedSections.contains(title) },
+                set: { open in
+                    if open { expandedSections.insert(title) } else { expandedSections.remove(title) }
+                }
+            ),
+            content: content
+        )
+    }
+}
+
+/// A settings section with a tap-to-toggle disclosure header and a left connector hairline
+/// tying the indented content back to the header.
+private struct SettingsDisclosureSection<Content: View>: View {
+    let title: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: () -> Content
+
+    @Environment(\.nookResolvedTheme) private var theme
+
+    /// Width of the leading icon gutter the top bar's home/lock/gear icons occupy (24×24).
+    /// The disclosure chevron centers in the same gutter so the arrows sit directly under
+    /// the top-left home icon, and the connector hairline runs down its middle.
+    private let iconGutter: CGFloat = 24
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.spring(response: 0.30, dampingFraction: 0.86)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(theme.quaternaryLabel)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+                        .frame(width: iconGutter)
+                    SettingsSectionLabel(title)
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                HStack(alignment: .top, spacing: 12) {
+                    // Connector: a thin vertical rule that fills the content height, tying the
+                    // indented items back to the header. Centered under the chevron gutter.
+                    RoundedRectangle(cornerRadius: 0.5, style: .continuous)
+                        .fill(theme.subtleStroke.opacity(0.5))
+                        .frame(width: 1)
+
+                    content()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.leading, (iconGutter - 1) / 2)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

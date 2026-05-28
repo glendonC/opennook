@@ -24,7 +24,11 @@ public struct NookStyle: Equatable, Sendable {
     /// Reasonable default that reads well next to the system menu bar on most notched MacBooks.
     public static let standard = NookStyle(topCornerRadius: 15, bottomCornerRadius: 20)
 
-    var openingAnimation: Animation { .bouncy(duration: 0.4) }
-    var closingAnimation: Animation { .smooth(duration: 0.4) }
-    var conversionAnimation: Animation { .snappy(duration: 0.4) }
+    /// The surface's built-in expand animation. Used when neither
+    /// ``NookTransitionConfiguration/openingAnimation`` nor a host override is supplied.
+    public var openingAnimation: Animation { .bouncy(duration: 0.4) }
+    /// The surface's built-in collapse animation. See ``openingAnimation``.
+    public var closingAnimation: Animation { .smooth(duration: 0.4) }
+    /// The surface's built-in compact↔expanded animation. See ``openingAnimation``.
+    public var conversionAnimation: Animation { .snappy(duration: 0.4) }
 }

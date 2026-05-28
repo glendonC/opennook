@@ -20,10 +20,26 @@ concurrency:
 
 jobs:
   spm:
-    name: SwiftPM build & test
+    name: SwiftPM build & test (Xcode ${{ matrix.xcode }})
     runs-on: macos-15
+    strategy:
+      # One toolchain regression shouldn't cancel the others — we want to see the full
+      # matrix result, especially which Xcode broke.
+      fail-fast: false
+      matrix:
+        # `latest-stable` is the required baseline. `latest` (which may be a beta when one
+        # is installed on the image) is a forward-looking toolchain-drift signal and is
+        # non-blocking via `continue-on-error` below, so a future Xcode can't wedge merges.
+        xcode: ['latest-stable']
+        include:
+          - xcode: 'latest'
+            experimental: true
+    continue-on-error: ${{ matrix.experimental == true }}
     steps:
       - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.xcode }}
       - name: Show Swift version
         run: swift --version
       - name: Build (all targets)
@@ -60,6 +76,22 @@ jobs:
         run: |
           set -euo pipefail
           fail=0
+
+          # Guard against a vacuous pass: if the dual-license layout ever moves (e.g.
+          # `Sources/NookSurface` is renamed), the find loops below would iterate over
+          # nothing and the check would succeed without verifying anything. Assert the
+          # expected directories actually contain Swift files first.
+          mit_count=$(find Sources/NookSurface -name '*.swift' | wc -l | tr -d ' ')
+          apache_count=$(find Sources Tests Examples App -name '*.swift' -not -path 'Sources/NookSurface/*' | wc -l | tr -d ' ')
+          if [ "$mit_count" -lt 1 ]; then
+            echo "::error::no .swift files under Sources/NookSurface — did the MIT module move? License check would pass vacuously."
+            fail=1
+          fi
+          if [ "$apache_count" -lt 1 ]; then
+            echo "::error::no Apache-2.0 .swift files found — did the source layout move? License check would pass vacuously."
+            fail=1
+          fi
+
           # Every .swift file under Sources/NookSurface must declare SPDX MIT.
           while IFS= read -r f; do
             if ! head -3 "$f" | grep -q 'SPDX-License-Identifier: MIT'; then

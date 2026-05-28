@@ -20,6 +20,7 @@ export default defineConfig({
         Header: './src/components/Header.astro',
         SiteTitle: './src/components/SiteTitle.astro',
         ThemeSelect: './src/components/ThemeToggle.astro',
+        PageTitle: './src/components/PageTitle.astro',
       },
       head: [
         {
@@ -49,20 +50,32 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Guides',
+          label: 'Customization',
           items: [
-            { label: 'Multiple modules', slug: 'guides/multiple-modules' },
+            { label: 'Theming', slug: 'guides/theming' },
+            { label: 'Settings chrome', slug: 'guides/settings-chrome' },
+            { label: 'Displays and presentation', slug: 'guides/displays' },
+          ],
+        },
+        {
+          label: 'Components',
+          items: [
             { label: 'File shelf', slug: 'guides/file-shelf' },
             { label: 'Activity queue', slug: 'guides/activity-queue' },
             { label: 'Volume glyph', slug: 'guides/volume-glyph' },
-            { label: 'Theming', slug: 'guides/theming' },
-            { label: 'Settings chrome', slug: 'guides/settings-chrome' },
+          ],
+        },
+        {
+          label: 'Hosting',
+          items: [
+            { label: 'Multiple modules', slug: 'guides/multiple-modules' },
           ],
         },
         {
           label: 'Reference',
           items: [
             { label: 'API reference', slug: 'reference/api' },
+            { label: 'Troubleshooting', slug: 'reference/troubleshooting' },
           ],
         },
       ],

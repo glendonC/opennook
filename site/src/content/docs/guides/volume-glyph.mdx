@@ -132,12 +132,11 @@ stereo-clipped. If both fail (no main scalar, no resolvable channels), the
 reader returns `nil` and the observer leaves its last `volume` value in
 place.
 
-The fallback is exposed as a pure function for testing:
-
-```swift
-resolveVolumeFallback(mainScalar: nil, channelScalars: [0.4, 0.6])
-// -> 0.5
-```
+The main-vs-channel decision is factored into a pure, module-internal
+`resolveVolumeFallback(mainScalar:channelScalars:)` so the framework's own tests
+can verify it without a live device - `mainScalar: nil` with
+`channelScalars: [0.4, 0.6]` resolves to `0.5`, for example. It is not part of
+the public API; a host never calls it directly.
 
 ## Injecting a reader (testing)
 

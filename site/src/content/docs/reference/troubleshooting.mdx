@@ -1,0 +1,59 @@
+---
+title: Troubleshooting
+description: Symptom-first fixes, each linking to the guide that covers it in depth.
+---
+
+Common symptoms and where to fix them. Each guide's own "Pitfalls" section has
+the full detail; this page is the symptom-first index into them.
+
+## Nothing appears when I launch
+
+OpenNook runs as a menu-bar accessory app - there is no Dock icon and no window
+on launch, by design. Press **⌥⌘;** or click the menu-bar item to expand the
+nook. (See [Your first nook](/start/first-nook/).)
+
+## The chrome is blank or wrong on a Mac with no notch
+
+The default `presentation` is `.auto`, which renders a free-floating panel on a
+display with no notch. If you forced `.notch`, the eared shape hangs off a bare
+menu bar and can look wrong. Set the Settings "Layout" picker back to Auto or
+Floating. (See [Displays and presentation](/guides/displays/).)
+
+## The global hotkey does nothing
+
+Another app may already own **⌥⌘;**. A failed registration is surfaced in
+Settings as a per-shortcut warning (`HotkeyRegistrationFailure`); rebind to a
+free combination there. (See [Your first nook](/start/first-nook/).)
+
+## Text or icons render in the wrong color (white on white)
+
+The notch panel's SwiftUI `colorScheme` is unreliable, so adaptive colors like
+`Color.primary` resolve for the wrong appearance. Build your palette from
+explicit `Color.white` / `Color.black` at a fixed opacity. (See
+[Theming](/guides/theming/#use-explicit-colors-not-adaptive-ones).)
+
+## The Settings gear is missing
+
+`topBar.showsSettings = false` removes the gear, and `topBar.showsTopBar = false`
+removes the whole bar (gear included). Settings stays reachable from the
+menu-bar fallback unless `showsSettings` is off. (See
+[Settings chrome](/guides/settings-chrome/).)
+
+## The file shelf is empty after a relaunch
+
+Under the App Sandbox a lost security-scoped grant can make the shelf look empty;
+the store deliberately preserves non-resolvable items rather than deleting them.
+Use `acceptanceMode: .strict` if you would rather a drop fail at drop time than
+fail to survive a relaunch. (See [File shelf](/guides/file-shelf/#sandbox-behavior).)
+
+## A queued activity never shows
+
+The activity queue yields to the user: while you are hovering or have the nook
+open, it waits. A background module's activity is also gated unless its priority
+is `.high`. (See [Activity queue](/guides/activity-queue/#yield-to-the-user).)
+
+## Registering modules traps at launch
+
+A duplicate module id, or an empty `NookHostConfiguration`, traps on purpose -
+both are `main.swift` setup bugs. Give every module a unique id, and register at
+least one. (See [Multiple modules](/guides/multiple-modules/#pitfalls).)

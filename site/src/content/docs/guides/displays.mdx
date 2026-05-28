@@ -1,0 +1,114 @@
+---
+title: Displays and presentation
+description: Run on a Mac with no notch, and pick which display the chrome appears on.
+---
+
+Two user-facing preferences decide *where* and *in what shape* the chrome
+appears: **presentation** (notch-fused vs free-floating) and **display** (which
+screen). Both ship with a Settings UI and persist across launches; a host
+usually leaves them alone and reads the resolved result.
+
+## Running on a Mac with no notch
+
+A notch app's premise is the physical notch - but plenty of Macs don't have one
+(a Mac mini or Studio on an external display, pre-2021 MacBooks, any desktop
+display). `NookPresentation` is the knob that makes the chrome work anywhere:
+
+```swift
+public enum NookPresentation: String, Codable, Sendable, CaseIterable, Equatable {
+    case auto      // notch layout on a notched display, floating otherwise
+    case notch     // always the eared notch shape (mostly useful for testing)
+    case floating  // always a free-floating rounded panel below the menu bar
+}
+```
+
+- `.auto` (the default) renders the eared, notch-fused shape on a notched
+  display and a free-floating rounded panel just below the menu bar everywhere
+  else. This is the right choice for almost every app - the same binary adapts
+  to whatever Mac it runs on.
+- `.notch` forces the notch shape even where there is no notch (it then hangs
+  from the bare menu bar).
+- `.floating` forces the free-floating panel even on a notched MacBook.
+
+`presentation` lives on `NookAppearancePreferences` (persisted under
+`opennook.appearance.v1`, the same record as the palette and surface style) and
+is exposed in the Settings "Layout" picker. The resolution is a pure function:
+
+```swift
+NookPresentation.auto.isFloating(screenHasNotch: false)  // -> true
+NookPresentation.auto.isFloating(screenHasNotch: true)   // -> false
+```
+
+You don't normally set this in code - the user picks it in Settings. To pin it
+programmatically, write through `AppState.replaceAppearancePreferences(_:)` so
+the choice persists (see
+[Theming](/guides/theming/#user-facing-appearance-preferences)).
+
+## Picking the display
+
+On a multi-display Mac, "which screen" is a real choice. `NookDisplayPreference`
+expresses it in a form that survives reboots and replugging:
+
+```swift
+public struct NookDisplayPreference: Equatable, Codable, Sendable {
+    public enum Mode { case builtIn, main, specific }
+    public var mode: Mode
+    public var displayUUID: String?   // only used when mode is .specific
+}
+```
+
+- `.builtIn` (the default) - the laptop's built-in (notched) panel, where the
+  physical notch is.
+- `.main` - whichever display currently hosts the active menu bar
+  (`NSScreen.main`); follows the user's focus across screens.
+- `.specific(uuid)` - one named display, pinned by its stable display UUID.
+
+The UUID matters: `CGDirectDisplayID` and `NSScreen` ordering both shuffle as
+displays connect and disconnect, so a saved preference can't reference them
+directly. `NookDisplayPreference.specific(_:)` persists the display UUID
+(`CGDisplayCreateUUIDFromDisplayID`), which is stable across reconnects.
+
+The preference lives on `AppState.displayPreference` (persisted separately,
+under `opennook.display.v1`) and is exposed in the Settings "Display" picker.
+Write it through `AppState.replaceDisplayPreference(_:)` to persist; the
+coordinator re-places the chrome on the new display immediately.
+
+## Graceful fallback
+
+`NookScreenLocator` resolves a preference to a concrete `NSScreen`, and the
+fallback chain keeps the chrome on-screen even when the chosen display is gone:
+
+- `.specific` that isn't attached -> built-in -> main -> first attached.
+- `.builtIn` on a Mac with no built-in panel -> main -> first attached.
+- `.main` -> built-in -> first attached.
+
+It returns no screen only when *no* display is attached at all. So a `.builtIn`
+default on a Mac mini, or a saved `.specific` display that has been unplugged,
+both degrade to a sensible screen rather than the chrome vanishing.
+
+`NookScreenLocator.connectedDisplays()` enumerates the attached displays
+(`DisplayInfo`: uuid, name, isBuiltIn) for building your own picker if you
+replace the Settings UI.
+
+## Pitfalls
+
+### `presentation` and `displayPreference` persist to different keys
+
+`presentation` is part of `NookAppearancePreferences` (`opennook.appearance.v1`)
+and is written through `replaceAppearancePreferences(_:)`. The display choice is
+separate - `AppState.displayPreference`, key `opennook.display.v1`, written
+through `replaceDisplayPreference(_:)`. Two different preferences, two different
+write paths.
+
+### Test the floating layout without unplugging
+
+Set `presentation` to `.floating` to see the non-notch layout on a notched
+MacBook, or `.notch` to force the eared shape on an external display. `.auto`
+only ever shows you whichever matches the current screen.
+
+## See also
+
+- [Theming](/guides/theming/#user-facing-appearance-preferences) - the
+  appearance-preferences record `presentation` is part of.
+- [Settings chrome](/guides/settings-chrome/) - the chrome that hosts the Layout
+  and Display pickers.

@@ -588,25 +588,74 @@ mobile-starlight-toc .dropdown {
 
 /* ---- Pagination ---- */
 .pagination-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
   border: 1px solid var(--on-control-border);
-  border-radius: var(--on-radius-md);
+  border-radius: var(--on-radius-lg);
   background: transparent;
   box-shadow: none;
   color: var(--on-ink-muted);
-  padding: 0.85rem 1rem;
-  transition: border-color 160ms var(--on-ease-out);
+  padding: 0.95rem 1.1rem;
+  transition:
+    border-color 160ms var(--on-ease-out),
+    background-color 160ms var(--on-ease-out);
 }
 
 .pagination-links a:hover {
   border-color: var(--on-control-border-hover);
+  background: color-mix(in srgb, var(--on-ink) 3%, transparent);
+}
+
+/* Direction eyebrow ("Previous" / "Next") - small, tracked, muted for contrast */
+.pagination-links a > span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: var(--on-ink-faint);
+}
+
+/* Page title - the emphasis */
+.pagination-links .link-title {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-transform: none;
   color: var(--sl-color-text-accent);
 }
 
-.pagination-links .link-title {
-  color: var(--sl-color-text-accent);
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+/* Arrow gets its own squircle that highlights (inverts) on hover */
+.pagination-links a svg {
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--on-ink) 7%, transparent);
+  color: var(--sl-color-gray-2);
+  transition:
+    background-color 180ms var(--on-ease-out),
+    color 180ms var(--on-ease-out),
+    transform 220ms var(--on-ease-out);
+}
+
+.pagination-links a:hover svg {
+  background: var(--sl-color-text-accent);
+  color: var(--sl-color-bg);
+}
+
+.pagination-links a[rel='prev']:hover svg {
+  transform: translateX(-2px);
+}
+
+.pagination-links a[rel='next']:hover svg {
+  transform: translateX(2px);
 }
 
 /* ---- Footer / meta ---- */

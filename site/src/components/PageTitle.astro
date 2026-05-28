@@ -1,0 +1,270 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+
+const { entry, id } = Astro.props;
+const title = entry.data.title;
+const mdHref = `/${id}.md`;
+---
+
+<div class="on-title-row">
+  <h1 id="_top">{title}</h1>
+
+  <copy-page class="on-copypage" data-md={mdHref}>
+    <div class="on-copypage-split">
+      <button type="button" class="on-copypage-main" data-copy>
+        <svg class="on-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span class="on-copypage-label">Copy page</span>
+      </button>
+      <button
+        type="button"
+        class="on-copypage-caret"
+        data-menu
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label="More copy options"
+      >
+        <svg class="on-ic on-ic-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="on-copypage-menu" hidden>
+      <button type="button" class="on-copypage-item" data-copy>
+        <svg class="on-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span class="on-mi">
+          <span class="on-mi-title">Copy page</span>
+          <span class="on-mi-sub">Copy page as Markdown for LLMs</span>
+        </span>
+      </button>
+      <a class="on-copypage-item" href={mdHref} target="_blank" rel="noopener">
+        <svg class="on-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path>
+          <path d="M14 3v5h5"></path>
+          <path d="M9 13h6M9 17h6"></path>
+        </svg>
+        <span class="on-mi">
+          <span class="on-mi-title">View as Markdown</span>
+          <span class="on-mi-sub">View this page as plain text</span>
+        </span>
+      </a>
+    </div>
+  </copy-page>
+</div>
+
+<script>
+  class CopyPage extends HTMLElement {
+    connectedCallback() {
+      const md = this.dataset.md ?? '';
+      const menu = this.querySelector<HTMLElement>('.on-copypage-menu');
+      const caret = this.querySelector<HTMLButtonElement>('[data-menu]');
+      const label = this.querySelector<HTMLElement>('.on-copypage-label');
+      const copyButtons = this.querySelectorAll<HTMLButtonElement>('[data-copy]');
+      if (!menu || !caret) return;
+
+      const close = () => {
+        menu.hidden = true;
+        caret.setAttribute('aria-expanded', 'false');
+      };
+      const open = () => {
+        menu.hidden = false;
+        caret.setAttribute('aria-expanded', 'true');
+      };
+
+      caret.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.hidden ? open() : close();
+      });
+      document.addEventListener('click', (e) => {
+        if (!this.contains(e.target as Node)) close();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+      });
+
+      copyButtons.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          try {
+            const res = await fetch(md);
+            const text = await res.text();
+            await navigator.clipboard.writeText(text);
+            if (label) {
+              const prev = label.textContent;
+              label.textContent = 'Copied';
+              this.classList.add('is-copied');
+              setTimeout(() => {
+                label.textContent = prev;
+                this.classList.remove('is-copied');
+              }, 1600);
+            }
+          } catch (err) {
+            console.error('Copy page failed:', err);
+          }
+          close();
+        });
+      });
+    }
+  }
+
+  customElements.define('copy-page', CopyPage);
+</script>
+
+<style>
+  .on-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .on-title-row h1 {
+    margin-top: 0;
+    font-size: var(--sl-text-h1);
+    line-height: var(--sl-line-height-headings);
+    font-weight: 600;
+  }
+
+  .on-copypage {
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+  }
+
+  /* Split control */
+  .on-copypage-split {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--on-control-border);
+    border-radius: var(--on-radius-md);
+    background: transparent;
+    overflow: hidden;
+    transition: border-color 160ms var(--on-ease-out);
+  }
+
+  .on-copypage-split:hover {
+    border-color: var(--on-control-border-hover);
+  }
+
+  .on-copypage-main,
+  .on-copypage-caret {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 0;
+    background: transparent;
+    color: var(--sl-color-gray-2);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 160ms var(--on-ease-out), color 160ms var(--on-ease-out);
+  }
+
+  .on-copypage-main {
+    padding: 0.4rem 0.7rem;
+    white-space: nowrap;
+  }
+
+  .on-copypage-caret {
+    padding: 0.4rem 0.45rem;
+    border-inline-start: 1px solid var(--on-control-border);
+  }
+
+  .on-copypage-main:hover,
+  .on-copypage-caret:hover {
+    background: color-mix(in srgb, var(--on-ink) 5%, transparent);
+    color: var(--sl-color-text-accent);
+  }
+
+  .on-ic {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+
+  .on-ic-caret {
+    transition: transform 200ms var(--on-ease-out);
+  }
+
+  .on-copypage-caret[aria-expanded='true'] .on-ic-caret {
+    transform: rotate(180deg);
+  }
+
+  /* Dropdown */
+  .on-copypage-menu {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + 0.4rem);
+    z-index: 30;
+    min-width: 16rem;
+    padding: 0.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: var(--on-radius-md);
+    background: var(--sl-color-bg);
+    box-shadow: var(--sl-shadow-lg);
+  }
+
+  .on-copypage-menu[hidden] {
+    display: none;
+  }
+
+  .on-copypage-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    border-radius: var(--on-radius-sm);
+    background: transparent;
+    color: var(--sl-color-text-accent);
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 140ms var(--on-ease-out);
+  }
+
+  .on-copypage-item:hover {
+    background: color-mix(in srgb, var(--on-ink) 6%, transparent);
+  }
+
+  .on-copypage-item .on-ic {
+    width: 17px;
+    height: 17px;
+    margin-top: 0.1rem;
+    color: var(--sl-color-gray-3);
+  }
+
+  .on-mi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    line-height: 1.3;
+  }
+
+  .on-mi-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--sl-color-text-accent);
+  }
+
+  .on-mi-sub {
+    font-size: 12px;
+    color: var(--on-ink-muted);
+  }
+
+  @media (max-width: 30rem) {
+    .on-copypage-label {
+      display: none;
+    }
+  }
+</style>

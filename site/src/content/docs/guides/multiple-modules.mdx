@@ -140,8 +140,8 @@ public final class NookModuleContext {
   creates it on first use.
 - `services` is a per-module `AppServices` bag (see below).
 
-The container helper traps on duplicate module ids precisely so two modules
-can't silently alias on any of these.
+`NookHostConfiguration.register` traps on a duplicate module id (see the
+pitfall below) precisely so two modules can't silently alias on any of these.
 
 ## Service isolation: `ServiceKey` and `AppServices`
 

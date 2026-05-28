@@ -46,8 +46,8 @@ public struct NookResolvedTheme: Sendable {
     /// Every color should be an explicit black/white-at-opacity value — see the type
     /// note above on why system-adaptive colors render wrong on the nook's panel.
     ///
-    /// `accent` and `fontDesign` default to the system accent and `.default` so existing
-    /// callers keep their behavior; pass them to brand the chrome.
+    /// `accent` and `fontDesign` are defaulted, so a palette can fill only the color
+    /// slots and still get a sensible chrome; pass them to brand it.
     public init(
         primaryLabel: Color,
         secondaryLabel: Color,

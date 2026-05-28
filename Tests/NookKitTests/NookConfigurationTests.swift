@@ -146,7 +146,7 @@ final class NookConfigurationTests: XCTestCase {
     }
 
     /// The framework theme defaults the interaction accent to the system accent and the
-    /// chrome font design to `.default`, preserving the pre-seam look.
+    /// chrome font design to `.default`, so the chrome matches the system out of the box.
     func testDefaultThemeAccentAndFontDesignMatchSystem() {
         let theme = NookResolvedTheme.resolve(
             preferences: .default, effectiveColorScheme: .dark, reduceTransparency: false

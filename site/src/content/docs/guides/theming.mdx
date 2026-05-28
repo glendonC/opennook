@@ -48,8 +48,8 @@ public struct NookResolvedTheme: Sendable {
 ```
 
 `accent` and `fontDesign` default to the macOS system accent and `.default`, so
-the memberwise initializer is source-compatible with palettes that only set the
-label/fill slots - you only pass them when you want to brand the chrome.
+a palette can set only the label/fill slots and still paint a sensible chrome -
+pass them when you want to brand it.
 
 Read it in a view with the SwiftUI environment:
 

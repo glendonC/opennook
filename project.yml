@@ -48,6 +48,11 @@ targets:
       - path: App
         excludes:
           - "Info.plist"
+          # Reference template only — committed so module authors can copy it. NOT wired
+          # via CODE_SIGN_ENTITLEMENTS, so the demo stays unsandboxed and the dev loop is
+          # unaffected. Excluded here so it isn't bundled as a stray resource. To actually
+          # sandbox the app, add `CODE_SIGN_ENTITLEMENTS: App/Nook.entitlements` below.
+          - "Nook.entitlements"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.nook

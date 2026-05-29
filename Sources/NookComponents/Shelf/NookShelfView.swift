@@ -22,8 +22,16 @@ public struct NookShelfView: View {
     @ObservedObject private var store: ShelfStore
     @Environment(\.nookResolvedTheme) private var theme
 
-    public init(store: ShelfStore) {
+    /// Optional "add files" action. When provided, the empty drop zone becomes
+    /// click-to-import and a `+` button appears in the populated header, so picking
+    /// files lives in the same surface as drag-and-drop. The host supplies the action
+    /// (typically the `NookFilePicker`), keeping this view agnostic about where files
+    /// come from - the same stance as `NookConfiguration.onFileDrop`.
+    private let onImport: (() -> Void)?
+
+    public init(store: ShelfStore, onImport: (() -> Void)? = nil) {
         self.store = store
+        self.onImport = onImport
     }
 
     public var body: some View {
@@ -39,17 +47,31 @@ public struct NookShelfView: View {
         .padding(.vertical, 6)
     }
 
+    @ViewBuilder
     private var emptyState: some View {
+        // The dashed zone is both a drop target and, when an import action is wired, a
+        // click target - one affordance, mirroring a web "drop or browse" upload well.
+        if let onImport {
+            Button(action: onImport) { dropZone }
+                .buttonStyle(.plain)
+                .help("Drop files here, or click to import")
+        } else {
+            dropZone
+        }
+    }
+
+    private var dropZone: some View {
         VStack(spacing: 8) {
             Image(systemName: "tray.and.arrow.down")
                 .font(.system(size: 24, weight: .light))
                 .foregroundStyle(theme.tertiaryLabel)
-            Text("Drop files onto the notch to shelve them")
+            Text(onImport == nil ? "Drop files onto the notch to shelve them" : "Drop files here, or click to import")
                 .font(.system(size: 11))
                 .foregroundStyle(theme.tertiaryLabel)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
+        .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(theme.subtleStroke, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
@@ -57,11 +79,20 @@ public struct NookShelfView: View {
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 10) {
             Text("^[\(store.items.count) file](inflect: true)")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(theme.secondaryLabel)
             Spacer(minLength: 0)
+            if let onImport {
+                Button(action: onImport) {
+                    Image(systemName: "plus")
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(theme.tertiaryLabel)
+                .help("Import files")
+            }
             Button("Clear") { store.clear() }
                 .buttonStyle(.plain)
                 .font(.system(size: 11))

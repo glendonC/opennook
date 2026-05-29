@@ -47,14 +47,16 @@ public final class NookModuleContext {
     /// Builds the default isolated context for a module id: a `"opennook.module.<id>"`
     /// suite and an `Application Support/<host>/Modules/<id>/` container.
     ///
-    /// `presentationPinning` is the host-wide broker (one instance per process,
-    /// owned by ``NookModuleRegistry``). It is pre-registered onto the new
-    /// context's ``AppServices`` so a module's views can resolve
-    /// ``NookPresentationPinningKey`` without any per-module wiring.
+    /// `presentationPinning` and `filePicker` are the host-wide brokers (one instance
+    /// each per process, owned by ``NookModuleRegistry``). Both are pre-registered onto
+    /// the new context's ``AppServices`` so a module's views can resolve
+    /// ``NookPresentationPinningKey`` / ``NookFilePickerKey`` without any per-module
+    /// wiring.
     @MainActor
     static func makeDefault(
         for descriptor: NookModuleDescriptor,
-        presentationPinning: NookPresentationPinning
+        presentationPinning: NookPresentationPinning,
+        filePicker: NookFilePicker
     ) -> NookModuleContext {
         let suiteName = "opennook.module.\(descriptor.id)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -70,6 +72,7 @@ public final class NookModuleContext {
 
         let services = AppServices()
         services.register(NookPresentationPinningKey.self, presentationPinning)
+        services.register(NookFilePickerKey.self, filePicker)
 
         return NookModuleContext(
             descriptor: descriptor,

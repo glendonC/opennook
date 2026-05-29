@@ -23,10 +23,42 @@ NookApp.main {
     let shelf = ShelfStore()
 
     var configuration = NookConfiguration()
-    configuration.setHome { NookShelfView(store: shelf) }
+    configuration.setHome { ShelfHome(store: shelf) }
     // `NookConfiguration.onFileDrop` is typed `@Sendable @MainActor ([URL]) -> Bool`
     // — the closure runs on the main actor, so it can call `ShelfStore.accept`
     // directly without any `assumeIsolated` hop.
     configuration.onFileDrop = { urls in shelf.accept(urls) }
     return configuration
+}
+
+/// The shelf, with click-to-import folded into its drop zone via the host's
+/// ``NookFilePicker`` — the picker-driven counterpart to drag-and-drop, in one surface.
+///
+/// Picker caveat: `swift run` produces an unbundled, unsandboxed binary with no
+/// powerbox, so the open panel cannot enter TCC-protected folders (Downloads, etc.).
+/// Build and run the signed `Nook.app` (the `NookHostApp` Xcode target) to exercise the
+/// picker for real — see the Shipping checklist in README.md.
+private struct ShelfHome: View {
+    let store: ShelfStore
+    @Environment(\.appServices) private var services
+
+    var body: some View {
+        NookShelfView(store: store, onImport: importFiles)
+            .padding(.horizontal, 8)
+    }
+
+    private func importFiles() {
+        // The host-provided picker handles app activation (so the panel is interactive
+        // despite the non-activating notch panel) and holds the surface expanded for the
+        // panel's lifetime.
+        let picker = services.resolve(NookFilePickerKey.self)
+        Task {
+            guard let selection = await picker.open(.init(allowsMultipleSelection: true)) else {
+                return
+            }
+            // Capture the shelf's security-scoped bookmarks while the picker's scoped
+            // access is still live.
+            selection.withAccess { urls in _ = store.accept(urls) }
+        }
+    }
 }

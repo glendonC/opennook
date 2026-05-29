@@ -48,6 +48,12 @@ public final class NookModuleRegistry {
     /// aggregate signal the coordinator can fold into ``AppCoordinator/isUserEngaged``.
     public let presentationPinning: NookPresentationPinning
 
+    /// One file picker per host process, shared across every module — same lifetime and
+    /// rationale as ``presentationPinning`` (it depends on that broker to hold the
+    /// surface while a panel is up). Registered into each module's ``AppServices`` as
+    /// ``NookModuleContext`` is built. See ``NookFilePicker``.
+    public let filePicker: NookFilePicker
+
     private var instances: [String: NookModule] = [:]
     private var contexts: [String: NookModuleContext] = [:]
 
@@ -63,6 +69,7 @@ public final class NookModuleRegistry {
         self.cycleHotkey = cycleHotkey
         self.branding = branding
         self.presentationPinning = presentationPinning
+        self.filePicker = NookFilePicker(presentationPinning: presentationPinning)
     }
 
     /// All registered modules' descriptors, in registration order — the switcher's list.
@@ -84,7 +91,8 @@ public final class NookModuleRegistry {
         }
         let context = NookModuleContext.makeDefault(
             for: registration.descriptor,
-            presentationPinning: presentationPinning
+            presentationPinning: presentationPinning,
+            filePicker: filePicker
         )
         let module = registration.factory(context)
         contexts[id] = context

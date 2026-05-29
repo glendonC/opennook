@@ -268,14 +268,29 @@ you need a few extra pieces - most of them tiny, none of them magic.
   `NookHostConfiguration`, each module gets its own `UserDefaults` suite via
   `NookModuleContext`. Don't collide host product state with the `opennook.*`
   or `nook.shelf.*` keys.
-- **Entitlements.** The minimum that lets every framework feature work
-  inside the App Sandbox: `com.apple.security.app-sandbox`,
-  `com.apple.security.files.user-selected.read-write` (shelf drag-in),
-  `com.apple.security.files.bookmarks.app-scope` (scoped-bookmark persistence).
-  The global hotkey is Carbon and needs no entitlement. CoreAudio
-  default-output listening is read-only and needs no entitlement. The
-  shelf detects the sandbox at runtime (`ShelfRuntime.isSandboxed`) and
-  switches to a stricter acceptance mode.
+- **Entitlements.** A ready-to-copy template lives at
+  [`App/Nook.entitlements`](App/Nook.entitlements) with the minimum that lets
+  every framework feature work inside the App Sandbox:
+  `com.apple.security.app-sandbox`,
+  `com.apple.security.files.user-selected.read-write` (shelf drag-in and the
+  file picker - see below), `com.apple.security.files.bookmarks.app-scope`
+  (scoped-bookmark persistence). It is intentionally *not* wired into the build
+  by default, so the demo and the dev loop stay unsandboxed; to actually sandbox
+  the app, add `CODE_SIGN_ENTITLEMENTS: App/Nook.entitlements` to the
+  `NookHostApp` target in `project.yml` and regenerate. The global hotkey is
+  Carbon and needs no entitlement. CoreAudio default-output listening is
+  read-only and needs no entitlement. The shelf detects the sandbox at runtime
+  (`ShelfRuntime.isSandboxed`) and switches to a stricter acceptance mode.
+- **File pickers.** Modules present open/save panels through the host's
+  `NookFilePicker` (resolved from `\.appServices` via `NookFilePickerKey`), which
+  activates the app so the panel is interactive from the non-activating notch
+  panel and holds the surface open while it's up. Two caveats: (1) under the
+  sandbox, `files.user-selected.read-write` is what makes a picked file readable,
+  so ship the entitlement above; (2) under `swift run` the binary is unbundled
+  and unsandboxed with no powerbox, so the panel can't enter TCC-protected
+  folders (Downloads, Desktop, Documents) - run the signed `.app` (the
+  `NookHostApp` target, e.g. Cmd-R in Xcode) or grant your terminal Full Disk
+  Access. This is a dev-loop artifact, not a shipping limitation.
 - **Menu-bar accessory, no Dock.** Set `LSUIElement = true` in
   `Info.plist` if you want the menu-bar-only behavior the demo ships.
 - **Hardened runtime + notarization** for distribution outside the Mac

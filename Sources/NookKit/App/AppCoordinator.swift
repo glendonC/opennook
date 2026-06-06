@@ -37,7 +37,7 @@ public final class AppCoordinator: ObservableObject {
         static let expandedBottomCornerRadius: CGFloat = 24
     }
 
-    let hotkeyController: HotkeyController
+    public let hotkeyController: HotkeyController
     var cancellables = Set<AnyCancellable>()
 
     /// An opaque `NotificationCenter` observer token, wrapped so the non-isolated

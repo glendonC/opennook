@@ -4,8 +4,7 @@ const docsUrl = '/start/introduction/';
 import '../styles/tokens.css';
 const carouselLines = [
   'Hover to expand',
-  'Framework chrome preview',
-  'Open settings with the gear',
+  'Home view + top bar chrome',
   'Lock to stay open',
 ];
 ---
@@ -22,7 +21,12 @@ const carouselLines = [
     <meta property="og:description" content="An open-source Swift framework for the menu-bar notch." />
     <meta property="og:url" content="https://opennook.dev" />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://opennook.dev/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://opennook.dev/og-image.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="canonical" href="https://opennook.dev/" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -36,10 +40,7 @@ const carouselLines = [
     <a href="#hero" class="visually-hidden">Skip to content</a>
 
     <main id="hero" class="page">
-      <div class="nook-host is-interactive" data-palette="dark" data-theme-mode="dark" data-surface="solid" data-layout="auto" data-layout-form="notch">
-        <div class="hardware-notch" aria-hidden="true">
-          <span class="hardware-notch__cutout"></span>
-        </div>
+      <div class="nook-host is-interactive" data-palette="dark" data-theme-mode="dark" data-surface="solid">
         <div class="nook-trigger" tabindex="0" aria-label="OpenNook - hover for more details">
           <div class="notch-carousel" data-notch-carousel aria-live="polite">
             <div class="notch-carousel__viewport">
@@ -61,17 +62,6 @@ const carouselLines = [
             <div class="bar__date" data-bar-date>
               <time class="bar__date-label" datetime="" data-bar-date-label>Sat, May 23</time>
             </div>
-            <button type="button" class="bar__back is-hidden" data-home-btn aria-label="Home">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-            </button>
-            <span class="bar__chevron is-hidden" data-bar-chevron aria-hidden="true">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </span>
-            <span class="bar__settings-title is-hidden" data-bar-settings-title>Settings</span>
             <span class="bar__spacer"></span>
             <div class="bar__trailing">
               <button type="button" class="bar__icon" data-keep-open aria-label="Stay expanded after hover" aria-pressed="false">
@@ -84,55 +74,24 @@ const carouselLines = [
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </button>
-              <button type="button" class="bar__icon bar__icon--settings" data-settings-toggle aria-label="Settings" aria-pressed="false">
+              <span class="bar__icon bar__icon--settings" aria-hidden="true">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
-              </button>
+              </span>
             </div>
           </header>
 
           <div class="surface-body">
-            <div class="home-surface" data-home-surface>
+            <div class="home-surface">
               <div class="placeholder-home">
-                <svg class="placeholder-home__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M9.94 14.32 12 2l2.06 12.32" />
-                  <path d="M12 2v7" />
-                  <path d="M6.53 17.11 12 22l5.47-4.89" />
-                  <path d="M8.5 14.5 12 22l3.5-7.5" />
+                <svg class="placeholder-home__icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+                  <path d="M5 10.5c0-3 3.1-6 7-6s7 3 7 6" />
+                  <circle cx="12" cy="16" r="2" fill="currentColor" stroke="none" />
                 </svg>
                 <p class="placeholder-home__title">Nook</p>
                 <p class="placeholder-home__body">Register your own view with NookConfiguration to start building.</p>
-              </div>
-            </div>
-
-            <div class="settings-surface is-hidden" data-settings-panel>
-              <div class="settings-scroll">
-                <div class="settings-stack">
-                  <div class="settings-block">
-                    <p class="settings-section-label">Appearance</p>
-                    <div class="settings-group">
-                      <div class="settings-field">
-                        <span class="settings-field__label">Theme</span>
-                        <div class="settings-segment" data-setting="theme" role="group" aria-label="Theme">
-                          <button type="button" class="settings-segment__btn" data-setting-value="match">Match Mac</button>
-                          <button type="button" class="settings-segment__btn is-active" data-setting-value="dark">Dark</button>
-                          <button type="button" class="settings-segment__btn" data-setting-value="light">Light</button>
-                        </div>
-                      </div>
-                      <div class="settings-field">
-                        <span class="settings-field__label">Layout</span>
-                        <div class="settings-segment" data-setting="layout" role="group" aria-label="Layout">
-                          <button type="button" class="settings-segment__btn is-active" data-setting-value="auto">Auto</button>
-                          <button type="button" class="settings-segment__btn" data-setting-value="notch">Notch</button>
-                          <button type="button" class="settings-segment__btn" data-setting-value="floating">Floating</button>
-                        </div>
-                        <p class="settings-field__hint" data-layout-hint>Auto uses the notch shape on a notched display and a floating panel on any other.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -178,71 +137,18 @@ const carouselLines = [
         </div>
       </section>
 
-      <p class="version" aria-hidden="true">v0.1.0 - Foundation</p>
+      <p class="version" aria-hidden="true">v0.2.0</p>
     </main>
 
     <script>
       const nookHost = document.querySelector('.nook-host');
       const nookTrigger = document.querySelector('.nook-trigger');
       const keepOpenBtn = document.querySelector('[data-keep-open]');
-      const settingsBtn = document.querySelector('[data-settings-toggle]');
-      const settingsPanel = document.querySelector('[data-settings-panel]');
-      const homeSurface = document.querySelector('[data-home-surface]');
-      const homeBtn = document.querySelector('[data-home-btn]');
-      const barDate = document.querySelector('[data-bar-date]');
       const barDateLabel = document.querySelector('[data-bar-date-label]');
-      const barChevron = document.querySelector('[data-bar-chevron]');
-      const barSettingsTitle = document.querySelector('[data-bar-settings-title]');
-      const layoutHint = document.querySelector('[data-layout-hint]');
       const carousel = document.querySelector('[data-notch-carousel]');
       const carouselLines = carousel?.querySelectorAll('[data-carousel-line]');
       const mobileNotice = document.querySelector('[data-mobile-notice]');
       const mobileNoticeDismiss = document.querySelector('[data-mobile-notice-dismiss]');
-
-      const layoutHints = {
-        auto: 'Auto uses the notch shape on a notched display and a floating panel on any other.',
-        notch: 'Notch always uses the notch shape, even on a display without one.',
-        floating: 'Floating always shows a free-standing panel below the menu bar.',
-      };
-
-      let settingsOpen = false;
-      let themeMode = 'dark';
-      let layoutMode = 'auto';
-
-      const themePairFor = (mode) => {
-        if (mode === 'light') return { page: 'dark', notch: 'light' };
-        if (mode === 'dark') return { page: 'light', notch: 'dark' };
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        return systemDark
-          ? { page: 'dark', notch: 'light' }
-          : { page: 'light', notch: 'dark' };
-      };
-
-      const layoutFormFor = (mode) => {
-        if (mode === 'floating') return 'floating';
-        if (mode === 'notch') return 'notch';
-        return 'notch';
-      };
-
-      const applyPalette = (mode) => {
-        themeMode = mode;
-        const { page, notch } = themePairFor(mode);
-        document.documentElement.setAttribute('data-palette', page);
-        nookHost?.setAttribute('data-palette', notch);
-        nookHost?.setAttribute('data-theme-mode', mode);
-      };
-
-      const applyLayout = (mode) => {
-        layoutMode = mode;
-        nookHost?.setAttribute('data-layout', mode);
-        nookHost?.setAttribute('data-layout-form', layoutFormFor(mode));
-        if (layoutHint) layoutHint.textContent = layoutHints[mode] ?? '';
-      };
-
-      const applySetting = (setting, value) => {
-        if (setting === 'theme') applyPalette(value);
-        if (setting === 'layout') applyLayout(value);
-      };
 
       const formatBarDate = (date = new Date()) => {
         return new Intl.DateTimeFormat('en-US', {
@@ -259,65 +165,7 @@ const carouselLines = [
         barDateLabel.dateTime = now.toISOString().slice(0, 10);
       };
 
-      const setBarForSettings = (open) => {
-        barDate?.classList.toggle('is-hidden', open);
-        homeBtn?.classList.toggle('is-hidden', !open);
-        barChevron?.classList.toggle('is-hidden', !open);
-        barSettingsTitle?.classList.toggle('is-hidden', !open);
-      };
-
-      const showHomeView = () => {
-        settingsOpen = false;
-        settingsBtn?.classList.remove('is-active');
-        settingsBtn?.setAttribute('aria-pressed', 'false');
-        settingsPanel?.classList.add('is-hidden');
-        homeSurface?.classList.remove('is-hidden');
-        setBarForSettings(false);
-      };
-
-      const openSettingsView = () => {
-        settingsOpen = true;
-        settingsBtn?.classList.add('is-active');
-        settingsBtn?.setAttribute('aria-pressed', 'true');
-        settingsPanel?.classList.remove('is-hidden');
-        homeSurface?.classList.add('is-hidden');
-        setBarForSettings(true);
-      };
-
-      settingsBtn?.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (settingsOpen) showHomeView();
-        else openSettingsView();
-      });
-
-      homeBtn?.addEventListener('click', () => {
-        showHomeView();
-      });
-
-      nookHost?.addEventListener('click', (event) => {
-        const settingBtn = event.target.closest('[data-setting-value]');
-        if (!settingBtn) return;
-        event.stopPropagation();
-
-        const group = settingBtn.closest('[data-setting]');
-        if (!group) return;
-
-        group.querySelectorAll('[data-setting-value]').forEach((option) => {
-          option.classList.toggle('is-active', option === settingBtn);
-        });
-
-        applySetting(group.dataset.setting, settingBtn.dataset.settingValue);
-      });
-
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (themeMode === 'match') applyPalette('match');
-      });
-
       updateBarDate();
-
-      applyPalette('dark');
-      applyLayout('auto');
-      showHomeView();
 
       if (keepOpenBtn && nookHost) {
         keepOpenBtn.addEventListener('click', () => {
@@ -384,7 +232,6 @@ const carouselLines = [
           window.clearTimeout(collapseTimer);
           nookHost.classList.remove('is-expanded');
           nookTrigger.setAttribute('aria-expanded', 'false');
-          showHomeView();
         };
 
         const scheduleCollapse = () => {
@@ -414,7 +261,7 @@ const carouselLines = [
 
           nookTrigger.addEventListener('click', (event) => {
             if (isExpanded()) return;
-            if (event.target.closest('[data-keep-open], [data-settings-toggle], [data-home-btn], [data-setting-value]')) {
+            if (event.target.closest('[data-keep-open]')) {
               return;
             }
             expand();
@@ -460,9 +307,6 @@ const carouselLines = [
         --accent: #0a84ff;
         --notch-pill-w: clamp(150px, 22vw, 200px);
         --notch-pill-h: clamp(26px, 3vw, 30px);
-        --mac-notch-w: var(--notch-pill-w);
-        --mac-notch-h: var(--notch-pill-h);
-        --menubar-gap: clamp(24px, 3.4vh, 32px);
         --notch-carousel-w: clamp(240px, 46vw, 340px);
         --compact-radius: 14px;
         --stage-radius: clamp(28px, 4.5vw, 48px);
@@ -579,41 +423,6 @@ const carouselLines = [
       .nook-host.is-interactive.is-open,
       .nook-host.is-interactive.is-pinned {
         z-index: 10;
-      }
-
-      .nook-host[data-layout-form='floating'] {
-        padding-top: 0;
-      }
-
-      .nook-host[data-layout-form='notch'] {
-        padding-top: 0;
-      }
-
-      /* Mac hardware notch — visible in floating layout only. The OpenNook panel
-         drops below the menu bar; the physical cutout stays flush to the top. */
-      .hardware-notch {
-        display: none;
-        width: 100%;
-        height: var(--mac-notch-h);
-        pointer-events: none;
-      }
-
-      .hardware-notch__cutout {
-        display: block;
-        width: var(--mac-notch-w);
-        height: 100%;
-        margin: 0 auto;
-        background: #050505;
-        border-radius: 0 0 9px 9px;
-        box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-      }
-
-      .nook-host[data-layout-form='floating'] .hardware-notch {
-        display: block;
-      }
-
-      .nook-host[data-layout-form='floating'] .nook-trigger {
-        margin-top: var(--menubar-gap);
       }
 
       /* ---- Mobile / touch notice ---- */
@@ -784,19 +593,6 @@ const carouselLines = [
           box-shadow 320ms ease;
       }
 
-      .nook-host[data-layout-form='floating'] .notch-carousel {
-        border-radius: calc(var(--notch-pill-h) / 2);
-        box-shadow:
-          0 8px 24px rgba(10, 10, 10, 0.14),
-          0 2px 6px rgba(10, 10, 10, 0.08);
-      }
-
-      .nook-host[data-layout-form='floating'][data-palette='light'] .notch-carousel {
-        box-shadow:
-          0 10px 28px rgba(10, 10, 10, 0.12),
-          0 2px 8px rgba(10, 10, 10, 0.06);
-      }
-
       .notch-carousel__viewport {
         position: relative;
         width: 100%;
@@ -883,11 +679,6 @@ const carouselLines = [
           box-shadow 320ms ease;
       }
 
-      .nook-host[data-layout-form='floating'] .stage {
-        border-radius: var(--stage-radius);
-        clip-path: inset(0 round var(--compact-radius));
-      }
-
       .nook-host.is-interactive .stage {
         visibility: visible;
         transition:
@@ -905,10 +696,6 @@ const carouselLines = [
         pointer-events: none;
       }
 
-      .nook-host[data-layout-form='floating'].is-interactive:not(.is-expanded):not(.is-open) .stage {
-        clip-path: inset(0 round var(--compact-radius));
-      }
-
       .nook-host.is-interactive.is-expanded .stage,
       .nook-host.is-interactive.is-open .stage {
         z-index: 2;
@@ -924,21 +711,6 @@ const carouselLines = [
           0 24px 50px rgba(10, 10, 10, 0.28),
           0 60px 120px rgba(10, 10, 10, 0.14);
         pointer-events: auto;
-      }
-
-      .nook-host[data-layout-form='floating'].is-interactive.is-expanded .stage,
-      .nook-host[data-layout-form='floating'].is-interactive.is-open .stage {
-        clip-path: inset(0 round var(--stage-radius));
-        box-shadow:
-          0 18px 44px rgba(10, 10, 10, 0.22),
-          0 6px 16px rgba(10, 10, 10, 0.1);
-      }
-
-      .nook-host[data-layout-form='floating'][data-palette='light'].is-interactive.is-expanded .stage,
-      .nook-host[data-layout-form='floating'][data-palette='light'].is-interactive.is-open .stage {
-        box-shadow:
-          0 20px 48px rgba(10, 10, 10, 0.18),
-          0 8px 20px rgba(10, 10, 10, 0.08);
       }
 
       .stage__content {
@@ -1015,34 +787,6 @@ const carouselLines = [
         color: inherit;
       }
 
-      .bar__back {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 24px;
-        height: 24px;
-        padding: 0;
-        border: 0;
-        border-radius: 7px;
-        background: transparent;
-        color: var(--notch-text-faint);
-        cursor: pointer;
-      }
-
-      .bar__chevron {
-        display: inline-flex;
-        align-items: center;
-        color: var(--notch-text-faint);
-        opacity: 0.42;
-      }
-
-      .bar__settings-title {
-        font-size: 11px;
-        font-weight: 400;
-        color: var(--notch-text-soft);
-        white-space: nowrap;
-      }
-
       .bar__spacer {
         flex: 1;
         min-width: 0;
@@ -1074,7 +818,7 @@ const carouselLines = [
       }
 
       .bar__icon.is-active {
-        color: #6eb5ff;
+        color: var(--accent);
       }
 
       .bar__icon.is-active .bar__icon-lock-open {
@@ -1083,6 +827,11 @@ const carouselLines = [
 
       .bar__icon.is-active .bar__icon-lock-closed {
         display: block;
+      }
+
+      .bar__icon--settings {
+        pointer-events: none;
+        cursor: default;
       }
 
       .is-hidden {
@@ -1131,274 +880,6 @@ const carouselLines = [
         color: var(--notch-text-faint);
       }
 
-      /* ---- Settings (SettingsView) ---- */
-      .settings-surface {
-        flex: 1;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-
-      .settings-scroll {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 2px;
-        padding-bottom: 14px;
-        scrollbar-width: thin;
-        scrollbar-color: var(--notch-line-strong) transparent;
-      }
-
-      .settings-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .settings-block {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .settings-section-label {
-        margin: 0 0 6px;
-        font-size: 9px;
-        font-weight: 600;
-        letter-spacing: 0.42px;
-        text-transform: uppercase;
-        color: var(--notch-text-faint);
-      }
-
-      .settings-group {
-        padding: 10px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.038);
-        border: 1px solid var(--notch-line);
-      }
-
-      .settings-group--rows {
-        padding: 4px 10px;
-      }
-
-      .nook-host[data-palette='light'] .settings-group {
-        background: rgba(10, 10, 10, 0.028);
-      }
-
-      .settings-field + .settings-field {
-        margin-top: 10px;
-      }
-
-      .settings-field__label {
-        display: block;
-        margin-bottom: 5px;
-        font-size: 10px;
-        font-weight: 500;
-        color: var(--notch-text-soft);
-      }
-
-      .settings-field__hint {
-        margin: 5px 0 0;
-        font-size: 10px;
-        line-height: 1.45;
-        color: var(--notch-text-faint);
-      }
-
-      .settings-segment {
-        display: flex;
-        gap: 1px;
-        padding: 1px;
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.055);
-        border: 1px solid var(--notch-line);
-      }
-
-      .nook-host[data-palette='light'] .settings-segment {
-        background: rgba(10, 10, 10, 0.04);
-      }
-
-      .settings-segment__btn {
-        flex: 1;
-        padding: 4px 6px;
-        border: 0;
-        border-radius: 5px;
-        background: transparent;
-        font-family: var(--font-sans);
-        font-size: 10px;
-        text-align: center;
-        color: var(--notch-text-faint);
-        cursor: pointer;
-        pointer-events: auto;
-      }
-
-      .settings-segment__btn.is-active {
-        color: #fff;
-        background: var(--accent);
-        box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.18);
-      }
-
-      .nook-host[data-palette='light'] .settings-segment__btn.is-active {
-        color: #fff;
-        background: var(--accent);
-        box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.12);
-      }
-
-      .settings-menu {
-        position: relative;
-      }
-
-      .settings-menu__select {
-        appearance: none;
-        width: 100%;
-        padding: 5px 28px 5px 8px;
-        border: 1px solid var(--notch-line);
-        border-radius: 6px;
-        background: rgba(255, 255, 255, 0.055);
-        font-family: var(--font-sans);
-        font-size: 10px;
-        color: var(--notch-text);
-        cursor: pointer;
-      }
-
-      .nook-host[data-palette='light'] .settings-menu__select {
-        background: rgba(10, 10, 10, 0.04);
-      }
-
-      .settings-menu__chevron {
-        position: absolute;
-        right: 8px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--notch-text-faint);
-        pointer-events: none;
-      }
-
-      .settings-inset-divider {
-        height: 1px;
-        margin: 6px 0;
-        background: var(--notch-line-strong);
-        opacity: 0.35;
-      }
-
-      .settings-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        width: 100%;
-        padding: 4px 0;
-        border: 0;
-        background: transparent;
-        text-align: left;
-        color: inherit;
-      }
-
-      .settings-row--action {
-        cursor: pointer;
-      }
-
-      .settings-row--command {
-        padding: 9px 10px;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.022);
-        border: 1px solid var(--notch-line);
-      }
-
-      .nook-host[data-palette='light'] .settings-row--command {
-        background: rgba(10, 10, 10, 0.018);
-      }
-
-      .settings-row__icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        flex: 0 0 18px;
-        color: var(--notch-text-faint);
-      }
-
-      .settings-row__icon--plate {
-        width: 26px;
-        height: 26px;
-        flex-basis: 26px;
-        border-radius: 7px;
-        background: rgba(255, 255, 255, 0.055);
-        border: 1px solid var(--notch-line);
-      }
-
-      .settings-row__copy {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .settings-row__title {
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--notch-text);
-        line-height: 1.2;
-      }
-
-      .settings-row__version {
-        margin-left: 6px;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        font-weight: 400;
-        color: var(--notch-text-faint);
-      }
-
-      .settings-row__detail {
-        font-size: 9px;
-        line-height: 1.35;
-        color: var(--notch-text-faint);
-      }
-
-      .settings-row__chevron {
-        color: var(--notch-text-faint);
-        opacity: 0.42;
-      }
-
-      .settings-shortcut {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        flex: 0 0 auto;
-      }
-
-      .settings-shortcut__key {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 24px;
-        min-height: 22px;
-        padding: 0 6px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--notch-text);
-        background: rgba(255, 255, 255, 0.055);
-        border: 1px solid var(--notch-line-strong);
-      }
-
-      .settings-row__pin-closed {
-        display: none;
-      }
-
-      .settings-row.is-active .settings-row__pin-open {
-        display: none;
-      }
-
-      .settings-row.is-active .settings-row__pin-closed {
-        display: block;
-        color: var(--accent);
-      }
-
-      .settings-row.is-active .settings-row__icon {
-        color: var(--accent);
-      }
 
       /* ---- Page version strip ---- */
       .version {
@@ -1434,9 +915,6 @@ const carouselLines = [
         .stage {
           width: var(--stage-w);
           clip-path: inset(0 round 0 0 var(--stage-radius) var(--stage-radius));
-        }
-        .nook-host[data-layout-form='floating'] .stage {
-          clip-path: inset(0 round var(--stage-radius));
         }
         .notch-carousel { display: none; }
         .page:has(.nook-host.is-interactive:not(.is-expanded):not(.is-open)) .screen-hero {
@@ -1481,7 +959,6 @@ const carouselLines = [
 
       /* ---- Touch surfaces ---- */
       @media (hover: none) {
-        .bar__back,
         .bar__icon {
           width: 44px;
           height: 44px;

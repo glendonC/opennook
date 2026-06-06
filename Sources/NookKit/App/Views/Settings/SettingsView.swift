@@ -91,13 +91,25 @@ struct SettingsView: View {
                 }
 
                 section("Data") {
-                    SettingsDataCommandRow(
-                        title: "Reset All Settings",
-                        subtitle: "Theme, surface, layout, display, hotkey, stay expanded",
-                        icon: "arrow.counterclockwise",
-                        style: .standard,
-                        action: onResetAllSettings
-                    )
+                    VStack(alignment: .leading, spacing: 12) {
+                        SettingsDataCommandRow(
+                            title: "Preview status banner",
+                            subtitle: "Shows the transient message channel under the top bar",
+                            icon: "text.bubble",
+                            style: .standard,
+                            action: {
+                                appState.errorMessage = "Something went wrong — try again."
+                                appState.showHome()
+                            }
+                        )
+                        SettingsDataCommandRow(
+                            title: "Reset All Settings",
+                            subtitle: "Theme, surface, layout, display, hotkey, stay expanded",
+                            icon: "arrow.counterclockwise",
+                            style: .standard,
+                            action: onResetAllSettings
+                        )
+                    }
                 }
 
                 section("About") {

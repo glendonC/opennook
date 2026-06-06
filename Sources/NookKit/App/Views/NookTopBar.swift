@@ -149,6 +149,13 @@ struct NookTopBar: View {
             if showPersistentHomeTitle {
                 if let leadingIcon {
                     StaticHeaderIcon(systemName: leadingIcon)
+                } else {
+                    NookMarkView(
+                        size: 11,
+                        strokeWidth: 1.1,
+                        color: resolvedTheme.secondaryLabel.opacity(0.92)
+                    )
+                    .frame(width: 11, height: 11)
                 }
                 Text(title)
                     .font(.system(size: 11, weight: .regular))

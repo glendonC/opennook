@@ -75,11 +75,11 @@ final class NookConfigurationTests: XCTestCase {
         XCTAssertNil(coordinator.surface.onHide)
     }
 
-    /// The default top-bar leading cluster must reproduce the demo: house + "Home".
+    /// The default top-bar leading cluster must reproduce the demo: brand mark + "Home".
     func testTopBarLeadingDefaultsMatchTheDemo() {
         let configuration = NookConfiguration()
 
-        XCTAssertEqual(configuration.topBar.leadingIcon, "house")
+        XCTAssertNil(configuration.topBar.leadingIcon)
         XCTAssertEqual(configuration.topBar.leadingTitle(AppState()), "Home")
     }
 
@@ -87,10 +87,10 @@ final class NookConfigurationTests: XCTestCase {
     func testTopBarLeadingIsHostConfigurable() {
         var configuration = NookConfiguration()
         configuration.topBar.leadingTitle = { _ in "Today" }
-        configuration.topBar.leadingIcon = nil
+        configuration.topBar.leadingIcon = "house"
 
         XCTAssertEqual(configuration.topBar.leadingTitle(AppState()), "Today")
-        XCTAssertNil(configuration.topBar.leadingIcon)
+        XCTAssertEqual(configuration.topBar.leadingIcon, "house")
     }
 
     /// The default configuration ships the full framework chrome — top bar and Settings.

@@ -1,0 +1,102 @@
+---
+title: Shipping
+description: Turn a dev-loop nook into a signed macOS app you can distribute.
+---
+
+`swift run` and Cmd-R in Xcode are for building and testing. Shipping a real
+`.app` means bundle identity, persistence, entitlements, and signing. Most of
+it is small and one-time.
+
+## Bundle identity
+
+Rename the product in three places:
+
+1. **`Package.swift`**: the `.executable(name:)` and `.library(name:)` products.
+2. **`project.yml`**: `name:`, `targets:`, and `PRODUCT_BUNDLE_IDENTIFIER`.
+3. **`App/Info.plist`**: `CFBundleIdentifier` and `CFBundleName`.
+
+Pick a reverse-DNS bundle id before you ship. `NookModuleContext.makeDefault`
+uses it to name on-disk containers and per-module `UserDefaults` suites.
+
+See [Your first nook](/start/first-nook/) for the quick rename pointers at the
+end of the getting-started flow.
+
+## Persistence
+
+`NookKit` stores framework preferences in `UserDefaults.standard` under the
+`opennook.*` prefix:
+
+- `opennook.appearance.v1`
+- `opennook.display.v1`
+- `opennook.hotkey.v1`
+- `opennook.module.default`
+
+`NookComponents` file shelf data lives under `nook.shelf.items`.
+
+If you use `NookHostConfiguration`, each module gets its own `UserDefaults`
+suite through `NookModuleContext`. Keep your host product keys separate from
+`opennook.*` and `nook.shelf.*` so nothing collides.
+
+## Entitlements
+
+A copy-paste template lives at [`App/Nook.entitlements`](https://github.com/glendonC/opennook/blob/main/App/Nook.entitlements).
+It includes the minimum for App Sandbox plus the features OpenNook expects:
+
+- `com.apple.security.app-sandbox`
+- `com.apple.security.files.user-selected.read-write` (shelf drag-in and the
+  file picker)
+- `com.apple.security.files.bookmarks.app-scope` (scoped-bookmark persistence)
+
+The demo does **not** wire this file in by default, so `swift run` stays
+unsandboxed. To sandbox your app, set
+`CODE_SIGN_ENTITLEMENTS: App/Nook.entitlements` on the `NookHostApp` target in
+`project.yml`, regenerate the Xcode project, and rebuild.
+
+The global hotkey is Carbon and needs no entitlement. CoreAudio output
+listening for the volume glyph is read-only and needs no entitlement. The shelf
+detects the sandbox at runtime (`ShelfRuntime.isSandboxed`) and switches to a
+stricter acceptance mode when sandboxed.
+
+## File pickers
+
+Modules open and save files through the host's `NookFilePicker`, resolved from
+`\.appServices` via `NookFilePickerKey`. It activates the app so the panel
+works from the non-activating notch panel and keeps the surface open while the
+panel is up.
+
+Two things to know:
+
+1. **Sandbox.** `files.user-selected.read-write` is what makes a user-picked
+   file readable inside the sandbox. Ship the entitlement above.
+2. **Dev loop.** Under `swift run` the binary is unbundled and unsandboxed with
+   no powerbox, so the panel cannot reach TCC-protected folders (Downloads,
+   Desktop, Documents). Run the signed `.app` from the `NookHostApp` target, or
+   grant your terminal Full Disk Access. That limitation is dev-only, not a
+   shipping constraint.
+
+## Menu bar only
+
+Set `LSUIElement = true` in `Info.plist` if you want menu-bar accessory
+behavior with no Dock icon, matching the demo.
+
+## Sign and notarize
+
+For distribution outside the Mac App Store, sign with a Developer ID, enable
+hardened runtime, and notarize. None of OpenNook's APIs require runtime
+exceptions.
+
+Regenerate the Xcode project after editing `project.yml`:
+
+```sh
+./Scripts/regenerate-xcodeproj.sh
+open Nook.xcodeproj
+```
+
+## See also
+
+- [File shelf](/guides/file-shelf/#sandbox-behavior): sandbox behavior and
+  relaunch pitfalls.
+- [Multiple modules](/guides/multiple-modules/): per-module persistence and
+  host branding.
+- [Troubleshooting](/reference/troubleshooting/): symptom-first fixes when
+  something looks wrong after you ship.

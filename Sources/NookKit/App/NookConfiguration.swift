@@ -200,16 +200,16 @@ public struct NookTopBarConfiguration: Sendable {
     /// only state, so it stays callable from any context.
     public var leadingTitle: @Sendable (AppState) -> String
 
-    /// SF Symbol for the top bar's leading cluster. Defaults to `"house"`. Set to
-    /// `nil` for a title-only cluster (in Settings, a back chevron is then used so
-    /// returning home still works).
+    /// SF Symbol for the top bar's leading cluster. Defaults to `nil`, which renders
+    /// the OpenNook brand mark. Set to `"house"` (or any SF Symbol) to override, or
+    /// keep `nil` for title-only on hosts that set a custom title without an icon.
     public var leadingIcon: String?
 
     public init(
         showsTopBar: Bool = true,
         showsSettings: Bool = true,
         leadingTitle: @escaping @Sendable (AppState) -> String = { _ in "Home" },
-        leadingIcon: String? = "house"
+        leadingIcon: String? = nil
     ) {
         self.showsTopBar = showsTopBar
         self.showsSettings = showsSettings
@@ -217,6 +217,6 @@ public struct NookTopBarConfiguration: Sendable {
         self.leadingIcon = leadingIcon
     }
 
-    /// The framework-demo defaults — top bar on, Settings on, "Home" with house glyph.
+    /// The framework-demo defaults — top bar on, Settings on, "Home" with the brand mark.
     public static let `default` = NookTopBarConfiguration()
 }

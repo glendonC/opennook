@@ -33,10 +33,12 @@ public struct NookCompactTrailingView: View {
     public init() {}
 
     public var body: some View {
-        Image(systemName: "sparkles")
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(theme.primaryLabel.opacity(0.82))
-            .frame(width: NookLayout.compactSlotSize, height: NookLayout.compactSlotSize)
+        NookMarkView(
+            size: 11,
+            strokeWidth: 1.1,
+            color: theme.primaryLabel.opacity(0.82)
+        )
+        .frame(width: NookLayout.compactSlotSize, height: NookLayout.compactSlotSize)
     }
 }
 

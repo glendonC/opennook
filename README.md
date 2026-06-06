@@ -174,7 +174,7 @@ configuration.theme = { appState in MyPalette.resolve(appState) }
 
 // Top bar - leading cluster identity and chrome flags live on `topBar`.
 configuration.topBar.leadingTitle = { _ in "Today" }  // default: "Home"
-configuration.topBar.leadingIcon = nil                // default: "house"
+configuration.topBar.leadingIcon = "house"            // nil = brand mark; SF Symbol overrides
 configuration.topBar.showsTopBar = true               // false strips top bar + gear + lock
 configuration.topBar.showsSettings = true             // false drops the gear (top bar stays)
 

@@ -9,6 +9,11 @@ export default defineConfig({
     starlight({
       title: 'OpenNook',
       description: 'An open-source framework for building macOS notch apps.',
+      logo: {
+        alt: 'OpenNook',
+        src: './src/assets/nook-mark.svg',
+        replacesTitle: false,
+      },
       social: {
         github: 'https://github.com/glendonC/opennook',
       },
@@ -23,6 +28,14 @@ export default defineConfig({
         PageTitle: './src/components/PageTitle.astro',
       },
       head: [
+        {
+          tag: 'link',
+          attrs: { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+        },
+        {
+          tag: 'link',
+          attrs: { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+        },
         {
           tag: 'link',
           attrs: { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -75,6 +88,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             { label: 'API reference', slug: 'reference/api' },
+            { label: 'Shipping', slug: 'guides/shipping' },
             { label: 'Troubleshooting', slug: 'reference/troubleshooting' },
           ],
         },

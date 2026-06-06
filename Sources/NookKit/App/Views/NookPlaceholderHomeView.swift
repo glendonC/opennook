@@ -23,9 +23,11 @@ public struct NookPlaceholderHomeView: View {
 
     public var body: some View {
         VStack(spacing: 10) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(theme.secondaryLabel)
+            NookMarkView(
+                size: 28,
+                strokeWidth: 2,
+                color: theme.secondaryLabel
+            )
             Text("Nook")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(theme.primaryLabel)

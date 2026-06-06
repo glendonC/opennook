@@ -8,6 +8,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "generate:brand": "node scripts/generate-brand-assets.mjs",
     "astro": "astro"
   },
   "dependencies": {

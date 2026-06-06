@@ -101,6 +101,9 @@ public struct NookExpandedView: View {
                     leadingIcon: topBar.leadingIcon,
                     showsSettings: topBar.showsSettings
                 )
+
+                NookTransientStatusBanner(appState: appState, theme: resolvedTheme)
+                    .animation(.spring(response: 0.34, dampingFraction: 0.86), value: appState.errorMessage)
             }
 
             Group {

@@ -110,7 +110,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
     private func installMenuBarFallback() {
         let hostName = moduleHost.branding.hostName
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "text.bubble", accessibilityDescription: hostName)
+        item.button?.image =
+            NookMarkView.makeTemplateImage(size: 14)
+            ?? NSImage(systemSymbolName: "text.bubble", accessibilityDescription: hostName)
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(

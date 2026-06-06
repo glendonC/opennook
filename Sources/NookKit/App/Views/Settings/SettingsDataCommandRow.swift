@@ -99,10 +99,12 @@ struct SettingsAboutCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(theme.headerInactiveIcon)
-                .frame(width: 18)
+            NookMarkView(
+                size: 14,
+                strokeWidth: 1.2,
+                color: theme.headerInactiveIcon
+            )
+            .frame(width: 18)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {

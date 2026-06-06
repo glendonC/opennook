@@ -35,7 +35,7 @@ configuration.theme = { appState in MyPalette.resolve(appState) }
 
 // Top bar - leading cluster identity and chrome flags live on `topBar`.
 configuration.topBar.leadingTitle = { _ in "Today" }  // default: "Home"
-configuration.topBar.leadingIcon = nil                // default: "house"
+configuration.topBar.leadingIcon = "house"            // nil = brand mark; SF Symbol overrides
 configuration.topBar.showsTopBar = true               // false strips top bar + gear + lock
 configuration.topBar.showsSettings = true             // false drops the gear (top bar stays)
 
@@ -67,4 +67,4 @@ menu-bar fallback already call into them.
 
 Rename the product (`Nook` → your app) by editing `project.yml`,
 `App/Info.plist`, and the `Package.swift` product name when you're ready
-to ship.
+to ship. See [Shipping](/guides/shipping/) for the full checklist.

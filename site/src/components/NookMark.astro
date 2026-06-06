@@ -1,0 +1,33 @@
+---
+interface Props {
+  class?: string;
+  width?: number;
+  height?: number;
+}
+
+const { class: className, width = 16, height = 16 } = Astro.props;
+---
+
+<svg
+  class:list={['nook-mark', className]}
+  width={width}
+  height={height}
+  viewBox="0 0 24 24"
+  fill="none"
+  aria-hidden="true"
+>
+  <path
+    d="M5 10.5c0-3 3.1-6 7-6s7 3 7 6"
+    stroke="currentColor"
+    stroke-width="1.75"
+    stroke-linecap="round"
+  />
+  <circle cx="12" cy="16" r="2" fill="currentColor" />
+</svg>
+
+<style>
+  .nook-mark {
+    flex: 0 0 auto;
+    display: block;
+  }
+</style>

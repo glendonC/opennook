@@ -42,6 +42,13 @@ struct NookTopBar: View {
     /// larger ``NookStyle/topCornerRadius`` than the default.
     @Environment(\.nookContentInsets) private var contentInsets
 
+    /// Host-overridable chrome strings, layout metrics, and in-panel motion (see
+    /// ``NookChromeLabels`` / ``NookChromeMetrics`` / ``NookChromeMotion``). Injected by
+    /// ``NookExpandedView``; default reproduces today's chrome.
+    @Environment(\.nookChromeLabels) private var labels
+    @Environment(\.nookChromeMetrics) private var metrics
+    @Environment(\.nookChromeMotion) private var motion
+
     var body: some View {
         HStack(spacing: 8) {
             homeLeadingCluster
@@ -53,7 +60,7 @@ struct NookTopBar: View {
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(resolvedTheme.quaternaryLabel)
 
-                Text("Settings")
+                Text(labels.settingsBreadcrumb)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
             } else if let breadcrumb = appState.moduleBreadcrumb, !breadcrumb.isEmpty {
@@ -81,7 +88,7 @@ struct NookTopBar: View {
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
-                    .frame(width: NookLayout.breadcrumbMaxWidth, alignment: .leading)
+                    .frame(width: metrics.breadcrumbMaxWidth, alignment: .leading)
                     .mask(
                         // Full opacity for the leading half of the
                         // breadcrumb frame, then a smooth ramp to fully
@@ -115,7 +122,7 @@ struct NookTopBar: View {
                     systemName: appState.keepNookOpen ? "lock.fill" : "lock.open",
                     isActive: appState.keepNookOpen,
                     activeColor: chromeInteractionAccent,
-                    help: "Stay expanded after hover"
+                    help: labels.keepOpenHelp
                 ) {
                     toggleKeepOpen()
                 }
@@ -125,9 +132,9 @@ struct NookTopBar: View {
                         systemName: "gearshape",
                         isActive: appState.isSettingsView,
                         activeColor: chromeInteractionAccent,
-                        help: "Settings"
+                        help: labels.settingsHelp
                     ) {
-                        withAnimation(.spring(response: 0.38, dampingFraction: 0.84)) {
+                        withAnimation(motion.viewModeChange) {
                             if appState.isSettingsView {
                                 appState.showHome()
                             } else {
@@ -140,8 +147,8 @@ struct NookTopBar: View {
             .fixedSize(horizontal: true, vertical: false)
             .padding(.trailing, contentInsets.trailing)
         }
-        .frame(height: 24)
-        .animation(.easeOut(duration: 0.18), value: appState.moduleBreadcrumb)
+        .frame(height: metrics.topBarHeight)
+        .animation(motion.breadcrumb, value: appState.moduleBreadcrumb)
     }
 
     /// On home the configured title stays visible next to its icon; in settings —
@@ -180,7 +187,7 @@ struct NookTopBar: View {
                     activeColor: chromeInteractionAccent,
                     help: title
                 ) {
-                    withAnimation(.spring(response: 0.34, dampingFraction: 0.85)) {
+                    withAnimation(motion.leadingClusterBack) {
                         if appState.isSettingsView {
                             appState.showHome()
                         } else if hasBreadcrumb {
@@ -210,6 +217,6 @@ struct NookTopBar: View {
                 }
             }
         }
-        .animation(.spring(response: 0.26, dampingFraction: 0.82), value: isHomeIconHovered)
+        .animation(motion.leadingClusterHover, value: isHomeIconHovered)
     }
 }

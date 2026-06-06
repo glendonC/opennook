@@ -90,11 +90,26 @@ public final class AppState: ObservableObject {
     /// for user engagement.
     @Published public internal(set) var isNookVisible = false
 
-    /// Transient status channel — a short-lived message tied to a single nook session.
-    /// Cleared by ``resetTransientStatus()`` on every show/toggle. Hotkey-registration
-    /// failures must NOT live here: they outlive a nook session and need to stay visible
-    /// until the registration is fixed. Those use ``hotkeyRegistrationFailures`` instead.
-    @Published public var errorMessage: String?
+    /// Transient status channel — a short-lived ``NookStatus`` (message + severity) tied
+    /// to a single nook session. Cleared by ``resetTransientStatus()`` on every
+    /// show/toggle. Hotkey-registration failures must NOT live here: they outlive a nook
+    /// session and need to stay visible until the registration is fixed. Those use
+    /// ``hotkeyRegistrationFailures`` instead.
+    @Published public var status: NookStatus?
+
+    /// Back-compatible string view of ``status`` — reading returns the current message,
+    /// writing posts an `.error`-severity status (and `nil` clears it). Prefer
+    /// ``showStatus(_:severity:)`` to post non-error severities.
+    public var errorMessage: String? {
+        get { status?.message }
+        set { status = newValue.map { NookStatus(message: $0, severity: .error) } }
+    }
+
+    /// Posts a transient status with an explicit severity (defaults to `.error`). Shown
+    /// in the top-bar banner until dismissed or cleared by the next show/toggle.
+    public func showStatus(_ message: String, severity: NookStatusSeverity = .error) {
+        status = NookStatus(message: message, severity: severity)
+    }
 
     /// Durable hotkey-registration failures, keyed by ``HotkeyController`` registration id
     /// (`"toggle"`, `"cycle"`, `"module.<id>"`). Each value is a human-readable failure
@@ -206,10 +221,10 @@ public final class AppState: ObservableObject {
         resetTransientStatus()
     }
 
-    /// Clears ``errorMessage``. Called on every show/toggle so a stale transient message
-    /// can't bleed into the next session. Durable hotkey-registration failures live on
-    /// ``hotkeyRegistrationFailures`` and are not cleared here.
+    /// Clears the transient ``status``. Called on every show/toggle so a stale transient
+    /// message can't bleed into the next session. Durable hotkey-registration failures
+    /// live on ``hotkeyRegistrationFailures`` and are not cleared here.
     public func resetTransientStatus() {
-        errorMessage = nil
+        status = nil
     }
 }

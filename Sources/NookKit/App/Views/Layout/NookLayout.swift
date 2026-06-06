@@ -23,6 +23,10 @@ public enum NookLayout {
     public static let edgePadding: CGFloat = 8
     public static let compactSlotSize: CGFloat = 24
 
+    /// Fixed height of the top bar's icon row. The framework default backing
+    /// ``NookChromeMetrics/topBarHeight``.
+    public static let topBarHeight: CGFloat = 24
+
     /// Maximum width allowed for the topbar's module-breadcrumb label.
     ///
     /// The topbar runs at the menu-bar level on a notched display, so anything

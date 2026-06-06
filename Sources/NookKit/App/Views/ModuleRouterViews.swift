@@ -40,6 +40,9 @@ struct ModuleRouterExpandedView: View {
                 home: configuration.home,
                 settings: configuration.settings,
                 topBar: configuration.topBar,
+                labels: configuration.labels,
+                metrics: configuration.metrics,
+                motion: configuration.motion,
                 width: configuration.expandedWidth ?? NookLayout.width
             )
             // Identity tracks the active module so a switch tears down the old content
@@ -81,5 +84,9 @@ struct ModuleRouterCompactView: View {
             theme: configuration.theme,
             content: content
         )
+        // The compact slots render in their own view tree (not under NookExpandedView),
+        // so inject the metrics here too — the default compact glyphs read
+        // `compactSlotSize` from it.
+        .environment(\.nookChromeMetrics, configuration.metrics)
     }
 }

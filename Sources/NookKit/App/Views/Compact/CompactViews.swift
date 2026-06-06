@@ -15,6 +15,7 @@ import SwiftUI
 /// apps register their own via ``NookConfiguration/setCompactLeading(_:)``.
 public struct NookCompactLeadingView: View {
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeMetrics) private var metrics
 
     public init() {}
 
@@ -22,13 +23,14 @@ public struct NookCompactLeadingView: View {
         Image(systemName: "house")
             .font(.system(size: 10, weight: .semibold))
             .foregroundStyle(theme.primaryLabel.opacity(0.88))
-            .frame(width: NookLayout.compactSlotSize, height: NookLayout.compactSlotSize)
+            .frame(width: metrics.compactSlotSize, height: metrics.compactSlotSize)
     }
 }
 
 /// Default compact slot to the **right** of the notch.
 public struct NookCompactTrailingView: View {
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeMetrics) private var metrics
 
     public init() {}
 
@@ -38,7 +40,7 @@ public struct NookCompactTrailingView: View {
             strokeWidth: 1.1,
             color: theme.primaryLabel.opacity(0.82)
         )
-        .frame(width: NookLayout.compactSlotSize, height: NookLayout.compactSlotSize)
+        .frame(width: metrics.compactSlotSize, height: metrics.compactSlotSize)
     }
 }
 

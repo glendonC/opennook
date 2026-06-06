@@ -9,21 +9,23 @@ import SwiftUI
 
 /// Transient status surfaced directly under the top bar.
 ///
-/// Reads ``AppState/errorMessage`` — a short-lived channel cleared on every
-/// show/toggle via ``AppState/resetTransientStatus()``.
+/// Reads ``AppState/status`` — a short-lived message + severity cleared on every
+/// show/toggle via ``AppState/resetTransientStatus()``. The severity selects the glyph.
 struct NookTransientStatusBanner: View {
     @ObservedObject var appState: AppState
     let theme: NookResolvedTheme
 
+    @Environment(\.nookChromeLabels) private var labels
+
     var body: some View {
-        if let message = appState.errorMessage {
+        if let status = appState.status {
             HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "exclamationmark.circle.fill")
+                Image(systemName: status.severity.systemImage)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(theme.accent)
                     .padding(.top, 1)
 
-                Text(message)
+                Text(status.message)
                     .font(.system(size: 10.5, weight: .medium))
                     .foregroundStyle(theme.primaryLabel.opacity(0.92))
                     .fixedSize(horizontal: false, vertical: true)
@@ -31,7 +33,7 @@ struct NookTransientStatusBanner: View {
                 Spacer(minLength: 0)
 
                 Button {
-                    appState.errorMessage = nil
+                    appState.status = nil
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 9, weight: .bold))
@@ -40,7 +42,7 @@ struct NookTransientStatusBanner: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help("Dismiss")
+                .help(labels.dismissHelp)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 7)

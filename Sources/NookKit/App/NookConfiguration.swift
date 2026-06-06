@@ -83,6 +83,21 @@ public struct NookConfiguration: Sendable {
     /// (today's framework behavior). See ``NookChromeBehavior``.
     public var chromeBehavior: NookChromeBehavior = .default
 
+    /// Host-overridable chrome strings (Settings breadcrumb, tooltips) for localization
+    /// or product naming. Defaults to ``NookChromeLabels/default`` (today's English). See
+    /// ``NookChromeLabels``.
+    public var labels: NookChromeLabels = .default
+
+    /// Host-tunable chrome layout metrics (edge padding, compact slot size, breadcrumb
+    /// width, top-bar height). Defaults to ``NookChromeMetrics/default`` (today's layout).
+    /// See ``NookChromeMetrics``.
+    public var metrics: NookChromeMetrics = .default
+
+    /// Host-tunable in-panel motion curves (home↔settings, banner, breadcrumb, leading
+    /// cluster). Distinct from ``transitions`` (surface-level expand/collapse). Defaults
+    /// to ``NookChromeMotion/default`` (today's springs). See ``NookChromeMotion``.
+    public var motion: NookChromeMotion = .default
+
     /// Overrides the chrome's corner radii — the small rounding into the notch arch and
     /// the larger rounding where the panel meets the wallpaper. `nil` (the default) uses
     /// the framework's radii, tuned to sit well under the menu bar on notched MacBooks.
@@ -217,6 +232,11 @@ public struct NookTopBarConfiguration: Sendable {
     /// surface stays on the home view.
     public var showsSettings: Bool
 
+    /// Whether the framework's transient status banner (driven by ``AppState/status``)
+    /// renders under the top bar. Defaults to `true`. Set to `false` to suppress the
+    /// framework banner — e.g. a host surfacing status inside its own home content.
+    public var showsStatusBanner: Bool
+
     /// The label for the top bar's leading cluster. Defaults to `"Home"` — override
     /// so the bar communicates *product* context (a date, a section name) rather
     /// than the demo's navigation metaphor. The closure receives ``AppState`` for
@@ -257,12 +277,14 @@ public struct NookTopBarConfiguration: Sendable {
     public init(
         showsTopBar: Bool = true,
         showsSettings: Bool = true,
+        showsStatusBanner: Bool = true,
         leadingTitle: @escaping @Sendable (AppState) -> String = { _ in "Home" },
         leadingIcon: String? = nil,
         trailingItems: (@Sendable @MainActor () -> AnyView)? = nil
     ) {
         self.showsTopBar = showsTopBar
         self.showsSettings = showsSettings
+        self.showsStatusBanner = showsStatusBanner
         self.leadingTitle = leadingTitle
         self.leadingIcon = leadingIcon
         self.trailingItems = trailingItems

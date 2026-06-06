@@ -43,6 +43,13 @@ public struct NookExpandedView: View {
     /// visibility, Settings visibility. See ``NookTopBarConfiguration``.
     let topBar: NookTopBarConfiguration
 
+    /// Host-overridable chrome strings, layout metrics, and in-panel motion. Injected
+    /// into the environment for the top bar / banner to read. See ``NookChromeLabels`` /
+    /// ``NookChromeMetrics`` / ``NookChromeMotion``.
+    let labels: NookChromeLabels
+    let metrics: NookChromeMetrics
+    let motion: NookChromeMotion
+
     /// Fixed width for the expanded surface. Host apps set this through
     /// ``NookConfiguration/expandedWidth``; the default is ``NookLayout/width``.
     let width: CGFloat
@@ -67,6 +74,9 @@ public struct NookExpandedView: View {
         home: @escaping @Sendable @MainActor () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
         settings: (@Sendable @MainActor () -> AnyView)? = nil,
         topBar: NookTopBarConfiguration = .default,
+        labels: NookChromeLabels = .default,
+        metrics: NookChromeMetrics = .default,
+        motion: NookChromeMotion = .default,
         width: CGFloat = NookLayout.width
     ) {
         self.appState = appState
@@ -78,6 +88,9 @@ public struct NookExpandedView: View {
         self.home = home
         self.settings = settings
         self.topBar = topBar
+        self.labels = labels
+        self.metrics = metrics
+        self.motion = motion
         self.width = width
     }
 
@@ -103,8 +116,10 @@ public struct NookExpandedView: View {
                     trailingItems: topBar.trailingItems
                 )
 
-                NookTransientStatusBanner(appState: appState, theme: resolvedTheme)
-                    .animation(.spring(response: 0.34, dampingFraction: 0.86), value: appState.errorMessage)
+                if topBar.showsStatusBanner {
+                    NookTransientStatusBanner(appState: appState, theme: resolvedTheme)
+                        .animation(motion.statusBanner, value: appState.status)
+                }
             }
 
             Group {
@@ -126,12 +141,15 @@ public struct NookExpandedView: View {
                         )
                 }
             }
-            .animation(.spring(response: 0.38, dampingFraction: 0.84), value: appState.viewMode)
+            .animation(motion.viewModeChange, value: appState.viewMode)
         }
-        .environment(\.nookContentInsets, outerContentInsets.reducingBy(NookLayout.edgePadding))
+        .environment(\.nookContentInsets, outerContentInsets.reducingBy(metrics.edgePadding))
         .frame(width: width)
-        .padding(NookLayout.edgePadding)
+        .padding(metrics.edgePadding)
         .environment(\.nookResolvedTheme, resolvedTheme)
+        .environment(\.nookChromeLabels, labels)
+        .environment(\.nookChromeMetrics, metrics)
+        .environment(\.nookChromeMotion, motion)
         .environment(\.appServices, services)
         // Expose `AppState` to the host-registered `home` surface so it can observe
         // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
@@ -149,7 +167,7 @@ public struct NookExpandedView: View {
             isHomeIconHovered = false
         }
         .onExitCommand(perform: hide)
-        .animation(.spring(response: 0.34, dampingFraction: 0.86), value: appState.viewMode)
+        .animation(motion.viewModeChange, value: appState.viewMode)
     }
 
     /// Host-registered home surface. Supplied via ``NookConfiguration`` — no fork needed.

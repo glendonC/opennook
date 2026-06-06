@@ -141,6 +141,7 @@ public API only - no forking:
 swift run HelloNook     # register one view, go
 swift run ClockNook     # custom home view + a custom compact slot
 swift run ThemedNook    # a host-supplied theme + lifecycle hooks
+swift run ChromeNook    # the deeper chrome seams: launch defaults, labels, motion, brand mark, status
 swift run ShelfNook     # a drop-files-on-the-notch shelf (NookComponents)
 swift run ActivityNook  # a priority live-activity queue (NookComponents)
 swift run VolumeNook    # an ambient volume glyph in the compact pill (NookComponents)
@@ -177,6 +178,7 @@ configuration.topBar.leadingTitle = { _ in "Today" }  // default: "Home"
 configuration.topBar.leadingIcon = "house"            // nil = brand mark; SF Symbol overrides
 configuration.topBar.showsTopBar = true               // false strips top bar + gear + lock
 configuration.topBar.showsSettings = true             // false drops the gear (top bar stays)
+configuration.setTopBarTrailingItems { MyGlyph() }    // host actions left of the lock/gear
 
 // Lifecycle hooks.
 configuration.onExpand    = { print("nook expanded") }
@@ -203,6 +205,68 @@ hotkey and menu-bar fallback already call into them.
 Rename the product (`Nook` → your app) by editing `project.yml`,
 `App/Info.plist`, and the `Package.swift` product name when you're ready to
 ship.
+
+## Deeper chrome customization
+
+`NookConfiguration` exposes the rest of the chrome through additive, non-breaking
+seams - every default reproduces the framework exactly, so you opt in only where
+you need to.
+
+**Launch defaults.** Ship your own out-of-box appearance, global hotkey, and
+display target. Seed-only: a value the user has changed in Settings always wins,
+and the seed is never persisted (so a later build can revise it for untouched
+users):
+
+```swift
+configuration.preferenceDefaults = NookPreferenceDefaults(
+    appearance: NookAppearancePreferences(
+        chromePalette: .dark, surfaceStyle: .translucent, presentation: .floating
+    )
+)
+```
+
+**Chrome behavior.** Hover side-effects, the cold-launch shimmer, and the
+appearance→backdrop mapping:
+
+```swift
+configuration.chromeBehavior = NookChromeBehavior(
+    hoverBehavior: .all,         // default []: opt into hover haptics / keep-visible
+    showsLaunchShimmer: false,   // default true: launch silently
+    backdrop: { preferences, scheme, reduceTransparency in
+        .vibrancy(.init(material: .hudWindow, darkenOpacity: 0.3))
+    }
+)
+```
+
+**Labels, metrics, motion.** Localize chrome strings, tune the few fixed layout
+values, retune the in-panel springs:
+
+```swift
+configuration.labels.settingsBreadcrumb = "Préférences"
+configuration.metrics.compactSlotSize = 28
+configuration.motion.viewModeChange = .snappy
+```
+
+**Status banner.** Post info / success / warning / error from any `AppState`
+handle; suppress the framework banner if you render your own:
+
+```swift
+appState.showStatus("Imported 3 files", severity: .success)
+configuration.topBar.showsStatusBanner = false
+```
+
+**Identity.** Name the product, drop in a custom brand mark (replaces the OpenNook
+glyph in the top bar, About card, and menu bar), or turn the menu-bar item off -
+all reachable from a single-module `NookConfiguration`:
+
+```swift
+configuration.branding = NookHostBranding(
+    hostName: "ContextNook",
+    hostTagline: "A focused notch app.",
+    mark: { size, color in AnyView(MyMark(color: color).frame(width: size, height: size)) }
+)
+configuration.showsMenuBarExtra = false
+```
 
 ## Multiple modules in one notch
 

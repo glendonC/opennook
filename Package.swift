@@ -30,11 +30,12 @@ let package = Package(
         .library(name: "NookComponents", targets: ["NookComponents"]),
         // Example apps under `Examples/` — each a single `main.swift` showing one
         // way to build on OpenNook through public API only. Run with `swift run
-        // HelloNook` (or `ClockNook` / `ThemedNook` / `ShelfNook` / `ActivityNook`
-        // / `VolumeNook` / `MultiNook`).
+        // HelloNook` (or `ClockNook` / `ThemedNook` / `ChromeNook` / `ShelfNook` /
+        // `ActivityNook` / `VolumeNook` / `MultiNook`).
         .executable(name: "HelloNook", targets: ["HelloNook"]),
         .executable(name: "ClockNook", targets: ["ClockNook"]),
         .executable(name: "ThemedNook", targets: ["ThemedNook"]),
+        .executable(name: "ChromeNook", targets: ["ChromeNook"]),
         .executable(name: "ShelfNook", targets: ["ShelfNook"]),
         .executable(name: "ActivityNook", targets: ["ActivityNook"]),
         .executable(name: "VolumeNook", targets: ["VolumeNook"]),
@@ -99,6 +100,12 @@ let package = Package(
             name: "ThemedNook",
             dependencies: ["NookApp"],
             path: "Examples/ThemedNook",
+            swiftSettings: strictConcurrency
+        ),
+        .executableTarget(
+            name: "ChromeNook",
+            dependencies: ["NookApp"],
+            path: "Examples/ChromeNook",
             swiftSettings: strictConcurrency
         ),
         .executableTarget(

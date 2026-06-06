@@ -45,6 +45,11 @@ public struct NookHostConfiguration: Sendable {
     /// behavior). See ``NookPreferenceDefaults`` for the seed-vs-persisted semantics.
     public var preferenceDefaults: NookPreferenceDefaults = .default
 
+    /// Process-global chrome behavior — hover side-effects, the cold-launch shimmer, and
+    /// the appearance→backdrop mapping. Defaults to ``NookChromeBehavior/default``
+    /// (today's framework behavior). See ``NookChromeBehavior``.
+    public var chromeBehavior: NookChromeBehavior = .default
+
     /// Builds an empty host. Register at least one module via ``register(_:factory:)``
     /// or ``register(_:configuration:)`` before passing to `NookApp.main(_:)`.
     public init() {}
@@ -123,6 +128,7 @@ public struct NookHostConfiguration: Sendable {
             defaultModuleID: defaultID,
             cycleHotkey: moduleCycleHotkey,
             branding: branding,
+            chromeBehavior: chromeBehavior,
             presentationPinning: NookPresentationPinning()
         )
     }

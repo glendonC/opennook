@@ -76,6 +76,13 @@ public struct NookConfiguration: Sendable {
     /// seed-vs-persisted semantics.
     public var preferenceDefaults: NookPreferenceDefaults = .default
 
+    /// Process-global chrome behavior — hover side-effects, the cold-launch shimmer, and
+    /// the appearance→backdrop mapping. On the single-module path this is forwarded onto
+    /// the synthesized ``NookHostConfiguration/chromeBehavior``; multi-module hosts set it
+    /// on ``NookHostConfiguration`` directly. Defaults to ``NookChromeBehavior/default``
+    /// (today's framework behavior). See ``NookChromeBehavior``.
+    public var chromeBehavior: NookChromeBehavior = .default
+
     /// Overrides the chrome's corner radii — the small rounding into the notch arch and
     /// the larger rounding where the panel meets the wallpaper. `nil` (the default) uses
     /// the framework's radii, tuned to sit well under the menu bar on notched MacBooks.

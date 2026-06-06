@@ -42,9 +42,11 @@ public enum NookApp {
     /// one module and no switcher.
     public static func main(_ configuration: NookConfiguration = NookConfiguration()) {
         var host = NookHostConfiguration()
-        // Forward the single-module path's launch seed onto the host that actually owns
-        // the process-global preferences (appearance / hotkey / display).
+        // Forward the single-module path's launch seed and chrome behavior onto the host
+        // that actually owns these process-global concerns (appearance / hotkey / display
+        // defaults, and hover / launch shimmer / backdrop).
         host.preferenceDefaults = configuration.preferenceDefaults
+        host.chromeBehavior = configuration.chromeBehavior
         host.register(
             NookModuleDescriptor(id: ModuleHost.singleModuleID, displayName: "Nook")
         ) { configuration }

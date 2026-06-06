@@ -184,7 +184,7 @@ public final class AppCoordinator: ObservableObject {
         coordinatorBox: CoordinatorBox
     ) -> Nook<AnyView, AnyView, AnyView> {
         Nook<AnyView, AnyView, AnyView>(
-            hoverBehavior: [],
+            hoverBehavior: moduleHost.chromeBehavior.hoverBehavior,
             style: moduleHost.configuration.style ?? NookStyle(
                 topCornerRadius: NookAppearance.expandedTopCornerRadius,
                 bottomCornerRadius: NookAppearance.expandedBottomCornerRadius
@@ -340,7 +340,11 @@ public final class AppCoordinator: ObservableObject {
             self.surface.onCompact = nil
             await self.surface.compact(on: self.resolveScreen())
             self.surface.onCompact = savedOnCompact
-            self.surface.playFeedback(.shimmer, duration: 1.1)
+            // The greeting shimmer is opt-out: a host can launch silently while still
+            // settling into the compact launch state. See `NookChromeBehavior`.
+            if self.moduleHost.chromeBehavior.showsLaunchShimmer {
+                self.surface.playFeedback(.shimmer, duration: 1.1)
+            }
         }
 
         // Hand the host a post-launch handle on the live coordinator (e.g. for
@@ -749,11 +753,17 @@ public final class AppCoordinator: ObservableObject {
         // Pin the window appearance first: the backdrop's visual-effect material resolves
         // against it, so a forced light/dark theme needs both to agree.
         surface.chromeAppearance = appState.appearancePreferences.chromeAppearanceOverride
-        surface.backdrop = NookBackdropMapping.notchBackdrop(
-            preferences: appState.appearancePreferences,
-            effectiveColorScheme: scheme,
-            reduceTransparency: reduceTransparency
-        )
+        // A host can override the appearance→backdrop mapping; the framework mapping is
+        // the default. See `NookChromeBehavior.backdrop`.
+        if let resolve = moduleHost.chromeBehavior.backdrop {
+            surface.backdrop = resolve(appState.appearancePreferences, scheme, reduceTransparency)
+        } else {
+            surface.backdrop = NookBackdropMapping.notchBackdrop(
+                preferences: appState.appearancePreferences,
+                effectiveColorScheme: scheme,
+                reduceTransparency: reduceTransparency
+            )
+        }
     }
 
     /// Mirrors the surface's live ``NookState`` onto `appState.isNookVisible`, and bounds

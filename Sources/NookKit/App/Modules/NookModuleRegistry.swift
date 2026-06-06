@@ -42,6 +42,12 @@ public final class NookModuleRegistry {
     /// configuration value.
     public let branding: NookHostBranding
 
+    /// Process-global chrome behavior (hover side-effects, cold-launch shimmer,
+    /// appearance→backdrop mapping). Held here for the same reason as ``branding`` — so
+    /// ``ModuleHost`` and ``AppCoordinator`` can read it without a reference back to the
+    /// host configuration. See ``NookChromeBehavior``.
+    public let chromeBehavior: NookChromeBehavior
+
     /// One broker per host process, shared across every module. Registered into each
     /// module's ``AppServices`` as ``NookModuleContext`` is built, so a view in module A
     /// and a view in module B both resolve the same instance — pins compose into one
@@ -62,12 +68,14 @@ public final class NookModuleRegistry {
         defaultModuleID: String,
         cycleHotkey: NookHotkey?,
         branding: NookHostBranding = .default,
+        chromeBehavior: NookChromeBehavior = .default,
         presentationPinning: NookPresentationPinning = NookPresentationPinning()
     ) {
         self.registrations = registrations
         self.defaultModuleID = defaultModuleID
         self.cycleHotkey = cycleHotkey
         self.branding = branding
+        self.chromeBehavior = chromeBehavior
         self.presentationPinning = presentationPinning
         self.filePicker = NookFilePicker(presentationPinning: presentationPinning)
     }

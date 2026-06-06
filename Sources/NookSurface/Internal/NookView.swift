@@ -17,10 +17,16 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     @State private var compactTrailingWidth: CGFloat = 0
     @State private var ambientColor: Color?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    private let safeAreaInset: CGFloat = 8
 
     init(nook: Nook<Expanded, CompactLeading, CompactTrailing>) {
         self.nook = nook
+    }
+
+    /// Safe-area strip the chrome reserves around the host's expanded content. Host-
+    /// configurable per edge via ``NookStyle/expandedContentInsets``; the default
+    /// reproduces the historical fixed geometry (0 top, 8 elsewhere).
+    private var expandedContentInsets: NookEdgeInsets {
+        nook.style.expandedContentInsets
     }
 
     /// `true` when the surface should render the free-floating panel instead of the
@@ -40,7 +46,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             form: nook.layoutForm,
             topCornerRadius: nook.style.topCornerRadius,
             bottomCornerRadius: nook.style.bottomCornerRadius,
-            chromeSafeAreaInset: safeAreaInset
+            chromeSafeAreaInsets: expandedContentInsets
         )
     }
 
@@ -231,10 +237,10 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
                     .transition(.blur(intensity: 6).combined(with: .scale(y: 0.72, anchor: .top)).combined(with: .opacity))
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: 0) }
-        .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: safeAreaInset) }
-        .safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: safeAreaInset) }
-        .safeAreaInset(edge: .trailing, spacing: 0) { Color.clear.frame(width: safeAreaInset) }
+        .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: expandedContentInsets.top) }
+        .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: expandedContentInsets.bottom) }
+        .safeAreaInset(edge: .leading, spacing: 0) { Color.clear.frame(width: expandedContentInsets.leading) }
+        .safeAreaInset(edge: .trailing, spacing: 0) { Color.clear.frame(width: expandedContentInsets.trailing) }
         .background {
             if let ambientColor {
                 NookAmbientColorBackground(color: ambientColor)

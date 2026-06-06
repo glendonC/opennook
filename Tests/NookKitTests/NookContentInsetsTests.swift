@@ -16,8 +16,9 @@ import XCTest
 /// chrome's own pre-padding stops clearing a curve.
 final class NookContentInsetsTests: XCTestCase {
 
-    // Matches `NookView.safeAreaInset`.
-    private let chromeSafeAreaInset: CGFloat = 8
+    // Matches `NookView`'s expanded-content safe-area strip — the historical
+    // fixed geometry (`NookStyle.standardExpandedContentInsets`): 0 top, 8 elsewhere.
+    private let chromeSafeAreaInsets = NookStyle.standardExpandedContentInsets
 
     // MARK: - Defaults
 
@@ -27,6 +28,23 @@ final class NookContentInsetsTests: XCTestCase {
         XCTAssertEqual(insets.bottom, 0)
         XCTAssertEqual(insets.leading, 0)
         XCTAssertEqual(insets.trailing, 0)
+    }
+
+    // MARK: - Default wiring
+
+    /// Guards the wiring default, not just the derivation math: `NookStyle.standard`
+    /// (and any `NookStyle` built without overriding `expandedContentInsets`) must
+    /// carry the historical strip — 0 on top, 8 on the other three edges. A future
+    /// edit to the default would silently reshape the shipped geometry without this.
+    func testStandardStyleCarriesLegacyExpandedInsets() {
+        let expected = NookEdgeInsets(top: 0, bottom: 8, leading: 8, trailing: 8)
+        XCTAssertEqual(NookStyle.standardExpandedContentInsets, expected)
+        XCTAssertEqual(NookStyle.standard.expandedContentInsets, expected)
+        // The corner-radius-only initializer must default to the same strip.
+        XCTAssertEqual(
+            NookStyle(topCornerRadius: 19, bottomCornerRadius: 24).expandedContentInsets,
+            expected
+        )
     }
 
     // MARK: - Notch form
@@ -39,12 +57,60 @@ final class NookContentInsetsTests: XCTestCase {
             form: .notch,
             topCornerRadius: 19,
             bottomCornerRadius: 24,
-            chromeSafeAreaInset: chromeSafeAreaInset
+            chromeSafeAreaInsets: chromeSafeAreaInsets
         )
         XCTAssertEqual(insets.top, 19)
         XCTAssertEqual(insets.bottom, 16)
         XCTAssertEqual(insets.leading, 16)
         XCTAssertEqual(insets.trailing, 16)
+    }
+
+    /// The default `expandedContentInsets` must reproduce the historical fixed
+    /// geometry exactly: a uniform 8 pt strip on bottom/leading/trailing and 0 on
+    /// top is equivalent to feeding the old scalar `8` to the derivation. This pins
+    /// the "default == old behavior" contract so the new per-edge knob can't drift
+    /// the shipped geometry.
+    func testNotchExpandedDefaultInsetsMatchLegacyScalar() {
+        let perEdge = NookContentInsets.expanded(
+            form: .notch,
+            topCornerRadius: 15,
+            bottomCornerRadius: 20,
+            chromeSafeAreaInsets: NookStyle.standardExpandedContentInsets
+        )
+        let legacyEquivalent = NookContentInsets.expanded(
+            form: .notch,
+            topCornerRadius: 15,
+            bottomCornerRadius: 20,
+            chromeSafeAreaInsets: NookEdgeInsets(top: 0, bottom: 8, leading: 8, trailing: 8)
+        )
+        XCTAssertEqual(perEdge, legacyEquivalent)
+        // And the concrete numbers at the `.standard` radii (top 15, bottom 20).
+        XCTAssertEqual(perEdge.top, 15)
+        XCTAssertEqual(perEdge.bottom, 12)
+        XCTAssertEqual(perEdge.leading, 12)
+        XCTAssertEqual(perEdge.trailing, 12)
+    }
+
+    /// Tightening only the bottom inset (8 → 2) leaves top/leading/trailing untouched
+    /// and *raises* the bottom residual: with 6 pt less chrome pre-padding, content
+    /// pinned into a bottom corner must inset 6 pt more to clear the same curve. The
+    /// chrome's own bottom safe-area strip shrinks by 6 pt, so centered content sits
+    /// ~6 pt closer to the rounded bottom.
+    func testNotchExpandedReducedBottomInset() {
+        let reduced = NookEdgeInsets(top: 0, bottom: 2, leading: 8, trailing: 8)
+        let insets = NookContentInsets.expanded(
+            form: .notch,
+            topCornerRadius: 19,
+            bottomCornerRadius: 24,
+            chromeSafeAreaInsets: reduced
+        )
+        // Unchanged from the default-inset case.
+        XCTAssertEqual(insets.top, 19)
+        XCTAssertEqual(insets.leading, 16)
+        XCTAssertEqual(insets.trailing, 16)
+        // 24 − 2 = 22, vs 16 at the default 8 pt bottom inset: +6 pt of residual
+        // corner clearance, mirroring the 6 pt the chrome no longer pre-pads.
+        XCTAssertEqual(insets.bottom, 22)
     }
 
     /// The chrome's horizontal pre-pad is `topCornerRadius + chromeSafeAreaInset`.
@@ -55,8 +121,8 @@ final class NookContentInsetsTests: XCTestCase {
         let insets = NookContentInsets.expanded(
             form: .notch,
             topCornerRadius: 19,
-            bottomCornerRadius: chromeSafeAreaInset, // 8
-            chromeSafeAreaInset: chromeSafeAreaInset
+            bottomCornerRadius: 8, // == the bottom/leading/trailing inset
+            chromeSafeAreaInsets: chromeSafeAreaInsets
         )
         XCTAssertEqual(insets.leading, 0, "horizontal residual must floor at 0")
         XCTAssertEqual(insets.trailing, 0)
@@ -74,7 +140,7 @@ final class NookContentInsetsTests: XCTestCase {
             form: .floating,
             topCornerRadius: 19,
             bottomCornerRadius: 24,
-            chromeSafeAreaInset: chromeSafeAreaInset
+            chromeSafeAreaInsets: chromeSafeAreaInsets
         )
         XCTAssertEqual(insets.top, 24)
         XCTAssertEqual(insets.bottom, 16)

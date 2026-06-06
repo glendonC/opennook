@@ -153,6 +153,17 @@ var configuration = NookConfiguration()
 // wallpaper. See NookStyle.
 configuration.style = NookStyle(topCornerRadius: 14, bottomCornerRadius: 28)
 
+// Tighten the safe-area strip the chrome reserves around expanded content. The
+// default is 0 on top and 8 elsewhere; dropping `bottom` lets content sit closer
+// to the rounded bottom. Centered content (e.g. a command row) stays clear of the
+// corners; content pinned into a bottom corner should still inset by the published
+// `nookContentInsets.bottom` to clear the curve.
+configuration.style = NookStyle(
+    topCornerRadius: 15,
+    bottomCornerRadius: 20,
+    expandedContentInsets: NookEdgeInsets(top: 0, bottom: 2, leading: 8, trailing: 8)
+)
+
 // Expand / collapse / convert animation curves. If you slow these down, also
 // set `animationDuration` so awaited expand()/compact() return once the chrome
 // has visibly arrived.

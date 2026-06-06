@@ -77,41 +77,52 @@ extension NookContentInsets {
     /// and the env value can't drift, and so tests can pin the math without
     /// driving the full view tree.
     ///
-    /// `chromeSafeAreaInset` is the strip the chrome reserves around the host's
-    /// expanded view (on three sides — leading, trailing, bottom). The top is
-    /// not pre-padded, so the full top corner curvature lands inside the host
-    /// frame and the top inset returns `topCornerRadius`. The notch form's
-    /// bottom corner also flares outward horizontally by `bottomCornerRadius`
-    /// beyond the side edges, so the leading/trailing residual depends on
-    /// `bottomCornerRadius`, not `topCornerRadius`.
+    /// `chromeSafeAreaInsets` is the per-edge strip the chrome reserves around the
+    /// host's expanded view (see ``NookStyle/expandedContentInsets``). With the
+    /// default (`top: 0`) the full top corner curvature lands inside the host frame
+    /// and the top residual returns `topCornerRadius`. The notch form's bottom corner
+    /// also flares outward horizontally by `bottomCornerRadius` beyond the side edges,
+    /// so the leading/trailing residual depends on `bottomCornerRadius`, not
+    /// `topCornerRadius`.
+    ///
+    /// Each residual is `curve − chromePrePad`, floored at zero: the curve intrudes
+    /// into the host frame by however much it exceeds the chrome's own inset on that
+    /// edge. Tightening `chromeSafeAreaInsets.bottom` therefore *raises* the reported
+    /// bottom residual — with less pre-padding, a host pinning content into a bottom
+    /// *corner* must inset more itself to clear the curve. Horizontally-centered
+    /// content stays clear of the corners and can ignore the residual.
     static func expanded(
         form: NookChromeForm,
         topCornerRadius: CGFloat,
         bottomCornerRadius: CGFloat,
-        chromeSafeAreaInset: CGFloat
+        chromeSafeAreaInsets: NookEdgeInsets
     ) -> NookContentInsets {
-        let horizontalPrePad = topCornerRadius + chromeSafeAreaInset
-        let bottomPrePad = chromeSafeAreaInset
+        let leadingPrePad = topCornerRadius + chromeSafeAreaInsets.leading
+        let trailingPrePad = topCornerRadius + chromeSafeAreaInsets.trailing
+        let bottomPrePad = chromeSafeAreaInsets.bottom
+        let topPrePad = chromeSafeAreaInsets.top
 
         switch form {
         case .notch:
-            let topV = topCornerRadius
+            let topV = max(0, topCornerRadius - topPrePad)
             let bottomV = max(0, bottomCornerRadius - bottomPrePad)
             // The bottom-leading bezier runs from x = topCornerRadius to
             // x = topCornerRadius + bottomCornerRadius. Net residual into the
             // host frame is whatever exceeds the chrome's horizontal pre-pad.
-            let sideH = max(0, (topCornerRadius + bottomCornerRadius) - horizontalPrePad)
-            return NookContentInsets(top: topV, bottom: bottomV, leading: sideH, trailing: sideH)
+            let leadingH = max(0, (topCornerRadius + bottomCornerRadius) - leadingPrePad)
+            let trailingH = max(0, (topCornerRadius + bottomCornerRadius) - trailingPrePad)
+            return NookContentInsets(top: topV, bottom: bottomV, leading: leadingH, trailing: trailingH)
         case .floating:
             // `NookView.floatingExpandedRadius` uses `bottomCornerRadius` for
             // every corner. The chrome's horizontal pre-pad still uses
             // `topCornerRadius` (the `.padding(.horizontal, topCornerRadius)`
             // on the inner ZStack is form-agnostic).
             let r = bottomCornerRadius
-            let topV = r
+            let topV = max(0, r - topPrePad)
             let bottomV = max(0, r - bottomPrePad)
-            let sideH = max(0, r - horizontalPrePad)
-            return NookContentInsets(top: topV, bottom: bottomV, leading: sideH, trailing: sideH)
+            let leadingH = max(0, r - leadingPrePad)
+            let trailingH = max(0, r - trailingPrePad)
+            return NookContentInsets(top: topV, bottom: bottomV, leading: leadingH, trailing: trailingH)
         }
     }
 

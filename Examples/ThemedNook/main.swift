@@ -59,6 +59,15 @@ struct ThemedHomeView: View {
 var configuration = NookConfiguration()
 configuration.setHome { ThemedHomeView() }
 configuration.theme = { SunsetTheme.resolve($0) }
+// Tighten the chrome's bottom safe-area strip from the default 8pt down to 2pt so
+// the home view's last row sits ~6pt closer to the rounded bottom. Top/leading/
+// trailing keep the default 8/8/8. Toggle this line off to compare against the
+// stock clearance.
+configuration.style = NookStyle(
+    topCornerRadius: 15,
+    bottomCornerRadius: 20,
+    expandedContentInsets: NookEdgeInsets(top: 0, bottom: 2, leading: 8, trailing: 8)
+)
 configuration.onExpand = { print("[ThemedNook] nook expanded") }
 configuration.onCompact = { print("[ThemedNook] nook compacted") }
 NookApp.main(configuration)

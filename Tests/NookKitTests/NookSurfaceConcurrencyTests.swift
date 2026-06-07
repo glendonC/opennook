@@ -4,6 +4,7 @@
 // Licensed under the MIT License.
 // Modifications license: /LICENSE-MIT-NOOKSURFACE
 
+import AppKit
 import SwiftUI
 import XCTest
 
@@ -227,5 +228,65 @@ final class NookSurfaceConcurrencyTests: XCTestCase {
 
         try? await Task.sleep(nanoseconds: 250_000_000)
         XCTAssertEqual(nook.feedbackEvent?.id, second.id, "the first cue's clear must not nil the second")
+    }
+
+    // MARK: - Layout-resize grace
+
+    func testLayoutGraceRequiresExpandedState() {
+        let nook = makeNook()
+        nook.noteExpandedContentSizeChange()
+        XCTAssertFalse(nook.isLayoutGraceActive)
+    }
+
+    func testLayoutGraceExpiresAfterConfiguredDuration() async {
+        let nook = makeNook()
+        nook.transitionConfiguration.layoutGraceDuration = 0.15
+        nook.beginLayoutGrace()
+        XCTAssertTrue(nook.isLayoutGraceActive)
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertFalse(nook.isLayoutGraceActive)
+    }
+
+    func testLayoutGraceRefreshesOnRepeatedActivation() async {
+        let nook = makeNook()
+        nook.transitionConfiguration.layoutGraceDuration = 0.2
+        nook.beginLayoutGrace()
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        XCTAssertTrue(nook.isLayoutGraceActive)
+        nook.beginLayoutGrace()
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        XCTAssertTrue(nook.isLayoutGraceActive, "refresh should extend grace")
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertFalse(nook.isLayoutGraceActive)
+    }
+
+    /// Hover-exit auto-compact must not run while layout grace is active — the common
+    /// failure when expanded content shrinks under a stationary cursor.
+    func testLayoutGraceSuppressesHoverExitCompact() async throws {
+        guard let screen = NSScreen.main else {
+            throw XCTSkip("No main display attached")
+        }
+
+        let nook = Nook(expanded: { Text("x") }, compactLeading: { Text("L") })
+        nook.transitionConfiguration.layoutGraceDuration = 0.2
+        nook.transitionConfiguration.animationDuration = 0.05
+        await nook.expand(on: screen)
+        XCTAssertEqual(nook.state, .expanded)
+
+        var compactCount = 0
+        nook.onCompact = { compactCount += 1 }
+
+        nook.updateHoverState(true)
+        nook.beginLayoutGrace()
+        nook.updateHoverState(false)
+        await Task.yield()
+        XCTAssertEqual(compactCount, 0, "layout grace should block hover-exit compact")
+
+        try await Task.sleep(nanoseconds: 250_000_000)
+        XCTAssertFalse(nook.isLayoutGraceActive)
+        nook.updateHoverState(true)
+        nook.updateHoverState(false)
+        try await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertEqual(compactCount, 1, "after grace expires, hover-exit should compact")
     }
 }

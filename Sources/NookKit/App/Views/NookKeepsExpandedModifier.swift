@@ -7,14 +7,23 @@
 
 import SwiftUI
 
+/// Brief grace after a popover/menu/sheet binding goes `false` before the
+/// presentation pin releases. Covers menu selection side-effects and the
+/// layout resize that often follows popover dismissal.
+enum NookKeepsExpandedGrace {
+    static let postPresentationDuration: Duration = .milliseconds(400)
+}
+
 public extension View {
     /// Hold the notch surface expanded while `condition.wrappedValue` is `true`.
     ///
     /// Pair with the same binding you pass to `.popover(isPresented:)`,
     /// `.sheet(isPresented:)`, or `.alert(_:isPresented:)`. While the binding is
     /// `true`, the surface stays open and counts as user-engaged (denying
-    /// competing arbiter claims); on `false` or view teardown the pin releases
-    /// automatically. See ``NookPresentationPinning``.
+    /// competing arbiter claims); on `false` the pin releases after a brief grace
+    /// so menu selection and the ensuing layout resize do not immediately expose
+    /// hover-exit auto-compact. View teardown releases immediately. See
+    /// ``NookPresentationPinning``.
     ///
     /// ```swift
     /// Button("Pick time") { showingPicker = true }
@@ -52,23 +61,40 @@ private struct NookKeepsExpandedBoolModifier: ViewModifier {
     @Binding var condition: Bool
     @Environment(\.appServices) private var services
     @State private var handle: NookPresentationPinHandle?
+    @State private var releaseTask: Task<Void, Never>?
 
     func body(content: Content) -> some View {
         content
             .onAppear { sync(to: condition) }
             .onChange(of: condition) { _, newValue in sync(to: newValue) }
-            .onDisappear { release() }
+            .onDisappear { releaseImmediately() }
     }
 
     private func sync(to active: Bool) {
-        if active, handle == nil {
-            handle = services.resolve(NookPresentationPinningKey.self).pin(reason: "view-modifier")
-        } else if !active {
-            release()
+        if active {
+            releaseTask?.cancel()
+            releaseTask = nil
+            if handle == nil {
+                handle = services.resolve(NookPresentationPinningKey.self).pin(reason: "view-modifier")
+            }
+        } else {
+            scheduleRelease()
         }
     }
 
-    private func release() {
+    private func scheduleRelease() {
+        guard handle != nil else { return }
+        releaseTask?.cancel()
+        releaseTask = Task {
+            try? await Task.sleep(for: NookKeepsExpandedGrace.postPresentationDuration)
+            guard !Task.isCancelled else { return }
+            releaseImmediately()
+        }
+    }
+
+    private func releaseImmediately() {
+        releaseTask?.cancel()
+        releaseTask = nil
         handle?.release()
         handle = nil
     }
@@ -80,23 +106,40 @@ private struct NookKeepsExpandedItemModifier<Item>: ViewModifier {
     @Binding var item: Item?
     @Environment(\.appServices) private var services
     @State private var handle: NookPresentationPinHandle?
+    @State private var releaseTask: Task<Void, Never>?
 
     func body(content: Content) -> some View {
         content
             .onAppear { sync(to: item != nil) }
             .onChange(of: item == nil) { _, isNil in sync(to: !isNil) }
-            .onDisappear { release() }
+            .onDisappear { releaseImmediately() }
     }
 
     private func sync(to active: Bool) {
-        if active, handle == nil {
-            handle = services.resolve(NookPresentationPinningKey.self).pin(reason: "view-modifier")
-        } else if !active {
-            release()
+        if active {
+            releaseTask?.cancel()
+            releaseTask = nil
+            if handle == nil {
+                handle = services.resolve(NookPresentationPinningKey.self).pin(reason: "view-modifier")
+            }
+        } else {
+            scheduleRelease()
         }
     }
 
-    private func release() {
+    private func scheduleRelease() {
+        guard handle != nil else { return }
+        releaseTask?.cancel()
+        releaseTask = Task {
+            try? await Task.sleep(for: NookKeepsExpandedGrace.postPresentationDuration)
+            guard !Task.isCancelled else { return }
+            releaseImmediately()
+        }
+    }
+
+    private func releaseImmediately() {
+        releaseTask?.cancel()
+        releaseTask = nil
         handle?.release()
         handle = nil
     }

@@ -939,7 +939,10 @@ extension AppCoordinator: NookSurfacePresenting {
     /// `false`; without the pin, a competing `.urgent` claim from another module would
     /// be granted at that exact moment and yank the surface from under the popover.
     public var isUserEngaged: Bool {
-        userInitiatedOpen || surface.isHovering || presentationPinning.isPinned
+        userInitiatedOpen
+            || surface.isHovering
+            || presentationPinning.isPinned
+            || surface.isLayoutGraceActive
     }
 
     /// Emits whenever ``isUserEngaged`` changes — the merge of the user-intent flag,
@@ -954,8 +957,12 @@ extension AppCoordinator: NookSurfacePresenting {
     /// pin transitions, which `removeDuplicates()` collapses to the true edges.
     public var userEngagementChanges: AnyPublisher<Bool, Never> {
         userInitiatedOpenSubject
-            .combineLatest(surface.isHoveringPublisher, presentationPinning.pinChanges)
-            .map { $0 || $1 || $2 }
+            .combineLatest(
+                surface.isHoveringPublisher,
+                presentationPinning.pinChanges,
+                surface.isLayoutGraceActivePublisher
+            )
+            .map { $0 || $1 || $2 || $3 }
             .removeDuplicates()
             .eraseToAnyPublisher()
     }

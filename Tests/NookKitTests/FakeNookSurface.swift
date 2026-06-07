@@ -26,6 +26,7 @@ final class FakeNookSurface: NookSurfaceDriving {
     private let stateSubject = CurrentValueSubject<NookState, Never>(.hidden)
     private let hoveringSubject = CurrentValueSubject<Bool, Never>(false)
     private let dragSubject = CurrentValueSubject<Bool, Never>(false)
+    private let layoutGraceSubject = CurrentValueSubject<Bool, Never>(false)
 
     var state: NookState { stateSubject.value }
     var statePublisher: AnyPublisher<NookState, Never> {
@@ -46,6 +47,14 @@ final class FakeNookSurface: NookSurfaceDriving {
     }
     var isDragInFlightPublisher: AnyPublisher<Bool, Never> {
         dragSubject.removeDuplicates().eraseToAnyPublisher()
+    }
+
+    var isLayoutGraceActive: Bool {
+        get { layoutGraceSubject.value }
+        set { layoutGraceSubject.send(newValue) }
+    }
+    var isLayoutGraceActivePublisher: AnyPublisher<Bool, Never> {
+        layoutGraceSubject.removeDuplicates().eraseToAnyPublisher()
     }
 
     var onExpand: (@MainActor () -> Void)?

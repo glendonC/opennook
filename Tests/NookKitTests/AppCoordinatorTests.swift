@@ -763,6 +763,45 @@ final class AppCoordinatorTests: XCTestCase {
         XCTAssertFalse(coordinator.isUserEngaged)
     }
 
+    /// Layout-resize grace counts as user engagement so arbiter claims do not fire
+    /// while expanded content is settling under a stationary cursor.
+    func testLayoutGraceCountsAsUserEngagement() async {
+        let log = ExpandLog()
+        let a = SpyModule(id: "A", expandLog: log)
+        let surface = FakeNookSurface()
+        let coordinator = makeCoordinator(modules: [a], surface: surface)
+
+        XCTAssertFalse(coordinator.isUserEngaged)
+        surface.isLayoutGraceActive = true
+        XCTAssertTrue(coordinator.isUserEngaged)
+        surface.isLayoutGraceActive = false
+        XCTAssertFalse(coordinator.isUserEngaged)
+    }
+
+    /// A presentation pin held through the post-popover grace window keeps
+    /// `staysExpandedOnHoverExit` true until the delayed release runs.
+    func testPostPopoverGraceKeepsPinActive() async {
+        let log = ExpandLog()
+        let a = SpyModule(id: "A", expandLog: log)
+        let surface = FakeNookSurface()
+        let coordinator = makeCoordinator(modules: [a], surface: surface)
+        coordinator.resetAllSettingsToDefaults()
+
+        let handle = coordinator.presentationPinning.pin(reason: "view-modifier")
+        await drainAndPump(coordinator)
+        XCTAssertTrue(surface.staysExpandedOnHoverExit)
+
+        let releaseTask = Task {
+            try? await Task.sleep(for: NookKeepsExpandedGrace.postPresentationDuration)
+            handle.release()
+        }
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        XCTAssertTrue(surface.staysExpandedOnHoverExit, "pin should stay active during grace")
+        await releaseTask.value
+        await drainAndPump(coordinator)
+        XCTAssertFalse(surface.staysExpandedOnHoverExit)
+    }
+
     /// When the user has `keepNookOpen` set, releasing the last pin must restore that
     /// preference — not silently turn it off. The pin overrides the user preference
     /// upward (always pinned while presenting); release must return control to it.

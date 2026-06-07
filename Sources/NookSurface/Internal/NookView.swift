@@ -15,6 +15,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     @ObservedObject private var nook: Nook<Expanded, CompactLeading, CompactTrailing>
     @State private var compactLeadingWidth: CGFloat = 0
     @State private var compactTrailingWidth: CGFloat = 0
+    @State private var trackedExpandedSize: CGSize = .zero
     @State private var ambientColor: Color?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -250,5 +251,10 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         .animation(.easeInOut(duration: 0.28), value: ambientColor)
         .onPreferenceChange(NookAmbientColorPreferenceKey.self) { ambientColor = $0 }
         .frame(minWidth: isFloating ? 0 : nook.notchSize.width)
+        .onGeometryChange(for: CGSize.self, of: \.size) { size in
+            guard nook.state == .expanded, size != trackedExpandedSize else { return }
+            trackedExpandedSize = size
+            nook.noteExpandedContentSizeChange()
+        }
     }
 }

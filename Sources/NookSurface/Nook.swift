@@ -123,6 +123,11 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     @Published public private(set) var isHovering: Bool = false
     @Published public var staysExpandedOnHoverExit: Bool = false
 
+    /// `true` while a layout-resize grace window is suppressing hover-exit auto-compact.
+    /// Host coordinators can fold this into user-engagement signals so arbiter claims
+    /// do not fire during the grace window.
+    @Published public private(set) var isLayoutGraceActive: Bool = false
+
     /// `true` while a system file-drag session is over the panel. Drives the drop-mode UI
     /// in the expanded surface and the auto-expand from compact. The panel surfaces
     /// `NSDraggingDestination` callbacks; this published bool is the SwiftUI-friendly view.
@@ -226,6 +231,10 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// to "the last call wins," even when the unstructured tasks start out of order.
     private var transitionGeneration = 0
 
+    /// Auto-releases after expanded content resizes. Refreshed on each geometry change
+    /// so rapid layout churn extends the grace window.
+    private var layoutGraceTask: Task<Void, Never>?
+
     private var cancellables = Set<AnyCancellable>()
 
     public init(
@@ -271,6 +280,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         observeScreenParameters()
         observeStateForPendingFeedback()
         observeStateForLifecycleHooks()
+        observeStateForLayoutGrace()
     }
 
     /// Convenience for the no-compact-content case. Compact mode collapses to hide.
@@ -329,6 +339,18 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             .store(in: &cancellables)
     }
 
+    /// Clears layout grace when the surface leaves `.expanded` so a compact/hidden nook
+    /// does not inherit a stale suppression window.
+    private func observeStateForLayoutGrace() {
+        $state
+            .removeDuplicates()
+            .sink { [weak self] newState in
+                guard let self, newState != .expanded else { return }
+                self.endLayoutGrace()
+            }
+            .store(in: &cancellables)
+    }
+
     /// The screen the chrome should occupy when no explicit screen is supplied.
     /// Consults the host-supplied ``screenProvider`` first, then the window's current
     /// screen, then the system. `nil` only when no display is attached at all.
@@ -368,6 +390,14 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             .store(in: &cancellables)
     }
 
+    /// Notifies the surface that expanded content geometry changed. Called from
+    /// ``NookView`` when the expanded body resizes; acquires a short-lived grace
+    /// window that suppresses hover-exit auto-compact while layout settles.
+    func noteExpandedContentSizeChange() {
+        guard state == .expanded else { return }
+        beginLayoutGrace()
+    }
+
     /// Apply hover side-effects (haptic, expand-on-hover, collapse-on-exit).
     func updateHoverState(_ hovering: Bool) {
         guard state != .hidden, hovering != isHovering else { return }
@@ -379,7 +409,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             performer.perform(.alignment, performanceTime: .default)
         }
 
-        guard hovering || !staysExpandedOnHoverExit else {
+        guard hovering || !suppressesHoverExitCompact else {
             return
         }
 
@@ -775,6 +805,41 @@ extension Nook {
 
     /// Poll cadence for a `.keepVisible` hide deferred until the cursor leaves.
     static var keepVisiblePollInterval: Duration { .milliseconds(100) }
+
+    /// Default grace after expanded content resizes before hover-exit auto-compact resumes.
+    static var defaultLayoutGraceDuration: TimeInterval { 0.6 }
+
+    /// Effective layout-grace duration from ``NookTransitionConfiguration/layoutGraceDuration``.
+    var layoutGraceDuration: Duration {
+        let seconds = max(
+            transitionConfiguration.layoutGraceDuration ?? Self.defaultLayoutGraceDuration,
+            0
+        )
+        return .seconds(seconds)
+    }
+
+    /// Hover-exit auto-compact is suppressed while a presentation pin or layout grace is active.
+    var suppressesHoverExitCompact: Bool {
+        staysExpandedOnHoverExit || isLayoutGraceActive
+    }
+
+    func beginLayoutGrace() {
+        layoutGraceTask?.cancel()
+        isLayoutGraceActive = true
+        let duration = layoutGraceDuration
+        layoutGraceTask = Task { [weak self] in
+            try? await Task.sleep(for: duration)
+            guard let self, !Task.isCancelled else { return }
+            self.isLayoutGraceActive = false
+            self.layoutGraceTask = nil
+        }
+    }
+
+    func endLayoutGrace() {
+        layoutGraceTask?.cancel()
+        layoutGraceTask = nil
+        if isLayoutGraceActive { isLayoutGraceActive = false }
+    }
 
     /// The layer of the hosting view inside the panel. Layer-level fades run here so the
     /// `NSWindow` itself (and its shadow/vibrancy compositing) stays at full alpha.

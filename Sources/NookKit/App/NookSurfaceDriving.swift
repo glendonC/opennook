@@ -65,6 +65,11 @@ protocol NookSurfaceDriving: AnyObject {
     /// Suspends auto-compact-on-hover-exit while `true`.
     var staysExpandedOnHoverExit: Bool { get set }
 
+    /// `true` while a layout-resize grace window suppresses hover-exit auto-compact.
+    var isLayoutGraceActive: Bool { get }
+    /// Emits on every `isLayoutGraceActive` change.
+    var isLayoutGraceActivePublisher: AnyPublisher<Bool, Never> { get }
+
     /// How the chrome presents itself — notch-fused, floating, or auto.
     var presentation: NookPresentation { get set }
 
@@ -115,5 +120,9 @@ extension Nook: NookSurfaceDriving {
 
     var isDragInFlightPublisher: AnyPublisher<Bool, Never> {
         $isDragInFlight.eraseToAnyPublisher()
+    }
+
+    var isLayoutGraceActivePublisher: AnyPublisher<Bool, Never> {
+        $isLayoutGraceActive.eraseToAnyPublisher()
     }
 }

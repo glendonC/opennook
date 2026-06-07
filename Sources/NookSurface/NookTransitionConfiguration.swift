@@ -33,17 +33,25 @@ public struct NookTransitionConfiguration: Sendable {
     /// pass a custom animation whose duration differs materially from the default.
     public var animationDuration: TimeInterval?
 
+    /// Short-lived grace after expanded content resizes. While active, hover-exit
+    /// auto-compact is suppressed so a stationary cursor does not dismiss the nook
+    /// when the chrome shape shrinks underneath it. `nil` uses the built-in default
+    /// (~600 ms).
+    public var layoutGraceDuration: TimeInterval?
+
     public init(
         openingAnimation: Animation? = nil,
         closingAnimation: Animation? = nil,
         conversionAnimation: Animation? = nil,
         skipIntermediateHides: Bool = false,
-        animationDuration: TimeInterval? = nil
+        animationDuration: TimeInterval? = nil,
+        layoutGraceDuration: TimeInterval? = nil
     ) {
         self.openingAnimation = openingAnimation
         self.closingAnimation = closingAnimation
         self.conversionAnimation = conversionAnimation
         self.skipIntermediateHides = skipIntermediateHides
         self.animationDuration = animationDuration
+        self.layoutGraceDuration = layoutGraceDuration
     }
 }

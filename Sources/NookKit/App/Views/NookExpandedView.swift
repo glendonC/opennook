@@ -102,24 +102,51 @@ public struct NookExpandedView: View {
         resolvedTheme.accent
     }
 
+    /// Horizontal gutter shared by the top bar and host content when
+    /// ``NookTopBarConfiguration/Width/contentColumn`` is active.
+    private var columnGutter: NookContentInsets {
+        outerContentInsets.reducingBy(metrics.edgePadding)
+    }
+
+    /// Vertical-only insets for descendants after ``columnGutter`` is applied once
+    /// on the expanded column — prevents double horizontal padding drift.
+    private var verticalContentInsets: NookContentInsets {
+        NookContentInsets(top: columnGutter.top, bottom: columnGutter.bottom)
+    }
+
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        expandedColumn
+            .frame(width: width)
+            .padding(metrics.edgePadding)
+            .environment(\.nookResolvedTheme, resolvedTheme)
+        .environment(\.nookChromeLabels, labels)
+        .environment(\.nookChromeMetrics, metrics)
+        .environment(\.nookChromeMotion, motion)
+        .environment(\.appServices, services)
+        // Expose `AppState` to the host-registered `home` surface so it can observe
+        // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
+        // bespoke parameter.
+        .environmentObject(appState)
+        // The nook lives on a `.nonactivatingPanel` so opening it never steals focus from
+        // the user's editor. Side effect: until the user clicks the surface, AppKit
+        // desaturates accent-tinted controls. Forcing `.active` makes the chrome paint as
+        // if focused without changing key-window behaviour.
+        .environment(\.controlActiveState, .active)
+        .tint(resolvedTheme.accent)
+        .fontDesign(resolvedTheme.fontDesign)
+        .preferredColorScheme(appState.appearancePreferences.chromeColorSchemeOverride)
+        .onChange(of: appState.viewMode) { _ in
+            isHomeIconHovered = false
+        }
+        .onExitCommand(perform: hide)
+        .animation(motion.viewModeChange, value: appState.viewMode)
+    }
+
+    @ViewBuilder
+    private var expandedColumn: some View {
+        let stack = VStack(alignment: .leading, spacing: 8) {
             if topBar.showsTopBar {
-                NookTopBar(
-                    appState: appState,
-                    chromeInteractionAccent: chromeInteractionAccent,
-                    isHomeIconHovered: $isHomeIconHovered,
-                    toggleKeepOpen: toggleKeepOpen,
-                    leadingTitle: topBar.leadingTitle,
-                    leadingIcon: topBar.leadingIcon,
-                    showsSettings: topBar.showsSettings,
-                    trailingItems: topBar.trailingItems,
-                    width: topBar.width
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    alignment: topBar.width == .contentColumn ? .leading : .center
-                )
+                topBarRow
 
                 if topBar.showsStatusBanner {
                     NookTransientStatusBanner(appState: appState, theme: resolvedTheme)
@@ -148,33 +175,50 @@ public struct NookExpandedView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .clipped()
             .animation(motion.viewModeChange, value: appState.viewMode)
         }
-        .environment(\.nookContentInsets, outerContentInsets.reducingBy(metrics.edgePadding))
-        .frame(width: width)
-        .padding(metrics.edgePadding)
-        .environment(\.nookResolvedTheme, resolvedTheme)
-        .environment(\.nookChromeLabels, labels)
-        .environment(\.nookChromeMetrics, metrics)
-        .environment(\.nookChromeMotion, motion)
-        .environment(\.appServices, services)
-        // Expose `AppState` to the host-registered `home` surface so it can observe
-        // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
-        // bespoke parameter.
-        .environmentObject(appState)
-        // The nook lives on a `.nonactivatingPanel` so opening it never steals focus from
-        // the user's editor. Side effect: until the user clicks the surface, AppKit
-        // desaturates accent-tinted controls. Forcing `.active` makes the chrome paint as
-        // if focused without changing key-window behaviour.
-        .environment(\.controlActiveState, .active)
-        .tint(resolvedTheme.accent)
-        .fontDesign(resolvedTheme.fontDesign)
-        .preferredColorScheme(appState.appearancePreferences.chromeColorSchemeOverride)
-        .onChange(of: appState.viewMode) { _ in
-            isHomeIconHovered = false
+
+        if topBar.width == .contentColumn {
+            stack
+                .padding(.leading, columnGutter.leading)
+                .padding(.trailing, columnGutter.trailing)
+                .environment(\.nookContentInsets, verticalContentInsets)
+        } else {
+            stack
+                .environment(\.nookContentInsets, columnGutter)
         }
-        .onExitCommand(perform: hide)
-        .animation(motion.viewModeChange, value: appState.viewMode)
+    }
+
+    @ViewBuilder
+    private var topBarRow: some View {
+        if topBar.width == .intrinsic {
+            NookTopBar(
+                appState: appState,
+                chromeInteractionAccent: chromeInteractionAccent,
+                isHomeIconHovered: $isHomeIconHovered,
+                toggleKeepOpen: toggleKeepOpen,
+                leadingTitle: topBar.leadingTitle,
+                leadingIcon: topBar.leadingIcon,
+                showsSettings: topBar.showsSettings,
+                trailingItems: topBar.trailingItems,
+                width: topBar.width
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
+        } else {
+            NookTopBar(
+                appState: appState,
+                chromeInteractionAccent: chromeInteractionAccent,
+                isHomeIconHovered: $isHomeIconHovered,
+                toggleKeepOpen: toggleKeepOpen,
+                leadingTitle: topBar.leadingTitle,
+                leadingIcon: topBar.leadingIcon,
+                showsSettings: topBar.showsSettings,
+                trailingItems: topBar.trailingItems,
+                width: topBar.width
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     /// Host-registered home surface. Supplied via ``NookConfiguration`` — no fork needed.

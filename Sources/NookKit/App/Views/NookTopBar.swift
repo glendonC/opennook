@@ -39,9 +39,8 @@ struct NookTopBar: View {
 
     @Environment(\.nookResolvedTheme) private var resolvedTheme
 
-    /// Curve-derived safe-area insets from the chrome. Applied once on the full-width
-    /// bar so the leading cluster and trailing icons share the same gutter and the
-    /// `Spacer` can push the trailing cluster to the content column's trailing edge.
+    /// Curve-derived safe-area insets from the chrome. Leading/trailing clusters pad
+    /// by these values so host rows and the top bar share one horizontal gutter.
     @Environment(\.nookContentInsets) private var contentInsets
 
     /// Host-overridable chrome strings, layout metrics, and in-panel motion (see
@@ -56,12 +55,44 @@ struct NookTopBar: View {
     @Environment(\.nookHostBranding) private var branding
 
     var body: some View {
-        iconRow
-            .frame(height: metrics.topBarHeight)
-            .animation(motion.breadcrumb, value: appState.moduleBreadcrumb)
+        Group {
+            switch width {
+            case .contentColumn:
+                contentColumnBar
+            case .intrinsic:
+                intrinsicBar
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: metrics.topBarHeight)
+        .animation(motion.breadcrumb, value: appState.moduleBreadcrumb)
     }
 
-    private var iconRow: some View {
+    /// Full-width bar: trailing cluster is overlay-pinned so it always shares the
+    /// content-column gutter with host rows (Settings toggles, home command bars).
+    private var contentColumnBar: some View {
+        Color.clear
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .leading) {
+                leadingBarContent
+            }
+            .overlay(alignment: .trailing) {
+                trailingCluster
+                    .padding(.trailing, contentInsets.trailing)
+            }
+            .frame(maxWidth: .infinity, minHeight: metrics.topBarHeight, maxHeight: metrics.topBarHeight)
+    }
+
+    private var intrinsicBar: some View {
+        HStack(spacing: 8) {
+            leadingBarContent
+            Spacer(minLength: 0)
+            trailingCluster
+                .padding(.trailing, contentInsets.trailing)
+        }
+    }
+
+    private var leadingBarContent: some View {
         HStack(spacing: 8) {
             homeLeadingCluster
                 .fixedSize(horizontal: true, vertical: false)
@@ -76,39 +107,16 @@ struct NookTopBar: View {
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
             } else if let breadcrumb = appState.moduleBreadcrumb, !breadcrumb.isEmpty {
-                // Module-driven drill-down label (a selected deck, an open
-                // document …). Renders with the same separator and typography
-                // weight as Settings so the chrome stays visually consistent.
                 Image(systemName: "chevron.right")
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(resolvedTheme.quaternaryLabel)
 
-                // The chrome's top edge sits at the menu bar level by design,
-                // so the topbar runs *under* the physical notch on a notched
-                // display: anything horizontally between the notch's edges is
-                // hardware-clipped. Leading content (home + chevron) lives on
-                // the left of the notch, trailing icons live on the right;
-                // the breadcrumb needs to stay on the leading side too or it
-                // visually splits across the notch. `.frame(width:)` (a hard
-                // size, not a flex) caps the breadcrumb to the leading
-                // pre-notch region without propagating an intrinsic width up
-                // through the chrome's sizing. The alpha mask fades the
-                // trailing 16pt so SwiftUI's missing-ellipsis truncation reads
-                // as a soft edge; `.help(breadcrumb)` exposes the full
-                // string on hover for the truncated tail.
                 Text(breadcrumb)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
                     .frame(width: metrics.breadcrumbMaxWidth, alignment: .leading)
                     .mask(
-                        // Full opacity for the leading half of the
-                        // breadcrumb frame, then a smooth ramp to fully
-                        // clear at the trailing edge. A 50% fade region
-                        // is wide enough to land over actually-rendered
-                        // characters even when SwiftUI truncates short of
-                        // the frame's trailing edge — a narrower band
-                        // mostly fades empty space and reads as crisp.
                         LinearGradient(
                             stops: [
                                 .init(color: .black, location: 0),
@@ -124,11 +132,7 @@ struct NookTopBar: View {
             }
 
             Spacer(minLength: 0)
-
-            trailingCluster
-                .padding(.trailing, contentInsets.trailing)
         }
-        .frame(maxWidth: width == .contentColumn ? .infinity : nil, alignment: .leading)
     }
 
     private var trailingCluster: some View {
@@ -193,9 +197,6 @@ struct NookTopBar: View {
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
             } else {
-                // Deep view (Settings or a module breadcrumb): the cluster is
-                // the back control. With no configured icon, a back chevron
-                // keeps that affordance.
                 HeaderIcon(
                     systemName: leadingIcon ?? "chevron.left",
                     isActive: false,
@@ -206,9 +207,6 @@ struct NookTopBar: View {
                         if appState.isSettingsView {
                             appState.showHome()
                         } else if hasBreadcrumb {
-                            // Module sub-context: clear the breadcrumb and let
-                            // the module react to that (by exiting its own
-                            // drilled-in state).
                             appState.moduleBreadcrumb = nil
                         } else {
                             appState.showHome()

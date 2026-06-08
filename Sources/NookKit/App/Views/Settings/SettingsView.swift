@@ -117,8 +117,6 @@ struct SettingsView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, contentInsets.leading)
-            .padding(.trailing, contentInsets.trailing)
             .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity, maxHeight: settingsScrollMaxHeight, alignment: .leading)

@@ -33,8 +33,8 @@ struct LayoutHomeView: View {
                     .foregroundStyle(theme.primaryLabel)
 
                 Text(
-                    "This answer block spans the full content column. Leading and trailing "
-                        + "padding come from `nookContentInsets`, matching Settings and the top bar."
+                    "Horizontal gutter comes from `NookExpandedView` (contentColumn top bar). "
+                        + "Host rows only need vertical `nookContentInsets` for bottom curves."
                 )
                 .font(.system(size: 11))
                 .foregroundStyle(theme.secondaryLabel)
@@ -42,17 +42,15 @@ struct LayoutHomeView: View {
 
                 Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(.leading, contentInsets.leading)
-            .padding(.trailing, contentInsets.trailing)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
             .padding(.top, 4)
 
             commandRow
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
-    /// Bottom toolbars should expand to the content column width, then inset by
-    /// `nookContentInsets` on the sides and bottom — not shrink-wrap to their buttons.
+    /// Bottom toolbars span the shared content column; only bottom inset clears the curve.
     private var commandRow: some View {
         HStack(spacing: 8) {
             commandChip("Send", icon: "paperplane.fill")
@@ -63,8 +61,6 @@ struct LayoutHomeView: View {
                 .foregroundStyle(theme.quaternaryLabel)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, contentInsets.leading)
-        .padding(.trailing, contentInsets.trailing)
         .padding(.bottom, contentInsets.bottom)
         .padding(.top, 6)
     }

@@ -60,9 +60,9 @@ struct NookTopBar: View {
             switch width {
             case .contentColumn:
                 iconRow
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, contentInsets.leading)
                     .padding(.trailing, contentInsets.trailing)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             case .intrinsic:
                 iconRow
                     .padding(.leading, contentInsets.leading)

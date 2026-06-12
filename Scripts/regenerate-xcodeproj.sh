@@ -2,7 +2,7 @@
 # regenerate-xcodeproj.sh
 # Rebuilds Nook.xcodeproj from project.yml (the source of truth).
 #
-# The .xcodeproj is gitignored — it's a generated artifact. Run this script
+# The .xcodeproj is gitignored - it's a generated artifact. Run this script
 # after editing project.yml, or after a fresh clone before opening the
 # project in Xcode for the first time.
 #

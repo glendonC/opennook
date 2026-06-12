@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Apply SPDX license headers to source files. Idempotent — skips files that already carry
+# Apply SPDX license headers to source files. Idempotent - skips files that already carry
 # an `SPDX-License-Identifier` line. Run from the repo root.
 set -euo pipefail
 

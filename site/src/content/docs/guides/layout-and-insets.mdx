@@ -4,9 +4,9 @@ description: How expanded width, chrome insets, and nookContentInsets compose in
 ---
 
 The expanded panel's **glass width** and the **content column** inside it are controlled
-by different knobs on different layers. Stacking horizontal padding — for example
+by different knobs on different layers. Stacking horizontal padding - for example
 `.padding(.horizontal, 12)` on a home view when the framework already applies
-`metrics.edgePadding` — is the most common cause of dead space beside answer text
+`metrics.edgePadding` - is the most common cause of dead space beside answer text
 and bottom command rows.
 
 This guide maps each knob, shows how they compose, and points at
@@ -16,14 +16,14 @@ This guide maps each knob, shows how they compose, and points at
 
 Expanded layout stacks three responsibilities:
 
-1. **`NookSurface` (`NookView`)** — clips the notch shape, applies
+1. **`NookSurface` (`NookView`)** - clips the notch shape, applies
    `NookStyle.expandedContentInsets` as `.safeAreaInset` strips, adds structural
    horizontal padding (`topCornerRadius`) for the panel ears, and derives the outer
    `nookContentInsets` from corner radii.
-2. **`NookKit` (`NookExpandedView`)** — pins the inner VStack to
+2. **`NookKit` (`NookExpandedView`)** - pins the inner VStack to
    `expandedWidth`, wraps it in `metrics.edgePadding`, and re-injects reduced
    `nookContentInsets` for descendants.
-3. **Host views** — read `@Environment(\.nookContentInsets)` when content pins to an
+3. **Host views** - read `@Environment(\.nookContentInsets)` when content pins to an
    edge or corner; use `frame(maxWidth: .infinity, …)` when a row should span the
    full content column.
 
@@ -47,21 +47,21 @@ Expanded layout stacks three responsibilities:
 
 | Knob | Layer | What it does |
 |------|-------|--------------|
-| `NookConfiguration.expandedWidth` | NookKit | Fixed width of the inner VStack (default 520). Does not resize the glass by itself — the surface measures the wrapped chrome. |
+| `NookConfiguration.expandedWidth` | NookKit | Fixed width of the inner VStack (default 520). Does not resize the glass by itself - the surface measures the wrapped chrome. |
 | `NookChromeMetrics.edgePadding` | NookKit | Padding around the inner VStack inside the expanded surface. Default `8` (`NookLayout.edgePadding`). Subtracted before re-injecting `nookContentInsets`. |
 | `NookStyle.expandedContentInsets` | NookSurface | Per-edge `.safeAreaInset` strip the chrome reserves around expanded content. Default: top `0`, other edges `8`. |
 | `NookStyle.topCornerRadius` / `bottomCornerRadius` | NookSurface | Panel corner radii; drive clip shape and `nookContentInsets` derivation. |
-| `EnvironmentValues.nookContentInsets` | Surface → host | Residual curve clearance **relative to the host content frame**. Use for edge/corner-pinned layout — not as a substitute for centering. |
+| `EnvironmentValues.nookContentInsets` | Surface -> host | Residual curve clearance **relative to the host content frame**. Use for edge/corner-pinned layout - not as a substitute for centering. |
 
 `expandedContentInsets` and `edgePadding` both default to **8 pt** on the sides for
 historical parity, but they are **independent knobs** on different layers.
 
 ## Usable content width (worked example)
 
-At the framework defaults — `expandedWidth = 520`, radii top `19` / bottom `24`,
+At the framework defaults - `expandedWidth = 520`, radii top `19` / bottom `24`,
 `expandedContentInsets` `(0, 8, 8, 8)`, `edgePadding = 8`:
 
-**Step 1 — outer `nookContentInsets`** (injected by `NookView`):
+**Step 1 - outer `nookContentInsets`** (injected by `NookView`):
 
 | Edge | Residual |
 |------|----------|
@@ -70,7 +70,7 @@ At the framework defaults — `expandedWidth = 520`, radii top `19` / bottom `24
 | leading | 16 |
 | trailing | 16 |
 
-**Step 2 — inner `nookContentInsets`** (after `NookExpandedView` subtracts
+**Step 2 - inner `nookContentInsets`** (after `NookExpandedView` subtracts
 `edgePadding`):
 
 | Edge | Residual |
@@ -80,13 +80,13 @@ At the framework defaults — `expandedWidth = 520`, radii top `19` / bottom `24
 | leading | 8 |
 | trailing | 8 |
 
-**Step 3 — edge-aligned text width** inside the 520 pt VStack:
+**Step 3 - edge-aligned text width** inside the 520 pt VStack:
 
 ```
 520 − leading(8) − trailing(8) = 504 pt
 ```
 
-`SettingsView` and `NookTopBar` follow this pattern — section labels and icon
+`SettingsView` and `NookTopBar` follow this pattern - section labels and icon
 clusters pad by `contentInsets.leading` / `contentInsets.trailing` so everything
 shares one left margin.
 
@@ -97,7 +97,7 @@ shares one left margin.
 
 - Inner VStack width: **600 pt**
 - Edge-aligned usable width: **600 − 8 − 8 = 584 pt**
-- `nookContentInsets.bottom` **rises** to 22 (24 − 2) — bottom-*corner* content must
+- `nookContentInsets.bottom` **rises** to 22 (24 − 2) - bottom-*corner* content must
   inset more; horizontally-centered rows are unaffected and sit ~6 pt closer to the
   rounded bottom.
 
@@ -118,7 +118,7 @@ NookApp.main(configuration)
 ```
 
 Leave `metrics.edgePadding` at the default unless you have a deliberate reason to
-change the wrapper padding — most hosts only need `expandedWidth` and
+change the wrapper padding - most hosts only need `expandedWidth` and
 `expandedContentInsets`.
 
 ### Read `nookContentInsets` in the home view
@@ -148,26 +148,26 @@ struct MyHomeView: View {
 ```
 
 Do **not** add `.padding(.horizontal, 12)` (or any fixed horizontal padding) on the
-home root — `NookExpandedView` already applies `metrics.edgePadding`. Extra padding
+home root - `NookExpandedView` already applies `metrics.edgePadding`. Extra padding
 narrows the effective column and leaves visible dead space beside text and toolbars.
 
 ### Full-width bottom command rows
 
 Bottom toolbars that should span the content column need two things:
 
-1. **`frame(maxWidth: .infinity, alignment: .leading)`** on the row — otherwise
+1. **`frame(maxWidth: .infinity, alignment: .leading)`** on the row - otherwise
    SwiftUI shrink-wraps the `HStack` to its buttons and the row looks narrower than
    the panel.
-2. **Edge insets from `nookContentInsets`** — not a second horizontal padding pass.
+2. **Edge insets from `nookContentInsets`** - not a second horizontal padding pass.
 
 Centered command rows (icons in the middle of the panel) can ignore horizontal
 `nookContentInsets`; only corner-pinned content needs the leading/trailing values.
 
 ### When you can skip `nookContentInsets`
 
-- **Centered placeholder content** (title + subtitle in the middle) — the default
+- **Centered placeholder content** (title + subtitle in the middle) - the default
   demo home does this with vertical padding only.
-- **Full-bleed custom art** that intentionally reaches toward the curves — rare; test
+- **Full-bleed custom art** that intentionally reaches toward the curves - rare; test
   on a notched display.
 
 When content aligns with Settings rows or the top-bar leading cluster, always use
@@ -187,13 +187,13 @@ the registered home view before tuning `expandedWidth`.
 
 ## See also
 
-- `Examples/LayoutNook/main.swift` — working 600 pt host with trimmed bottom inset
+- `Examples/LayoutNook/main.swift` - working 600 pt host with trimmed bottom inset
   and a full-width command row.
-- [Theming](/guides/theming/#chrome-shape-animation-and-width) — corner radii and
+- [Theming](/guides/theming/#chrome-shape-animation-and-width) - corner radii and
   `expandedContentInsets` in context.
-- [Settings chrome](/guides/settings-chrome/) — top-bar layout that shares the same
+- [Settings chrome](/guides/settings-chrome/) - top-bar layout that shares the same
   inset contract.
-- `Sources/NookKit/App/Views/Settings/SettingsView.swift` — canonical edge-aligned
+- `Sources/NookKit/App/Views/Settings/SettingsView.swift` - canonical edge-aligned
   list layout inside the framework.
-- `Tests/NookKitTests/NookContentInsetsTests.swift` — executable spec for inset
+- `Tests/NookKitTests/NookContentInsetsTests.swift` - executable spec for inset
   derivation math.

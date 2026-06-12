@@ -20,7 +20,7 @@ the iteration:
 
 | Path  | Command                                                              | When                                                          | Limitations                                                              |
 | ----- | -------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| SPM   | `swift run Nook` (or `Scripts/dev-run.sh`)                    | Fast headless iteration                                       | No `Info.plist` on disk → Launch Services can't route URL-scheme links   |
+| SPM   | `swift run Nook` (or `Scripts/dev-run.sh`)                    | Fast headless iteration                                       | No `Info.plist` on disk -> Launch Services can't route URL-scheme links   |
 | Xcode | Cmd-R in `Nook.xcodeproj` or `xcodebuild -scheme NookHostApp build` | End-to-end (signing, notarization, bundled `.app`)        | Slower first build; `DerivedData/` lives in `.build/xcode/`              |
 
 `swift test` runs the test suite from the package root. Both paths share the

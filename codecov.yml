@@ -1,0 +1,9 @@
+# Informational coverage only - no merge gates until baseline stabilizes.
+coverage:
+  status:
+    project: off
+    patch: off
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: false

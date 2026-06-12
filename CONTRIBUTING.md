@@ -88,6 +88,11 @@ add or change public API, update the docs in the same change:
 - A new public symbol still needs its DocC comment in source (see Public API
   discipline above); the guides are the prose layer on top.
 
+The symbol-level API reference is generated from those DocC comments by Swift
+Package Index (`.spi.yml`), not hand-written. Preview it locally with
+`./Scripts/generate-docs.sh`; CI builds it on every PR, so a doc comment that
+breaks DocC fails the build before it reaches the next release.
+
 Treat a feature as unfinished until its docs land. The site lagging the code is
 the failure mode this section exists to prevent.
 

@@ -11,5 +11,9 @@ xcuserdata/
 Nook.xcodeproj/
 .swiftpm/
 
+# Generated DocC output (Scripts/generate-docs.sh). The hosted API reference is
+# built by Swift Package Index from .spi.yml, so this never needs committing.
+.docs-out/
+
 # Internal planning notes — not part of the published framework.
 .notes/

@@ -132,3 +132,19 @@ jobs:
             exit 1
           fi
           echo "License headers OK."
+
+  docs:
+    name: DocC build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      # The Liquid Glass surface code references the macOS 26 SDK; match the other
+      # jobs so symbol extraction compiles the real path.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      # Builds the same DocC reference Swift Package Index publishes per release
+      # (.spi.yml), so a doc-comment change that breaks the build fails here at PR
+      # time instead of silently breaking the next release's hosted docs.
+      - name: Build the API reference
+        run: ./Scripts/generate-docs.sh

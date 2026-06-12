@@ -1,5 +1,6 @@
 // swift-tools-version: 5.9
 
+import Foundation
 import PackageDescription
 
 /// Centralized strict-concurrency checking — applied to every target so the
@@ -8,7 +9,7 @@ import PackageDescription
 /// concurrency rules the library targets enforce.
 let strictConcurrency: [SwiftSetting] = [.enableUpcomingFeature("StrictConcurrency")]
 
-let package = Package(
+var package = Package(
     name: "Nook",
     platforms: [
         .macOS("15.0")
@@ -153,3 +154,13 @@ let package = Package(
         )
     ]
 )
+
+// DocC is a docs-only, opt-in dependency: the swift-docc-plugin is added to the manifest
+// only when OPENNOOK_BUILD_DOCS is set, so consumers of OpenNook never resolve or fetch it
+// and the framework keeps its zero-runtime-dependency promise. Generate the API reference
+// with Scripts/generate-docs.sh (which sets the variable).
+if ProcessInfo.processInfo.environment["OPENNOOK_BUILD_DOCS"] != nil {
+    package.dependencies.append(
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
+    )
+}

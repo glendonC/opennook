@@ -18,9 +18,11 @@ flips between rather than nesting inside one home view.
 - **You want isolated persistence and services.** Two modules in the same host
   should never collide on `UserDefaults` keys or service instances. The
   framework gives each module its own context (see below).
-- **You want a switcher in the chrome.** Registering modules puts a switcher
-  strip in the expanded surface for free, plus an optional cycle hotkey and
-  per-module direct-jump hotkeys.
+- **You want to switch at runtime.** Registering modules gives you switching
+  for free: a "Modules" section in the menu-bar item, an optional cycle hotkey,
+  and per-module direct-jump hotkeys. By default nothing is planted in the
+  expanded surface - it stays entirely the module's own. Opt into a compact
+  in-surface switcher with `moduleSwitcherPlacement` (see below).
 
 If you only have one notch app, stick with `NookConfiguration` and
 `NookApp.main(_:)`. `NookHostConfiguration` traps if you build it empty - it
@@ -53,6 +55,28 @@ NookApp.main(host)
 `defaultModule` is the module shown at launch. When unset, the first
 registered module wins. `moduleCycleHotkey` adds a global shortcut that
 advances to the next module in registration order.
+
+## Where the switcher appears
+
+The framework never plants switcher chrome in a module's expanded surface
+uninvited. `host.moduleSwitcherPlacement` decides where the on-screen switch
+affordance lives; switching is always reachable through the cycle and
+per-module hotkeys regardless.
+
+```swift
+host.moduleSwitcherPlacement = .menuBar        // default
+```
+
+- `.menuBar` (default) - a "Modules" section in the menu-bar item lists every
+  module and switches on selection, with a check on the active one. Nothing is
+  added to the expanded surface; it stays entirely the module's own.
+- `.leadingCluster` - a compact switcher folded into the top bar's leading
+  cluster: the active module's name and icon become a popup that lists the
+  others. It replaces the leading title rather than adding a band, so it costs
+  no extra height and never duplicates the active module's identity. Also lists
+  modules in the menu bar.
+- `.none` - no on-screen switcher anywhere. Switching is reachable only through
+  the hotkeys.
 
 ## Descriptors and modules
 

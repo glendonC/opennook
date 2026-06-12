@@ -28,6 +28,12 @@ This is still 0.x: the public API is not frozen. Pin to a tag.
 - `AppState.moduleBreadcrumb` - a drill-in breadcrumb on the host top bar for
   multi-module hosts, with an overflow fade mask constrained to the pre-notch
   region.
+- `NookHostConfiguration.moduleSwitcherPlacement` / `NookModuleSwitcherPlacement`
+  - choose where a multi-module host surfaces its switcher: `.menuBar` (the
+  default - a "Modules" section in the menu-bar item), `.leadingCluster` (a
+  compact popup folded into the top bar's leading cluster), or `.none` (cycle /
+  per-module hotkeys only). The framework no longer plants switcher chrome in a
+  module's expanded surface uninvited.
 - `NookConfiguration.style` - host override for the chrome corner radii.
 - `NookConfiguration.transitions` - host override for the expand / collapse /
   convert animation curves.
@@ -70,6 +76,11 @@ This is still 0.x: the public API is not frozen. Pin to a tag.
 - `NookLayout` and its metrics are now `public`.
 - The Settings UI was reworked alongside the expanded chrome-customization
   seams.
+- The module switcher is no longer a chrome band at the top of the expanded
+  surface. A multi-module host now switches from a "Modules" menu-bar section
+  and the cycle / per-module hotkeys by default, leaving the surface entirely
+  the module's own; opt into a compact in-surface switcher with
+  `NookHostConfiguration.moduleSwitcherPlacement = .leadingCluster`.
 
 ### Fixed
 

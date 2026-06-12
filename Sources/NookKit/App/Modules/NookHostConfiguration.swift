@@ -55,6 +55,15 @@ public struct NookHostConfiguration: Sendable {
     /// presence or none.
     public var showsMenuBarExtra: Bool = true
 
+    /// Where the module switcher appears. Defaults to ``NookModuleSwitcherPlacement/menuBar``
+    /// so the framework never plants switcher chrome in the host's expanded surface: a
+    /// multi-module host gets a "Modules" menu-bar section and the cycle / per-module
+    /// hotkeys, and the surface stays entirely the host's. Opt into
+    /// ``NookModuleSwitcherPlacement/leadingCluster`` for a compact in-surface switcher,
+    /// or ``NookModuleSwitcherPlacement/none`` for hotkeys only. Has no effect on a
+    /// single-module host.
+    public var moduleSwitcherPlacement: NookModuleSwitcherPlacement = .menuBar
+
     /// Builds an empty host. Register at least one module via ``register(_:factory:)``
     /// or ``register(_:configuration:)`` before passing to `NookApp.main(_:)`.
     public init() {}
@@ -135,6 +144,7 @@ public struct NookHostConfiguration: Sendable {
             branding: branding,
             chromeBehavior: chromeBehavior,
             showsMenuBarExtra: showsMenuBarExtra,
+            switcherPlacement: moduleSwitcherPlacement,
             presentationPinning: NookPresentationPinning()
         )
     }

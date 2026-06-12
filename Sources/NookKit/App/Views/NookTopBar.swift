@@ -37,6 +37,13 @@ struct NookTopBar: View {
     /// How the row spans the expanded content column. See ``NookTopBarConfiguration/Width``.
     let width: NookTopBarConfiguration.Width
 
+    /// When non-`nil`, the leading cluster becomes a compact module switcher popup
+    /// instead of the plain title - supplied by the multi-module router only when the
+    /// host opted into ``NookModuleSwitcherPlacement/leadingCluster``. Defaults to `nil`,
+    /// so single-module and menu-bar-switcher hosts render the plain title unchanged.
+    /// See ``NookModuleSwitcher``.
+    var moduleSwitcher: NookModuleSwitcher? = nil
+
     @Environment(\.nookResolvedTheme) private var resolvedTheme
 
     /// Curve-derived safe-area insets from the chrome. Leading/trailing clusters pad
@@ -181,7 +188,18 @@ struct NookTopBar: View {
         let title = leadingTitle(appState)
 
         return HStack(spacing: 6) {
-            if showPersistentHomeTitle {
+            if showPersistentHomeTitle, let moduleSwitcher {
+                // Multi-module host that opted into an in-surface switcher: the leading
+                // cluster IS the switcher (it replaces the plain title - no extra band,
+                // no duplicated identity).
+                ModuleSwitcherMenu(
+                    switcher: moduleSwitcher,
+                    fallbackIcon: leadingIcon,
+                    fallbackTitle: title,
+                    theme: resolvedTheme,
+                    branding: branding
+                )
+            } else if showPersistentHomeTitle {
                 if let leadingIcon {
                     StaticHeaderIcon(systemName: leadingIcon)
                 } else {
@@ -231,5 +249,68 @@ struct NookTopBar: View {
             }
         }
         .animation(motion.leadingClusterHover, value: isHomeIconHovered)
+    }
+}
+
+/// The opt-in in-surface module switcher: a flat popup folded into the top bar's leading
+/// cluster. Its label is the active module's icon + name (matching the plain-title chrome
+/// it replaces) plus a small chevron; the menu lists every module, checks the active one,
+/// and badges any that asked for attention. Shown only when a host opts into
+/// ``NookModuleSwitcherPlacement/leadingCluster``. See ``NookModuleSwitcher``.
+private struct ModuleSwitcherMenu: View {
+    let switcher: NookModuleSwitcher
+    let fallbackIcon: String?
+    let fallbackTitle: String
+    let theme: NookResolvedTheme
+    let branding: NookHostBranding
+
+    var body: some View {
+        Menu {
+            ForEach(switcher.modules) { descriptor in
+                Button {
+                    switcher.switchTo(descriptor.id)
+                } label: {
+                    if descriptor.id == switcher.activeID {
+                        Label(descriptor.displayName, systemImage: "checkmark")
+                    } else if switcher.attentionIDs.contains(descriptor.id) {
+                        Label("\(descriptor.displayName)  •", systemImage: descriptor.icon)
+                    } else {
+                        Label(descriptor.displayName, systemImage: descriptor.icon)
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                icon
+                Text(activeTitle)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(theme.secondaryLabel)
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 7, weight: .semibold))
+                    .foregroundStyle(theme.tertiaryLabel)
+            }
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Switch module")
+    }
+
+    private var activeTitle: String {
+        switcher.activeDescriptor?.displayName ?? fallbackTitle
+    }
+
+    @ViewBuilder private var icon: some View {
+        if let symbol = switcher.activeDescriptor?.icon ?? fallbackIcon {
+            StaticHeaderIcon(systemName: symbol)
+        } else {
+            branding.markView(
+                size: 11,
+                strokeWidth: 1.1,
+                color: theme.secondaryLabel.opacity(0.92)
+            )
+            .frame(width: 11, height: 11)
+        }
     }
 }

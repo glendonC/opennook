@@ -54,6 +54,12 @@ public struct NookExpandedView: View {
     /// ``NookConfiguration/expandedWidth``; the default is ``NookLayout/width``.
     let width: CGFloat
 
+    /// When non-`nil`, the top bar's leading cluster becomes a compact module switcher
+    /// instead of the plain title. Supplied by the multi-module router only when the host
+    /// opted into ``NookModuleSwitcherPlacement/leadingCluster``; `nil` for every
+    /// single-module and menu-bar-switcher host. See ``NookModuleSwitcher``.
+    let moduleSwitcher: NookModuleSwitcher?
+
     @State private var isHomeIconHovered = false
 
     /// Insets injected by the chrome (`NookSurface`) relative to this view's
@@ -77,7 +83,8 @@ public struct NookExpandedView: View {
         labels: NookChromeLabels = .default,
         metrics: NookChromeMetrics = .default,
         motion: NookChromeMotion = .default,
-        width: CGFloat = NookLayout.width
+        width: CGFloat = NookLayout.width,
+        moduleSwitcher: NookModuleSwitcher? = nil
     ) {
         self.appState = appState
         self.services = services
@@ -92,6 +99,7 @@ public struct NookExpandedView: View {
         self.metrics = metrics
         self.motion = motion
         self.width = width
+        self.moduleSwitcher = moduleSwitcher
     }
 
     private var resolvedTheme: NookResolvedTheme {
@@ -202,7 +210,8 @@ public struct NookExpandedView: View {
                 leadingIcon: topBar.leadingIcon,
                 showsSettings: topBar.showsSettings,
                 trailingItems: topBar.trailingItems,
-                width: topBar.width
+                width: topBar.width,
+                moduleSwitcher: moduleSwitcher
             )
             .frame(maxWidth: .infinity, alignment: .center)
         } else {
@@ -215,7 +224,8 @@ public struct NookExpandedView: View {
                 leadingIcon: topBar.leadingIcon,
                 showsSettings: topBar.showsSettings,
                 trailingItems: topBar.trailingItems,
-                width: topBar.width
+                width: topBar.width,
+                moduleSwitcher: moduleSwitcher
             )
             .frame(maxWidth: .infinity, alignment: .leading)
         }

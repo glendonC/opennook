@@ -308,6 +308,11 @@ host.branding = NookHostBranding(
 NookApp.main(host)
 ```
 
+By default the switcher lives in the menu-bar item (a "Modules" section) plus
+the cycle / per-module hotkeys - nothing is planted in a module's expanded
+surface. Set `host.moduleSwitcherPlacement = .leadingCluster` for a compact
+in-surface switcher folded into the top bar, or `.none` for hotkeys only.
+
 The active module's hooks/services drive the surface; switching is one
 atomic transaction on the lifecycle chain (no half-applied state, no
 arbiter claims leaking across modules). See `Examples/MultiNook/main.swift`

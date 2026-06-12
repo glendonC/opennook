@@ -52,6 +52,11 @@ public final class NookModuleRegistry {
     /// shell can read it (and observe it) through ``ModuleHost``.
     public let showsMenuBarExtra: Bool
 
+    /// Where the module switcher appears (menu bar, leading cluster, or nowhere). Held
+    /// here so the router and the app shell can read it through ``ModuleHost``. See
+    /// ``NookModuleSwitcherPlacement``.
+    public let switcherPlacement: NookModuleSwitcherPlacement
+
     /// One broker per host process, shared across every module. Registered into each
     /// module's ``AppServices`` as ``NookModuleContext`` is built, so a view in module A
     /// and a view in module B both resolve the same instance — pins compose into one
@@ -74,6 +79,7 @@ public final class NookModuleRegistry {
         branding: NookHostBranding = .default,
         chromeBehavior: NookChromeBehavior = .default,
         showsMenuBarExtra: Bool = true,
+        switcherPlacement: NookModuleSwitcherPlacement = .menuBar,
         presentationPinning: NookPresentationPinning = NookPresentationPinning()
     ) {
         self.registrations = registrations
@@ -82,6 +88,7 @@ public final class NookModuleRegistry {
         self.branding = branding
         self.chromeBehavior = chromeBehavior
         self.showsMenuBarExtra = showsMenuBarExtra
+        self.switcherPlacement = switcherPlacement
         self.presentationPinning = presentationPinning
         self.filePicker = NookFilePicker(presentationPinning: presentationPinning)
     }

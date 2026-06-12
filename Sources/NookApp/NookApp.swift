@@ -171,6 +171,29 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(toggleKeepOpen),
             keyEquivalent: "k"
         ))
+
+        // Modules — a multi-module host that left switching in the menu bar (the default
+        // placement) gets a section here: one item per module, a check on the active one,
+        // selecting switches. This keeps switching off the host's expanded surface.
+        if moduleHost.switcherPlacement.listsModulesInMenuBar && moduleHost.isMultiModule {
+            menu.addItem(.separator())
+            menu.addItem(.sectionHeader(title: "Modules"))
+            for descriptor in moduleHost.descriptors {
+                let moduleItem = NSMenuItem(
+                    title: descriptor.displayName,
+                    action: #selector(switchToModule(_:)),
+                    keyEquivalent: ""
+                )
+                moduleItem.representedObject = descriptor.id
+                moduleItem.state = descriptor.id == moduleHost.activeModuleID ? .on : .off
+                moduleItem.image = NSImage(
+                    systemSymbolName: descriptor.icon,
+                    accessibilityDescription: descriptor.displayName
+                )
+                menu.addItem(moduleItem)
+            }
+        }
+
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(
             title: "Quit",
@@ -192,6 +215,11 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggleKeepOpen() {
         coordinator.toggleKeepNookOpen()
+    }
+
+    @objc private func switchToModule(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        coordinator.switchModule(to: id)
     }
 
     @objc private func quit() {

@@ -23,43 +23,46 @@ struct ModuleRouterExpandedView: View {
 
     var body: some View {
         let configuration = moduleHost.configuration
-        VStack(spacing: 0) {
-            // The switcher is persistent chrome: it sits outside the `.id`-keyed content
-            // below, so it does not cross-fade when the module changes under it.
-            if moduleHost.isMultiModule {
-                ModuleSwitcherBar(moduleHost: moduleHost, switchModule: switchModule)
-            }
-
-            NookExpandedView(
-                appState: appState,
-                services: moduleHost.activeServices,
-                toggleKeepOpen: toggleKeepOpen,
-                hide: hide,
-                resetAllSettings: resetAllSettings,
-                theme: configuration.theme,
-                home: configuration.home,
-                settings: configuration.settings,
-                topBar: configuration.topBar,
-                labels: configuration.labels,
-                metrics: configuration.metrics,
-                motion: configuration.motion,
-                width: configuration.expandedWidth ?? NookLayout.width
-            )
-            // Identity tracks the active module so a switch tears down the old content
-            // and inserts the new — letting the transition cross-fade rather than diff
-            // in place.
-            .id(moduleHost.activeModuleID)
-            .transition(.opacity)
-        }
-        // The switcher reads `\.nookResolvedTheme`; NookExpandedView re-sets it for its
-        // own subtree, so this only reaches the switcher bar.
-        .environment(\.nookResolvedTheme, configuration.theme(appState))
-        .fontDesign(configuration.theme(appState).fontDesign)
-        // Host-product identity (About card, show-hide hotkey label) lives on
-        // `ModuleHost`; surface it here so any nested chrome view can read it without
-        // an init-time plumb. Applied at the router so it covers both the switcher and
-        // the expanded surface.
+        NookExpandedView(
+            appState: appState,
+            services: moduleHost.activeServices,
+            toggleKeepOpen: toggleKeepOpen,
+            hide: hide,
+            resetAllSettings: resetAllSettings,
+            theme: configuration.theme,
+            home: configuration.home,
+            settings: configuration.settings,
+            topBar: configuration.topBar,
+            labels: configuration.labels,
+            metrics: configuration.metrics,
+            motion: configuration.motion,
+            width: configuration.expandedWidth ?? NookLayout.width,
+            // Only fold a switcher into the chrome when the host opted in; otherwise the
+            // surface is untouched and switching lives in the menu bar / hotkeys.
+            moduleSwitcher: leadingClusterSwitcher
+        )
+        // Identity tracks the active module so a switch tears down the old content and
+        // inserts the new — letting the transition cross-fade rather than diff in place.
+        .id(moduleHost.activeModuleID)
+        .transition(.opacity)
+        // Host-product identity (brand mark, About card, show-hide hotkey label) lives on
+        // `ModuleHost`; surface it so the chrome can read it without an init-time plumb.
         .environment(\.nookHostBranding, moduleHost.branding)
+    }
+
+    /// The in-surface switcher payload, built only when the host opted into
+    /// ``NookModuleSwitcherPlacement/leadingCluster`` and more than one module is
+    /// registered. `nil` leaves the top bar's leading cluster the plain module title.
+    private var leadingClusterSwitcher: NookModuleSwitcher? {
+        guard moduleHost.isMultiModule, moduleHost.switcherPlacement.foldsIntoLeadingCluster else {
+            return nil
+        }
+        return NookModuleSwitcher(
+            modules: moduleHost.descriptors,
+            activeID: moduleHost.activeModuleID,
+            attentionIDs: moduleHost.attentionModuleIDs,
+            switchTo: switchModule
+        )
     }
 }
 

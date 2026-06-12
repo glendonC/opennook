@@ -139,7 +139,7 @@ func notesConfiguration() -> NookConfiguration {
     configuration.setHome {
         ModuleHome(
             headline: "Notes module",
-            detail: "Switch with the strip above, or press Control-Option-Grave.",
+            detail: "Switch from the menu-bar Modules section, or press Control-Option-Grave.",
             symbol: "note.text"
         )
     }
@@ -175,5 +175,12 @@ host.register(
 // Control-Option-Grave cycles to the next module. (Carbon: controlKey | optionKey.)
 host.moduleCycleHotkey = NookHotkey(keyCode: 50, carbonModifiers: 4096 | 2048, keySymbol: "`")
 host.defaultModule = CounterModule.moduleDescriptor.id
+
+// Where the switcher lives. The default (.menuBar) keeps the expanded surface entirely
+// the module's own and lists modules in the menu-bar item; switch there or with the cycle
+// hotkey above. Opt into an on-screen switcher folded into the top bar's leading cluster:
+//   host.moduleSwitcherPlacement = .leadingCluster
+// or drop the on-screen affordance entirely (hotkeys only):
+//   host.moduleSwitcherPlacement = .none
 
 NookApp.main(host)

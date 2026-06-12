@@ -89,6 +89,10 @@ public final class ModuleHost: ObservableObject {
     /// ``NookHostConfiguration/showsMenuBarExtra``.
     public var showsMenuBarExtra: Bool { registry.showsMenuBarExtra }
 
+    /// Where the module switcher appears. See ``NookModuleSwitcherPlacement`` and
+    /// ``NookHostConfiguration/moduleSwitcherPlacement``.
+    public var switcherPlacement: NookModuleSwitcherPlacement { registry.switcherPlacement }
+
     /// Modules that want the user's attention while in the background — the switcher
     /// badges these. A backgrounded module (or a component running on its behalf) calls
     /// ``requestAttention(for:)``; switching to a module clears its badge.

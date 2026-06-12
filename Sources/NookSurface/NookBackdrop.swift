@@ -85,20 +85,57 @@ public enum NookBackdrop: Equatable, Sendable {
         /// adds a faint extra rim there.
         public var highlightStrength: CGFloat
 
-        /// 0...1 black legibility pass composited under chrome content. `0` keeps the
-        /// glass pristine; raise it so text stays readable over a bright wallpaper.
-        public var darkenOpacity: CGFloat
+        /// Legibility pass composited under chrome content, expressed as a gradient the
+        /// caller fully owns — flat, bottom-weighted, top-weighted, banded, multi-stop,
+        /// any direction, any color. `nil` leaves the glass pristine. The surface renders
+        /// exactly this and imposes nothing of its own, so a coder building on OpenNook is
+        /// never boxed into the framework's idea of the gradient; the framework's default
+        /// mapping just supplies a sensible one (a top-to-bottom darken so the surface
+        /// reads glassier near the wallpaper) that a host can replace wholesale.
+        public var shading: Shading?
 
         public init(
             tint: Color? = nil,
             tintStrength: CGFloat = 0.18,
             highlightStrength: CGFloat = 0.6,
-            darkenOpacity: CGFloat = 0
+            shading: Shading? = nil
         ) {
             self.tint = tint
             self.tintStrength = tintStrength
             self.highlightStrength = highlightStrength
-            self.darkenOpacity = darkenOpacity
+            self.shading = shading
+        }
+
+        /// A shading pass: a `Gradient` plus the direction it runs across the surface.
+        /// Build one directly for full control, or use ``uniform(_:)`` for a flat fill.
+        /// Because it carries a whole gradient, a host can shape the glass any way it
+        /// likes without the framework constraining it to a single knob.
+        public struct Shading: Equatable, Sendable {
+            /// The gradient painted over the glass. Its stops and colors are entirely the
+            /// caller's; the framework never rewrites them.
+            public var gradient: Gradient
+
+            /// Where the gradient begins. Defaults to the top edge.
+            public var startPoint: UnitPoint
+
+            /// Where the gradient ends. Defaults to the bottom edge — so a two-stop
+            /// gradient runs top-to-bottom, the common "glassier toward the bottom" case.
+            public var endPoint: UnitPoint
+
+            public init(
+                gradient: Gradient,
+                startPoint: UnitPoint = .top,
+                endPoint: UnitPoint = .bottom
+            ) {
+                self.gradient = gradient
+                self.startPoint = startPoint
+                self.endPoint = endPoint
+            }
+
+            /// A flat, uniform shading of one color — no gradient falloff.
+            public static func uniform(_ color: Color) -> Shading {
+                Shading(gradient: Gradient(colors: [color, color]))
+            }
         }
     }
 

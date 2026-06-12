@@ -194,14 +194,24 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         }()
         Color.clear
             .glassEffect(tinted, in: notchShape)
-            // Real glass adapts its own contrast, so the legibility pass is applied at
-            // half weight here — just enough to keep chrome text crisp over a bright
-            // wallpaper without flattening the material's depth.
-            .overlay {
-                if glass.darkenOpacity > 0 {
-                    Color.black.opacity(glass.darkenOpacity * 0.5)
-                }
-            }
+            // The legibility pass is whatever the spec carries — the surface adds no
+            // darken of its own on top of Apple's self-contrasting material.
+            .overlay { glassShading(glass) }
+    }
+
+    /// The host-supplied legibility shading, rendered as a gradient. `nil` shading draws
+    /// nothing, leaving the glass pristine. The gradient, its stops, and its direction all
+    /// come from the ``NookBackdrop/LiquidGlass`` spec — the surface never substitutes its
+    /// own, so a host can shape the falloff however it likes.
+    @ViewBuilder
+    private func glassShading(_ glass: NookBackdrop.LiquidGlass) -> some View {
+        if let shading = glass.shading {
+            LinearGradient(
+                gradient: shading.gradient,
+                startPoint: shading.startPoint,
+                endPoint: shading.endPoint
+            )
+        }
     }
 
     /// Pre-Tahoe approximation: a glassy material, an optional tint, a legibility darken,
@@ -217,9 +227,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
                 tint.opacity(glass.tintStrength)
             }
 
-            if glass.darkenOpacity > 0 {
-                Color.black.opacity(glass.darkenOpacity)
-            }
+            glassShading(glass)
 
             if glass.highlightStrength > 0 {
                 LinearGradient(

@@ -126,7 +126,10 @@ final class NookBackdropMappingTests: XCTestCase {
         )
         let expected = NookBackdrop.liquidGlass(.init(
             highlightStrength: 0.6,
-            darkenOpacity: 0.22
+            shading: .init(gradient: Gradient(colors: [
+                .black.opacity(0.22),
+                .black.opacity(0.22 * 0.4)
+            ]))
         ))
         XCTAssertEqual(backdrop, expected)
     }
@@ -139,7 +142,10 @@ final class NookBackdropMappingTests: XCTestCase {
         )
         let expected = NookBackdrop.liquidGlass(.init(
             highlightStrength: 0.6,
-            darkenOpacity: 0.05
+            shading: .init(gradient: Gradient(colors: [
+                .black.opacity(0.05),
+                .black.opacity(0.05 * 0.4)
+            ]))
         ))
         XCTAssertEqual(backdrop, expected)
     }
@@ -165,7 +171,10 @@ final class NookBackdropMappingTests: XCTestCase {
         )
         let expected = NookBackdrop.liquidGlass(.init(
             highlightStrength: 0.6,
-            darkenOpacity: 0.22 * 0.5
+            shading: .init(gradient: Gradient(colors: [
+                .black.opacity(0.22 * 0.5),
+                .black.opacity(0.22 * 0.5 * 0.4)
+            ]))
         ))
         XCTAssertEqual(backdrop, expected)
     }

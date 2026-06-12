@@ -49,11 +49,18 @@ public enum NookBackdropMapping {
         case .liquidGlass:
             // Neutral glass (no tint) — the real material refracts the wallpaper itself.
             // A lighter darken than frost since glass keeps its own contrast; a bright
-            // rim sells the edge on the pre-Tahoe approximation.
-            let baseDarken = isDark ? 0.22 : 0.05
+            // rim sells the edge on the pre-Tahoe approximation. The default shading runs
+            // top-to-bottom and tapers to 40% at the bottom, so the surface reads glassier
+            // as it nears the wallpaper. This is only a *default*: a host returning
+            // `.liquidGlass` from a backdrop resolver supplies its own `Shading` gradient
+            // and is never constrained to this curve, direction, or color.
+            let topDarken = (isDark ? 0.22 : 0.05) * strength
             return .liquidGlass(.init(
                 highlightStrength: 0.6,
-                darkenOpacity: baseDarken * strength
+                shading: .init(gradient: Gradient(colors: [
+                    .black.opacity(topDarken),
+                    .black.opacity(topDarken * 0.4)
+                ]))
             ))
         case .solid:
             // Unreachable — handled by the guard above. Kept so the switch stays

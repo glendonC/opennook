@@ -518,36 +518,38 @@ final class AppCoordinatorTests: XCTestCase {
     /// onto one *intent change* (suspended -> bound), and `removeDuplicates` then dedups
     /// transitional duplicates.
     func testHotkeyRebindFiresExactlyOneRegisterPerUserAction() async throws {
-        let log = ExpandLog()
-        let a = SpyModule(id: "A", expandLog: log)
-        let surface = FakeNookSurface()
-        let coordinator = makeCoordinator(modules: [a], surface: surface)
-        coordinator.registerGlobalHotkey()  // initial registration (start()'s job)
-        coordinator.bindHotkeyRegistration()  // install the sink
-        let mintedAfterStart = coordinator.hotkeyController.carbonIDsMintedForTesting
+        try await PreferenceStoreTestIsolation.withIsolatedStore {
+            let log = ExpandLog()
+            let a = SpyModule(id: "A", expandLog: log)
+            let surface = FakeNookSurface()
+            let coordinator = makeCoordinator(modules: [a], surface: surface)
+            coordinator.registerGlobalHotkey()  // initial registration (start()'s job)
+            coordinator.bindHotkeyRegistration()  // install the sink
+            let mintedAfterStart = coordinator.hotkeyController.carbonIDsMintedForTesting
 
-        // Open the recorder - intent maps to `.suspended`; sink unregisters (no mint).
-        coordinator.appState.isRecordingHotkey = true
-        try await Task.sleep(nanoseconds: 30_000_000)
-        XCTAssertEqual(
-            coordinator.hotkeyController.carbonIDsMintedForTesting, mintedAfterStart,
-            "unregister mints nothing"
-        )
+            // Open the recorder - intent maps to `.suspended`; sink unregisters (no mint).
+            coordinator.appState.isRecordingHotkey = true
+            try await Task.sleep(nanoseconds: 30_000_000)
+            XCTAssertEqual(
+                coordinator.hotkeyController.carbonIDsMintedForTesting, mintedAfterStart,
+                "unregister mints nothing"
+            )
 
-        // User picks a new hotkey, then closes the recorder. Both publishes happen on
-        // the same runloop turn - the sink must fire exactly ONE register for the new
-        // hotkey, not one per upstream @Published change.
-        let newHotkey = NookHotkey(keyCode: 51, carbonModifiers: 4096 | 2048, keySymbol: "⌫")
-        coordinator.appState.replaceHotkey(newHotkey)
-        coordinator.appState.isRecordingHotkey = false
-        try await Task.sleep(nanoseconds: 30_000_000)
+            // User picks a new hotkey, then closes the recorder. Both publishes happen on
+            // the same runloop turn - the sink must fire exactly ONE register for the new
+            // hotkey, not one per upstream @Published change.
+            let newHotkey = NookHotkey(keyCode: 51, carbonModifiers: 4096 | 2048, keySymbol: "⌫")
+            coordinator.appState.replaceHotkey(newHotkey)
+            coordinator.appState.isRecordingHotkey = false
+            try await Task.sleep(nanoseconds: 30_000_000)
 
-        XCTAssertEqual(
-            coordinator.hotkeyController.carbonIDsMintedForTesting,
-            mintedAfterStart + 1,
-            "one register per user action, not one per upstream @Published change"
-        )
-        XCTAssertTrue(coordinator.hotkeyController.registeredIDsForTesting.contains(NookHotkeyIDs.toggle))
+            XCTAssertEqual(
+                coordinator.hotkeyController.carbonIDsMintedForTesting,
+                mintedAfterStart + 1,
+                "one register per user action, not one per upstream @Published change"
+            )
+            XCTAssertTrue(coordinator.hotkeyController.registeredIDsForTesting.contains(NookHotkeyIDs.toggle))
+        }
     }
 
     /// Recorder opened and then cancelled without changing the key collapses through

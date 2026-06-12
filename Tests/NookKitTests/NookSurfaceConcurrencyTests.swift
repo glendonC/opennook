@@ -268,11 +268,25 @@ final class NookSurfaceConcurrencyTests: XCTestCase {
         let nook = makeNook()
         nook.transitionConfiguration.layoutGraceDuration = 0.2
         nook.beginLayoutGrace()
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        XCTAssertTrue(nook.isLayoutGraceActive)
-        nook.beginLayoutGrace()
-        try? await Task.sleep(nanoseconds: 150_000_000)
-        XCTAssertTrue(nook.isLayoutGraceActive, "refresh should extend grace")
+
+        // Refresh far faster than the grace duration, for longer than a single,
+        // un-refreshed grace (0.2s) would last. Each activation resets the timer, so grace
+        // must stay continuously active across the whole window - which is only possible
+        // if a refresh extends it. Asserting across the window (rather than at one
+        // knife-edge instant) is robust to CI `Task.sleep` overruns: a single 40ms refresh
+        // gap would have to overrun ~5x to let the 0.2s grace lapse between refreshes.
+        let start = ContinuousClock.now
+        while ContinuousClock.now - start < .milliseconds(450) {
+            nook.beginLayoutGrace()
+            XCTAssertTrue(nook.isLayoutGraceActive, "refresh should keep grace active")
+            try? await Task.sleep(for: .milliseconds(40))
+        }
+
+        // Still active after ~2x the configured duration - proof the repeated activation
+        // refreshed the window rather than letting the first grace expire.
+        XCTAssertTrue(nook.isLayoutGraceActive, "repeated refresh should extend grace")
+
+        // Once refreshing stops, it expires.
         await waitUntil { !nook.isLayoutGraceActive }
         XCTAssertFalse(nook.isLayoutGraceActive)
     }

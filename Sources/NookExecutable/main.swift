@@ -7,7 +7,7 @@
 
 // SPM trampoline. `swift run Nook` builds this target and immediately
 // hands off to the shared library entry point in `NookApp`. The Xcode app
-// target uses `App/main.swift`, which is identical — both keep behavior in one
+// target uses `App/main.swift`, which is identical - both keep behavior in one
 // place so the headless dev loop and the bundled-app launch can never diverge.
 //
 // Note: the SPM-built binary has no `Contents/Info.plist` on disk, so it runs

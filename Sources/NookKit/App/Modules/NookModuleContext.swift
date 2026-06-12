@@ -19,16 +19,16 @@ public final class NookModuleContext {
     /// The module's registration-time identity.
     public let descriptor: NookModuleDescriptor
 
-    /// Per-module `UserDefaults` suite (`"opennook.module.<id>"`). Component stores —
+    /// Per-module `UserDefaults` suite (`"opennook.module.<id>"`). Component stores - 
     /// e.g. `NookComponents`' `ShelfStore`, which already accepts an injected
-    /// `defaults:` — should be wired to this so their keys can't collide across modules.
+    /// `defaults:` - should be wired to this so their keys can't collide across modules.
     public let defaults: UserDefaults
 
     /// Per-module service bag, injected into the module's views via `\.appServices`.
     public let services: AppServices
 
     /// Suggested on-disk container for module-owned files (databases, caches):
-    /// `Application Support/<host>/Modules/<id>/`. Not created on disk — the module
+    /// `Application Support/<host>/Modules/<id>/`. Not created on disk - the module
     /// creates it on first use.
     public let containerURL: URL
 

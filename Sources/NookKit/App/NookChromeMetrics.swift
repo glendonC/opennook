@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Host-tunable layout metrics for the framework chrome — the few fixed point values
+/// Host-tunable layout metrics for the framework chrome - the few fixed point values
 /// that were previously baked into the views as `NookLayout` constants. Defaults
 /// reproduce today's layout exactly.
 ///
@@ -22,14 +22,14 @@ public struct NookChromeMetrics: Sendable, Equatable {
     /// ``NookConfiguration/expandedWidth``. Distinct from
     /// ``NookStyle/expandedContentInsets`` (the chrome's own `.safeAreaInset` strip on
     /// ``NookView``). Host home views should not mirror this with extra horizontal
-    /// padding — read ``EnvironmentValues/nookContentInsets`` instead. See
+    /// padding - read ``EnvironmentValues/nookContentInsets`` instead. See
     /// `Examples/LayoutNook/main.swift`.
     public var edgePadding: CGFloat
 
     /// Square size of each compact pill slot (the glyphs flanking the notch). Default `24`.
     public var compactSlotSize: CGFloat
 
-    /// Maximum width of the top bar's module-breadcrumb label before it fades — capped to
+    /// Maximum width of the top bar's module-breadcrumb label before it fades - capped to
     /// the leading pre-notch region so it doesn't split across the notch. Default `140`.
     public var breadcrumbMaxWidth: CGFloat
 
@@ -48,7 +48,7 @@ public struct NookChromeMetrics: Sendable, Equatable {
         self.topBarHeight = topBarHeight
     }
 
-    /// The framework-default metrics — reproduces today's layout.
+    /// The framework-default metrics - reproduces today's layout.
     public static let `default` = NookChromeMetrics()
 }
 

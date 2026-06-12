@@ -8,7 +8,7 @@
 import AppKit
 
 /// Centralized trackpad haptics for completion-style events. Reads
-/// `appearancePreferences.hapticFeedbackEnabled` at the call site — never fires when
+/// `appearancePreferences.hapticFeedbackEnabled` at the call site - never fires when
 /// the preference is off. macOS only delivers the pulse when the user's hand is on a
 /// Force Touch trackpad and "Force Click and haptic feedback" is enabled in System
 /// Settings, so a missed pulse on a mouse-driven session is expected, not a bug.

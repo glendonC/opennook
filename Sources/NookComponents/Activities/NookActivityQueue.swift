@@ -14,19 +14,19 @@ import NookKit
 /// Enqueue ``NookActivity`` values; the queue drains them one at a time, highest
 /// ``NookActivityPriority/high`` first, collapsing any that share a `coalescingKey`.
 /// Presenting an activity briefly takes over the expanded surface through a
-/// ``NookSurfacePresenting`` — typically `AppCoordinator`, supplied via
+/// ``NookSurfacePresenting`` - typically `AppCoordinator`, supplied via
 /// `NookConfiguration.onReady`:
 ///
 /// ```swift
 /// let queue = NookActivityQueue()
 /// configuration.onReady = { queue.bind(to: $0) }
-/// // …later, from anywhere on the main actor:
+/// // ...later, from anywhere on the main actor:
 /// queue.enqueue(NookActivity(title: "Build finished", systemImage: "hammer"))
 /// ```
 ///
 /// The queue **yields to the user**: while the user is hovering or has opened the nook
 /// themselves it pauses, resuming once they disengage. It does not preempt an activity
-/// that is already on screen — priority orders only what is still pending.
+/// that is already on screen - priority orders only what is still pending.
 @MainActor
 public final class NookActivityQueue: ObservableObject {
     /// The activity currently on screen, or `nil`. A host view (see ``NookActivityHost``)
@@ -41,7 +41,7 @@ public final class NookActivityQueue: ObservableObject {
 
     private weak var presenter: (any NookSurfacePresenting)?
 
-    /// The module this queue presents on behalf of — stamped onto every surface claim so
+    /// The module this queue presents on behalf of - stamped onto every surface claim so
     /// the arbiter can gate a background module's activities. Captured at ``bind(to:moduleID:)``.
     private var moduleID = ""
 
@@ -53,7 +53,7 @@ public final class NookActivityQueue: ObservableObject {
     /// ``quiesce()`` uses this to release a held claim when stopping mid-presentation.
     private var activeToken: NookSurfaceToken?
 
-    /// Injectable sleep — real time in production, instant in tests.
+    /// Injectable sleep - real time in production, instant in tests.
     private let sleep: @Sendable (Duration) async -> Void
 
     /// - Parameter sleep: how the queue waits out an activity's `dwell`. Defaults to a
@@ -63,12 +63,12 @@ public final class NookActivityQueue: ObservableObject {
     }
 
     /// Connects the queue to the surface it presents through, and starts draining any
-    /// already-queued activities. Call once — `NookConfiguration.onReady` is the seam.
+    /// already-queued activities. Call once - `NookConfiguration.onReady` is the seam.
     ///
     /// - Parameter presenter: the surface the queue drives its takeovers through - the
     ///   host `AppCoordinator` in a single-module app, or the active module's coordinator.
     /// - Parameter moduleID: the module this queue belongs to, stamped onto its surface
-    ///   claims. When `nil`, the foreground module at bind time is assumed — correct for
+    ///   claims. When `nil`, the foreground module at bind time is assumed - correct for
     ///   a single-module host. A multi-module host should pass `context.descriptor.id`
     ///   so a backgrounded module's activities are gated correctly.
     public func bind(to presenter: any NookSurfacePresenting, moduleID: String? = nil) {
@@ -104,11 +104,11 @@ public final class NookActivityQueue: ObservableObject {
     /// Cooperative on purpose: a hard cancel mid-dwell would skip the
     /// `endTransientPresentation` call in the drain loop and strand the arbiter claim
     /// until the next ``quiesce()`` released it. Use ``quiesce()`` when you need hard
-    /// teardown — e.g. on module switch-away or queue destruction.
+    /// teardown - e.g. on module switch-away or queue destruction.
     public func suspend() {
         guard !isSuspended else { return }
         isSuspended = true
-        // Do NOT cancel `drainTask` here — see doc comment. The loop checks
+        // Do NOT cancel `drainTask` here - see doc comment. The loop checks
         // `isSuspended` at the top of each iteration and at the engagement-wait poll;
         // it exits on its own once the current activity finishes (or immediately if
         // it was parked in a wait).
@@ -123,7 +123,7 @@ public final class NookActivityQueue: ObservableObject {
 
     /// Stops all draining, joins the drain task, and releases any held surface token.
     ///
-    /// Unlike ``suspend()`` — which detaches the drain task and returns immediately —
+    /// Unlike ``suspend()`` - which detaches the drain task and returns immediately - 
     /// `quiesce()` *awaits* the drain task to fully unwind, then hands back any
     /// in-flight surface claim. After it returns the queue is provably no longer
     /// touching the surface, so the owning module is safe to switch away or unload.
@@ -152,7 +152,7 @@ public final class NookActivityQueue: ObservableObject {
         drainTask = Task { [weak self] in
             await self?.drain()
             // Only a drain that finished *naturally* clears the handle. A cancelled
-            // drain was detached by `suspend()`, which already niled the handle — and
+            // drain was detached by `suspend()`, which already niled the handle - and
             // a `resume()` may since have installed a fresh drain; don't clobber it.
             if !Task.isCancelled {
                 self?.drainTask = nil
@@ -172,7 +172,7 @@ public final class NookActivityQueue: ObservableObject {
 
             let claim = NookSurfaceClaim(moduleID: moduleID, priority: activity.priority.surfacePriority)
             guard let token = await presenter.beginTransientPresentation(claim) else {
-                // Denied — the user grabbed the surface, or another presenter outranks
+                // Denied - the user grabbed the surface, or another presenter outranks
                 // this claim. Put the activity back at the front and back off briefly so
                 // a contended surface is retried without spinning.
                 requeue(activity)
@@ -187,15 +187,15 @@ public final class NookActivityQueue: ObservableObject {
             current = activity
             await sleep(activity.dwell)
             // Keep `current` set across the `endTransientPresentation` await, then clear
-            // it — this holds the activity card on screen while the surface hands the
+            // it - this holds the activity card on screen while the surface hands the
             // claim back.
             //
             // Honest caveat: `endTransientPresentation` returns when the claim is
             // released, not necessarily when a follow-on collapse *animation* has
             // finished. If the presenter animates the collapse asynchronously after
             // returning, `current` is already `nil` for the tail of that animation and
-            // the host shows idle home content underneath. That is acceptable — the card
-            // covers the claim handoff, which is the visible part — but it is not the
+            // the host shows idle home content underneath. That is acceptable - the card
+            // covers the claim handoff, which is the visible part - but it is not the
             // "card renders through the entire collapse" an earlier comment promised.
             await presenter.endTransientPresentation(token)
             activeToken = nil
@@ -208,7 +208,7 @@ public final class NookActivityQueue: ObservableObject {
     /// Appended, not front-inserted: ``dequeue()`` picks the *first* element of the
     /// highest priority, so appending puts the rejected item behind any same-priority
     /// peers that were already waiting. That preserves FIFO order within a priority
-    /// class — a peer enqueued before the takeover still gets its turn first, the
+    /// class - a peer enqueued before the takeover still gets its turn first, the
     /// retry happens after. A higher-priority enqueue arriving during the contention
     /// backoff still preempts (dequeue's max-priority pass picks it first).
     private func requeue(_ activity: NookActivity) {
@@ -225,12 +225,12 @@ public final class NookActivityQueue: ObservableObject {
     }
 
     /// Suspends the drain loop while the user is engaging the surface, returning once
-    /// they disengage — or promptly when the queue is suspended or the drain task is
+    /// they disengage - or promptly when the queue is suspended or the drain task is
     /// cancelled.
     ///
     /// This polls rather than awaiting `userEngagementChanges` directly. That publisher
     /// collapses duplicates, so a `for await` over it parks until the *next distinct*
-    /// value arrives — and a `suspend()`/teardown that cancels the drain task while the
+    /// value arrives - and a `suspend()`/teardown that cancels the drain task while the
     /// user stays engaged would never wake it. `Task.sleep` throws `CancellationError`
     /// the instant the task is cancelled, so the wait can never outlive its task.
     private func waitWhileUserEngaged(_ presenter: any NookSurfacePresenting) async {

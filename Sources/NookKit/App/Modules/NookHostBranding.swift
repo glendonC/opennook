@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// A host brand mark — builds the mark view at a requested size and color. The framework
+/// A host brand mark - builds the mark view at a requested size and color. The framework
 /// renders it in the top-bar leading cluster (when no `leadingIcon` is set), the About
 /// card, and (as a template image) the menu-bar status item.
 ///
@@ -18,7 +18,7 @@ public typealias NookBrandMark = @Sendable @MainActor (_ size: CGFloat, _ color:
 /// Host-level identity surfaced through the framework chrome.
 ///
 /// Strings here name the *host product* (the `.app` the user installed), not any
-/// individual module — they are how the chrome labels itself across the multi-module
+/// individual module - they are how the chrome labels itself across the multi-module
 /// host's shared surface. The About card reads ``hostName`` and ``hostTagline``; the
 /// show/hide hotkey label and the menu-bar fallback read ``hostName``; the brand ``mark``
 /// replaces the OpenNook glyph across the chrome.
@@ -36,9 +36,9 @@ public struct NookHostBranding: Sendable, Equatable {
     public var hostTagline: String?
 
     /// Replaces the OpenNook ``NookMark`` glyph wherever the chrome renders the brand
-    /// mark — the top-bar leading cluster (when ``NookTopBarConfiguration/leadingIcon`` is
+    /// mark - the top-bar leading cluster (when ``NookTopBarConfiguration/leadingIcon`` is
     /// `nil`), the About card, and the menu-bar status icon. `nil` (the default) keeps the
-    /// OpenNook mark. Not part of ``Equatable`` (a closure can't be compared) — two
+    /// OpenNook mark. Not part of ``Equatable`` (a closure can't be compared) - two
     /// brandings are equal when their strings match.
     public var mark: NookBrandMark?
 
@@ -55,10 +55,10 @@ public struct NookHostBranding: Sendable, Equatable {
     }
 
     /// The single-module / unconfigured-host default. Reproduces the demo's strings
-    /// exactly so `NookApp.main { … }` is unchanged.
+    /// exactly so `NookApp.main { ... }` is unchanged.
     public static let `default` = NookHostBranding()
 
-    /// Builds the brand mark view at the given size/color — the host's ``mark`` if set,
+    /// Builds the brand mark view at the given size/color - the host's ``mark`` if set,
     /// otherwise the framework ``NookMarkView`` at the supplied `strokeWidth`.
     @MainActor
     public func markView(size: CGFloat, strokeWidth: CGFloat, color: Color) -> AnyView {
@@ -73,7 +73,7 @@ public struct NookHostBranding: Sendable, Equatable {
 import AppKit
 
 public extension NookHostBranding {
-    /// Renders the brand mark into a template `NSImage` for the menu-bar status item —
+    /// Renders the brand mark into a template `NSImage` for the menu-bar status item - 
     /// the host's ``mark`` if set, otherwise the framework mark.
     @MainActor
     func menuBarTemplateImage(size: CGFloat = 14) -> NSImage? {

@@ -13,7 +13,7 @@ import SwiftUI
 /// Offers the two stable modes (built-in / main) plus one entry per attached display.
 /// The display list refreshes on connect/disconnect; a previously-chosen display that's
 /// since been unplugged stays selectable as a "(not connected)" row so the preference
-/// isn't silently lost — the resolver falls back to the built-in display until it returns.
+/// isn't silently lost - the resolver falls back to the built-in display until it returns.
 struct DisplaySettingsSection: View {
     @ObservedObject var appState: AppState
     @Environment(\.nookResolvedTheme) private var theme

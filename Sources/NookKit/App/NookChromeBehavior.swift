@@ -12,14 +12,14 @@ import SwiftUI
 /// hover side-effects, the cold-launch greeting, and how appearance preferences map to
 /// the surface backdrop.
 ///
-/// These are distinct from ``NookConfiguration``'s per-surface content/theme seams —
+/// These are distinct from ``NookConfiguration``'s per-surface content/theme seams - 
 /// they describe how the single shared notch surface *behaves*, so they live at the
 /// host-process level (``NookHostConfiguration/chromeBehavior``). The single-module path
 /// mirrors them on ``NookConfiguration/chromeBehavior`` and forwards onto the synthesized
 /// host. The default value reproduces today's framework behavior exactly.
 ///
 /// `Sendable`: assembled at a `main.swift`'s nonisolated top level and handed to
-/// `NookApp.main`, which crosses to the main actor — like the configurations that carry
+/// `NookApp.main`, which crosses to the main actor - like the configurations that carry
 /// it. Not `Equatable` because ``backdrop`` carries a closure.
 public struct NookChromeBehavior: Sendable {
     /// Resolves the surface backdrop from the live appearance state. Returns the
@@ -34,13 +34,13 @@ public struct NookChromeBehavior: Sendable {
         @Sendable @MainActor (NookAppearancePreferences, ColorScheme, Bool) -> NookBackdrop
 
     /// Side-effects to apply while the cursor is over the chrome. Defaults to `[]` (the
-    /// framework default — neither hover-keep-visible nor hover haptics). Set to
+    /// framework default - neither hover-keep-visible nor hover haptics). Set to
     /// ``NookHoverBehavior/all`` (or a subset) to opt in. Read once when the surface is
     /// built, like ``NookConfiguration/style``.
     public var hoverBehavior: NookHoverBehavior
 
     /// Whether the one-shot perimeter shimmer plays at cold launch. Defaults to `true`
-    /// (today's greeting). Set to `false` for a silent launch — the chrome still settles
+    /// (today's greeting). Set to `false` for a silent launch - the chrome still settles
     /// into its compact launch state, it just skips the feedback flourish.
     public var showsLaunchShimmer: Bool
 
@@ -61,7 +61,7 @@ public struct NookChromeBehavior: Sendable {
         self.backdrop = backdrop
     }
 
-    /// The framework defaults — what ships when a host sets no chrome behavior. Using
+    /// The framework defaults - what ships when a host sets no chrome behavior. Using
     /// this reproduces today's behavior exactly.
     public static let `default` = NookChromeBehavior()
 }

@@ -55,7 +55,7 @@ public final class NookPresentationPinning {
 
     /// Monotonically increasing token assigned to each `pin()` so the broker
     /// keys by a stable identity that survives a handle's deinit (an
-    /// `ObjectIdentifier` of the handle would not — its pointer becomes
+    /// `ObjectIdentifier` of the handle would not - its pointer becomes
     /// undefined after deallocation, and ARC can drop the handle on any thread).
     private var nextToken: Int = 0
 

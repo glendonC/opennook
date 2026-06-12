@@ -9,13 +9,13 @@ import AppKit
 import NookKit
 import SwiftUI
 
-/// The file-shelf surface. Register it as a host home view — either as the whole home
+/// The file-shelf surface. Register it as a host home view - either as the whole home
 /// view (`NookApp.main { NookShelfView(store: shelf) }`) or as one section of a larger
 /// `home` content closure.
 ///
 /// Files dropped on the notch appear here once the host wires ``ShelfStore/accept(_:)``
 /// into `NookConfiguration.onFileDrop`. Each shelved file can be dragged back out to
-/// Finder or another app via a file-promise drag source — which works from the notch's
+/// Finder or another app via a file-promise drag source - which works from the notch's
 /// non-activating panel, satisfies receivers that demand file promises, and brackets
 /// security-scoped access for sandboxed reads.
 public struct NookShelfView: View {

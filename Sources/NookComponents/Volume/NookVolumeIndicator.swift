@@ -18,7 +18,7 @@ import SwiftUI
 /// configuration.setCompactTrailing { NookVolumeIndicator(observer: volume) }
 /// ```
 ///
-/// It is *ambient* — it shows the level, it does not intercept or replace Apple's
+/// It is *ambient* - it shows the level, it does not intercept or replace Apple's
 /// volume HUD. Reads `\.nookResolvedTheme` from the environment for its tint.
 public struct NookVolumeIndicator: View {
     @ObservedObject private var observer: SystemVolumeObserver

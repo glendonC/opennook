@@ -79,7 +79,7 @@ struct SettingsDataCommandRow: View {
 
 /// About card surfaced in the About settings group: host name, version, and a one-line
 /// note about the host. Name and tagline come from `\.nookHostBranding` so downstream
-/// hosts read their own product name — the demo's `"Nook"` / stock tagline are the
+/// hosts read their own product name - the demo's `"Nook"` / stock tagline are the
 /// defaults.
 struct SettingsAboutCard: View {
     @Environment(\.nookResolvedTheme) private var theme
@@ -92,7 +92,7 @@ struct SettingsAboutCard: View {
     }
 
     /// Default tagline used when the host has not overridden ``NookHostBranding/hostTagline``.
-    /// References OpenNook as the framework, not the host product — the host's
+    /// References OpenNook as the framework, not the host product - the host's
     /// own marketing copy belongs in a `hostTagline` override.
     private static let defaultTagline =
         "A demo notch app built with OpenNook, an open-source framework for macOS notch apps."

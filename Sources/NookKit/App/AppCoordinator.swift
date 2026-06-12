@@ -15,12 +15,12 @@ import SwiftUI
 /// and the menu-bar fallback call into.
 ///
 /// `@MainActor`-isolated: the coordinator drives `Nook`/`NSWindow` chrome, holds the
-/// `@Published` ``AppState``, and arbitrates transient surface presenters — every one
+/// `@Published` ``AppState``, and arbitrates transient surface presenters - every one
 /// of which is main-actor work. Conforms to ``NookSurfacePresenting`` so transient
 /// presenters (e.g. ``NookActivityQueue``) can take over the surface through it.
 @MainActor
 public final class AppCoordinator: ObservableObject {
-    /// Framework-global, observable chrome state — appearance preferences, hotkey,
+    /// Framework-global, observable chrome state - appearance preferences, hotkey,
     /// display preference, visibility mirror, view mode.
     public let appState: AppState
 
@@ -52,7 +52,7 @@ public final class AppCoordinator: ObservableObject {
     }
     var accessibilityObserver: ObserverToken?
 
-    /// Arbitrates the surface between competing transient presenters — the activity
+    /// Arbitrates the surface between competing transient presenters - the activity
     /// queues and ambient indicators of every loaded module. Lazy because it captures
     /// `surface`; layered over ``enqueueLifecycle`` so it serializes nothing itself.
     lazy var arbiter: SurfaceArbiter = {
@@ -73,12 +73,12 @@ public final class AppCoordinator: ObservableObject {
     /// duplicate observers, sinks, and `onReady` callbacks.
     private var hasStarted = false
 
-    /// User-initiated open intent — `true` from the moment the user opens the surface
+    /// User-initiated open intent - `true` from the moment the user opens the surface
     /// (toggleNook / showNook / showHome / showSettings) until it leaves `.expanded`
     /// for any reason. Drives ``isUserEngaged`` together with `surface.isHovering`.
     ///
     /// This is *intent*, not a mirror of surface state. The arbiter's own `expand()`
-    /// flips the surface to `.expanded` but does NOT set this flag — so a later
+    /// flips the surface to `.expanded` but does NOT set this flag - so a later
     /// higher-priority claim can preempt without the gate falsely tripping. The old
     /// model (engagement = `isNookVisible || isHovering`) had exactly that bug,
     /// because the mirror flipped from the arbiter's own expand and silently
@@ -108,19 +108,19 @@ public final class AppCoordinator: ObservableObject {
     }
 
     /// Module ids whose `onReady` has already fired. A module's `onReady` runs once per
-    /// *loaded instance* — when it is unloaded (`unloadOnSwitchAway`) the id is dropped
+    /// *loaded instance* - when it is unloaded (`unloadOnSwitchAway`) the id is dropped
     /// so a rebuilt instance gets a fresh `onReady` (e.g. to re-bind an activity queue).
     private var modulesGivenOnReady: Set<String> = []
 
     /// Tail of the serial chain that all surface lifecycle transitions
-    /// (expand/compact/hide) run through. Without this, two rapid triggers — a
-    /// double hotkey press, a display change landing mid-show — each spawn an
+    /// (expand/compact/hide) run through. Without this, two rapid triggers - a
+    /// double hotkey press, a display change landing mid-show - each spawn an
     /// independent `Task` whose `await`s interleave, settling the surface in the
     /// opposite state from the user's last action.
     private var lifecycleTail: Task<Void, Never>?
 
     /// Tail of the *off-chain* switch-quiesce drains. A module switch flips identity
-    /// inside the serial lifecycle chain (fast — no user-visible stall) and runs the
+    /// inside the serial lifecycle chain (fast - no user-visible stall) and runs the
     /// outgoing module's `prepareForSwitchAway` in a detached follow-on task: the
     /// arbiter's `invalidateClaims` already makes the outgoing module's surface
     /// activity stale-token-safe, so the user sees the new module immediately and the
@@ -129,17 +129,17 @@ public final class AppCoordinator: ObservableObject {
     private var switchTailTask: Task<Void, Never>?
 
     /// Bounded budget for an outgoing module's `prepareForSwitchAway`. A misbehaving
-    /// module that never returns is logged and the task is cancelled — the arbiter's
+    /// module that never returns is logged and the task is cancelled - the arbiter's
     /// stale-token guard makes the abandoned drain a no-op on the surface.
     static let switchAwayTimeout: Duration = .seconds(2)
 
-    /// Awaits the current tail of the serial lifecycle chain — every transition and
+    /// Awaits the current tail of the serial lifecycle chain - every transition and
     /// switch transaction enqueued so far has settled when this returns. Test-only seam.
     func drainLifecycleForTesting() async {
         await lifecycleTail?.value
     }
 
-    /// Awaits all in-flight detached switch-quiesce drains. Test-only seam — production
+    /// Awaits all in-flight detached switch-quiesce drains. Test-only seam - production
     /// code never reads this because the arbiter already guarantees stale-token safety.
     func drainSwitchTailsForTesting() async {
         await switchTailTask?.value
@@ -176,7 +176,7 @@ public final class AppCoordinator: ObservableObject {
     /// Builds the production `Nook` surface with the coordinator's router views.
     ///
     /// The router views capture `moduleHost`/`appState` and weak callbacks onto a
-    /// coordinator that does not exist yet at call time — they are wired with a
+    /// coordinator that does not exist yet at call time - they are wired with a
     /// `coordinatorBox` that the designated `init` fills in once `self` is available.
     static func makeDefaultNook(
         moduleHost: ModuleHost,
@@ -223,7 +223,7 @@ public final class AppCoordinator: ObservableObject {
         weak var coordinator: AppCoordinator?
     }
 
-    /// Single-module convenience — wraps `configuration` as a lone-module ``ModuleHost``
+    /// Single-module convenience - wraps `configuration` as a lone-module ``ModuleHost``
     /// so a downstream that just wants a coordinator for one ``NookConfiguration`` does
     /// not have to construct the host plumbing manually.
     public convenience init(
@@ -238,7 +238,7 @@ public final class AppCoordinator: ObservableObject {
         )
     }
 
-    /// Multi-module entry — pass a fully built ``ModuleHost`` (e.g. from
+    /// Multi-module entry - pass a fully built ``ModuleHost`` (e.g. from
     /// `NookHostConfiguration.makeRegistry()`).
     public convenience init(
         appState: AppState = AppState(),
@@ -278,7 +278,7 @@ public final class AppCoordinator: ObservableObject {
         // Bind the surface-state mirror at init, not at start: it is pure observation
         // (writes only to `appState.isNookVisible` and clears `userInitiatedOpen` on
         // independent collapse), and the arbiter's engagement bookkeeping depends on
-        // it being live from the moment the coordinator exists — including in tests
+        // it being live from the moment the coordinator exists - including in tests
         // that construct a coordinator without calling `start()`.
         bindSurfaceVisibility()
         // Likewise bind the presentation-pin projection at init: tests that exercise
@@ -289,7 +289,7 @@ public final class AppCoordinator: ObservableObject {
         coordinatorBox.coordinator = self
         // Project the active module's lifecycle callbacks onto the surface. The hooks
         // fire on the surface's own state transitions, so hover- and drag-driven changes
-        // reach the host too — not just coordinator-initiated show/hide. `performSwitch`
+        // reach the host too - not just coordinator-initiated show/hide. `performSwitch`
         // re-wires them across a module switch.
         applyModuleHooks(configuration)
     }
@@ -302,13 +302,13 @@ public final class AppCoordinator: ObservableObject {
 
     /// Brings the coordinator online: sets the activation policy, syncs the chrome
     /// backdrop, registers global hotkeys, installs the surface bindings, plays the
-    /// cold-launch shimmer, and fires the active module's `onReady`. Idempotent —
+    /// cold-launch shimmer, and fires the active module's `onReady`. Idempotent - 
     /// safe to call more than once.
     public func start() {
         guard !hasStarted else { return }
         hasStarted = true
 
-        // `NSApplication.shared` — not the `NSApp` global. The global is nil until the
+        // `NSApplication.shared` - not the `NSApp` global. The global is nil until the
         // app object is first materialized; a unit-test process that constructs the
         // coordinator without ever calling `NSApplication.shared.run()` traps on
         // `NSApp.setActivationPolicy`. The shared accessor materializes lazily.
@@ -322,7 +322,7 @@ public final class AppCoordinator: ObservableObject {
         registerModuleHotkeys()
         bindHotkeyRegistration()
         bindNookDragSession()
-        // `bindSurfaceVisibility` was moved to `init` — it must be live before any
+        // `bindSurfaceVisibility` was moved to `init` - it must be live before any
         // arbiter claim is granted, including in tests that don't call `start()`.
 
         // Cold-launch greeting: compact the chrome, then fire a one-shot shimmer along the
@@ -330,7 +330,7 @@ public final class AppCoordinator: ObservableObject {
         // nook into a visible state so the event fires immediately instead of queuing.
         //
         // The cold-launch compact suppresses the host's `onCompact` hook for this one
-        // transition — it is a boot artifact, not a user-driven collapse, and a host
+        // transition - it is a boot artifact, not a user-driven collapse, and a host
         // wiring `onCompact = { /* user dismissed the nook */ }` would otherwise fire
         // on launch every time. Restored synchronously inside the same serial step so
         // any subsequent hover- or coordinator-driven compact fires the hook normally.
@@ -361,12 +361,12 @@ public final class AppCoordinator: ObservableObject {
     public var activeModuleID: String { moduleHost.activeModuleID }
 
     /// Switches the foreground module. The switch is enqueued as a transaction on the
-    /// serial lifecycle chain (``enqueueLifecycle``), so it is ordered against — never
-    /// interleaved with — surface transitions and other switches.
+    /// serial lifecycle chain (``enqueueLifecycle``), so it is ordered against - never
+    /// interleaved with - surface transitions and other switches.
     ///
     /// The transaction quiesces the outgoing module's surface activity, invalidates its
-    /// arbiter claims, flips module identity, re-wires the surface hooks, and — when the
-    /// surface is already expanded — fires a synthetic `onExpand` for the incoming
+    /// arbiter claims, flips module identity, re-wires the surface hooks, and - when the
+    /// surface is already expanded - fires a synthetic `onExpand` for the incoming
     /// module. The content cross-fades in place; the surface is not hidden, so the
     /// outgoing module gets `onDeactivate` (via `ModuleHost`) but not `onHide`.
     public func switchModule(to id: String) {
@@ -377,12 +377,12 @@ public final class AppCoordinator: ObservableObject {
     /// invalidate-first so a slow or misbehaving outgoing module cannot wedge the
     /// lifecycle chain.
     ///
-    /// On the serial chain — fast, user-facing:
+    /// On the serial chain - fast, user-facing:
     ///   1. **Invalidate** outgoing module's arbiter claims (synchronous, in-memory).
     ///      After this, any `endTransientPresentation` from the outgoing module is a
-    ///      guaranteed no-op — the arbiter's `liveTokens` guard makes the outgoing
+    ///      guaranteed no-op - the arbiter's `liveTokens` guard makes the outgoing
     ///      drain stale-token-safe regardless of when it finishes.
-    ///   2. **Read live surface state** — never the mirror, never a value captured
+    ///   2. **Read live surface state** - never the mirror, never a value captured
     ///      before this transaction reached the head of the queue.
     ///   3. **Flip identity**: `onDeactivate` / `onActivate`, configuration re-publish.
     ///   4. **Re-wire surface hooks** so the synthetic `onExpand` below fires the
@@ -392,20 +392,20 @@ public final class AppCoordinator: ObservableObject {
     ///   6. **Fire `onReady`** for the incoming module (once per loaded instance).
     ///   7. **Synthesize `onExpand`** if the surface was already expanded.
     ///
-    /// Off the serial chain — bounded, under-the-covers:
+    /// Off the serial chain - bounded, under-the-covers:
     ///   8. **Drain the outgoing module's `prepareForSwitchAway`** in a detached
     ///      follow-on (`enqueueSwitchTail`) with a hard timeout. The user sees the new
     ///      module immediately; the outgoing module's quiesce runs concurrently. A
-    ///      hanging quiesce hits the timeout and is cancelled — the arbiter's
+    ///      hanging quiesce hits the timeout and is cancelled - the arbiter's
     ///      stale-token guard keeps that abandoned work harmless.
     ///
     /// Before the reorder, step 1 was an unbounded `await` on a module-supplied
-    /// `prepareForSwitchAway` — a misbehaving module wedged the entire lifecycle chain.
+    /// `prepareForSwitchAway` - a misbehaving module wedged the entire lifecycle chain.
     private func performSwitch(to id: String) async {
         let outgoingID = moduleHost.activeModuleID
         guard id != outgoingID, moduleHost.registry.descriptor(for: id) != nil else { return }
 
-        // 1. Invalidate outgoing claims FIRST — stale-token safety is now the contract
+        // 1. Invalidate outgoing claims FIRST - stale-token safety is now the contract
         //    the off-chain quiesce drain relies on.
         arbiter.invalidateClaims(ownedBy: outgoingID)
 
@@ -438,7 +438,7 @@ public final class AppCoordinator: ObservableObject {
             moduleHost.configuration.onExpand?()
         }
 
-        // 8. Quiesce drain — off the serial chain, with a hard timeout.
+        // 8. Quiesce drain - off the serial chain, with a hard timeout.
         //
         //    Capture the Sendable `outgoingID` only and re-resolve the module instance
         //    inside the closure. The drain runs on the main actor (the closure body is
@@ -446,7 +446,7 @@ public final class AppCoordinator: ObservableObject {
         //    reference would force a non-Sendable value across the `@Sendable` closure
         //    boundary for no real benefit. As a bonus, if a third rapid switch unloaded
         //    the outgoing module before the drain runs, the re-resolve returns `nil` and
-        //    the drain is a clean no-op — which is exactly what we'd want anyway.
+        //    the drain is a clean no-op - which is exactly what we'd want anyway.
         guard moduleHost.registry.isLoaded(outgoingID) else { return }
         enqueueSwitchTail { [weak self] in
             guard let self,
@@ -459,9 +459,9 @@ public final class AppCoordinator: ObservableObject {
     }
 
     /// Runs `work` under a hard deadline. Past `timeout` the work task is cancelled and
-    /// the timeout is logged via `print` — the coordinator does not fail the switch.
+    /// the timeout is logged via `print` - the coordinator does not fail the switch.
     ///
-    /// `work` is `@MainActor` because every caller in `AppCoordinator` is — most notably
+    /// `work` is `@MainActor` because every caller in `AppCoordinator` is - most notably
     /// the `prepareForSwitchAway` drain in ``performSwitch(to:)``, which calls a
     /// main-actor module method. Pinning the work closure to the main actor here lets
     /// the caller capture main-actor-isolated references (the resolved `NookModule`
@@ -473,7 +473,7 @@ public final class AppCoordinator: ObservableObject {
     /// no-op on the surface.
     ///
     /// `internal` rather than `private` so the test suite can exercise the deadline
-    /// directly with short timeouts — driving the production path via
+    /// directly with short timeouts - driving the production path via
     /// ``performSwitch(to:)`` would require waiting the full ``switchAwayTimeout``
     /// (2 s) per case.
     static func runWithTimeout(
@@ -499,7 +499,7 @@ public final class AppCoordinator: ObservableObject {
     }
 
     /// Projects a module's lifecycle hooks onto the surface. Called from initial wiring
-    /// and from the switch transaction — the single seam for hook projection.
+    /// and from the switch transaction - the single seam for hook projection.
     private func applyModuleHooks(_ configuration: NookConfiguration) {
         surface.onExpand = configuration.onExpand
         surface.onCompact = configuration.onCompact
@@ -535,7 +535,7 @@ public final class AppCoordinator: ObservableObject {
     /// chrome live when the user picks a different display in Settings.
     ///
     /// `Nook.screenProvider` is what makes the preference stick *without* an explicit
-    /// screen on every call site — the surface consults it on hover transitions and on
+    /// screen on every call site - the surface consults it on hover transitions and on
     /// display connect/disconnect too, so the disconnect fallback in
     /// ``NookScreenLocator/screen(matching:)`` flows through automatically.
     private func configureDisplayTargeting() {
@@ -551,7 +551,7 @@ public final class AppCoordinator: ObservableObject {
                 self.enqueueLifecycle { [weak self] in
                     guard let self else { return }
                     // Re-place whichever way the chrome is currently showing. A hidden
-                    // nook needs nothing — its next expand/compact rebuilds on the new
+                    // nook needs nothing - its next expand/compact rebuilds on the new
                     // screen via `screenProvider`.
                     if self.surface.state == .expanded {
                         await self.surface.expand(on: screen)
@@ -565,7 +565,7 @@ public final class AppCoordinator: ObservableObject {
 
     // MARK: - Chrome / backdrop
 
-    /// Softer springs than NookSurface's bouncy defaults — smoother expand/compact with
+    /// Softer springs than NookSurface's bouncy defaults - smoother expand/compact with
     /// less overshoot. A host can override the whole set via
     /// ``NookConfiguration/transitions``; otherwise these defaults apply.
     func configureNotchAnimations() {
@@ -670,9 +670,9 @@ public final class AppCoordinator: ObservableObject {
     /// The dedup key for the hotkey-registration sink: one *intent change* per user
     /// action, not one emission per upstream `@Published` update.
     private enum HotkeyRegistrationIntent: Equatable {
-        /// Recorder is open — live registration is suspended.
+        /// Recorder is open - live registration is suspended.
         case suspended
-        /// Recorder is closed — this hotkey should be registered.
+        /// Recorder is closed - this hotkey should be registered.
         case bound(NookHotkey)
     }
 
@@ -681,11 +681,11 @@ public final class AppCoordinator: ObservableObject {
     ///
     /// `combineLatest` emits once per upstream `@Published` change. A user finishing
     /// recording flips both `$hotkey` (new value) and `$isRecordingHotkey` (false) on
-    /// the same runloop turn — two emissions. A naive `removeDuplicates(by: ==)` on
+    /// the same runloop turn - two emissions. A naive `removeDuplicates(by: ==)` on
     /// the raw pair wouldn't dedup them (they're distinct), so the sink would unregister
     /// then re-register an extra time, recording the registration outcome twice on the
     /// durable failure channel. Mapping to a `HotkeyRegistrationIntent` collapses the
-    /// pair onto *what should happen* — and a recorder opened+cancelled without any
+    /// pair onto *what should happen* - and a recorder opened+cancelled without any
     /// key change deduces to one no-op.
     ///
     /// `internal`, not `private`, so tests can install the sink without bringing up
@@ -753,7 +753,7 @@ public final class AppCoordinator: ObservableObject {
         // Pin the window appearance first: the backdrop's visual-effect material resolves
         // against it, so a forced light/dark theme needs both to agree.
         surface.chromeAppearance = appState.appearancePreferences.chromeAppearanceOverride
-        // A host can override the appearance→backdrop mapping; the framework mapping is
+        // A host can override the appearance->backdrop mapping; the framework mapping is
         // the default. See `NookChromeBehavior.backdrop`.
         if let resolve = moduleHost.chromeBehavior.backdrop {
             surface.backdrop = resolve(appState.appearancePreferences, scheme, reduceTransparency)
@@ -767,8 +767,8 @@ public final class AppCoordinator: ObservableObject {
     }
 
     /// Mirrors the surface's live ``NookState`` onto `appState.isNookVisible`, and bounds
-    /// ``userInitiatedOpen`` by it: any independent collapse — hover-exit auto-compact,
-    /// drag dismiss, arbiter restore — cleanly clears intent without explicit teardown.
+    /// ``userInitiatedOpen`` by it: any independent collapse - hover-exit auto-compact,
+    /// drag dismiss, arbiter restore - cleanly clears intent without explicit teardown.
     ///
     /// This single sink is the only writer of `appState.isNookVisible` and the only
     /// path that clears `userInitiatedOpen` on independent collapse; the user-action
@@ -810,7 +810,7 @@ public final class AppCoordinator: ObservableObject {
         enqueueLifecycle { [weak self] in
             guard let self else { return }
             // Decide off the surface's live state *at execution time*, not the mirror
-            // and not when `toggleNook()` was called — a hover-expanded nook must
+            // and not when `toggleNook()` was called - a hover-expanded nook must
             // toggle closed even though no coordinator call opened it, and deciding
             // before the serial chain reaches us would race other queued transitions.
             if self.surface.state == .expanded {
@@ -873,7 +873,7 @@ public final class AppCoordinator: ObservableObject {
     }
 
     /// Projects the boolean "ignore hover-exit auto-compact" override onto the surface.
-    /// Internal because modules should not flip this directly — they pin and unpin
+    /// Internal because modules should not flip this directly - they pin and unpin
     /// through ``NookPresentationPinning`` (resolved from `\.appServices`), which
     /// ref-counts overlapping presenters and folds into ``isUserEngaged`` for the
     /// arbiter. This method is the broker's lone client; it is also called by
@@ -891,7 +891,7 @@ public final class AppCoordinator: ObservableObject {
     /// broker. The broker emits on 0->1 and N->0 pin-count edges; on each edge we
     /// project the boolean onto the surface via ``setStaysExpandedOverride(_:)``.
     /// The arbiter side is wired implicitly through ``isUserEngaged`` and
-    /// ``userEngagementChanges`` — both already consult `presentationPinning`.
+    /// ``userEngagementChanges`` - both already consult `presentationPinning`.
     private func bindPresentationPinning() {
         presentationPinning.pinChanges
             .receive(on: RunLoop.main)
@@ -904,8 +904,8 @@ public final class AppCoordinator: ObservableObject {
     // MARK: - Reset
 
     /// Restores appearance prefs, the global hotkey, and the display preference to their
-    /// defaults. Every reset routes through `AppState`'s guarded `replace…` path, so
-    /// persistence and observers fire exactly once per preference, in one pattern — no
+    /// defaults. Every reset routes through `AppState`'s guarded `replace...` path, so
+    /// persistence and observers fire exactly once per preference, in one pattern - no
     /// direct `appearancePreferences` assignment plus manual `NookAppearanceStore.save`.
     ///
     /// `staysExpandedOnHoverExit` is then projected from the freshly reset preference
@@ -929,8 +929,8 @@ extension AppCoordinator: NookSurfacePresenting {
     /// notch pinned via ``NookPresentationPinning``. A transient arbiter presenter
     /// pauses in any of those cases.
     ///
-    /// Sources from ``userInitiatedOpen`` (user intent) — NOT `appState.isNookVisible`
-    /// (surface mirror) — so the arbiter's own `expand()` never trips this gate on a
+    /// Sources from ``userInitiatedOpen`` (user intent) - NOT `appState.isNookVisible`
+    /// (surface mirror) - so the arbiter's own `expand()` never trips this gate on a
     /// subsequent preempting claim.
     ///
     /// **The pin disjunct closes a real hole**, not a theoretical one. A hover-opened
@@ -945,13 +945,13 @@ extension AppCoordinator: NookSurfacePresenting {
             || surface.isLayoutGraceActive
     }
 
-    /// Emits whenever ``isUserEngaged`` changes — the merge of the user-intent flag,
+    /// Emits whenever ``isUserEngaged`` changes - the merge of the user-intent flag,
     /// the surface's hover publisher, and the presentation-pin broker, deduplicated.
     ///
     /// Verified: in-tree consumers of `isUserEngaged` / `userEngagementChanges`
     /// (``NookActivityQueue/waitWhileUserEngaged(_:)`` at NookActivityQueue.swift:234,
     /// ``SurfaceArbiter``'s engagement gate at SurfaceArbiter.swift:109/198) are
-    /// idempotent under repeated same-value events — the activity queue polls in a
+    /// idempotent under repeated same-value events - the activity queue polls in a
     /// while-loop, and the arbiter consults the flag fresh on each claim. Adding a
     /// third publisher to the `combineLatest` increases emission frequency only on
     /// pin transitions, which `removeDuplicates()` collapses to the true edges.

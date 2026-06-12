@@ -8,7 +8,7 @@
 import NookSurface
 import SwiftUI
 
-/// The host-app registration seam — everything a notch app customizes without forking
+/// The host-app registration seam - everything a notch app customizes without forking
 /// the framework.
 ///
 /// Pass one to `NookApp.main(_:)`. The default value reproduces the demo exactly, so
@@ -30,7 +30,7 @@ import SwiftUI
 /// ```
 ///
 /// > Note: This is a *registration* entry point, distinct from the `NookSurface`-level
-/// > customization types (`NookStyle`, `NookHoverBehavior`, …). It exists so a host can
+/// > customization types (`NookStyle`, `NookHoverBehavior`, ...). It exists so a host can
 /// > depend on the package and customize through public API only.
 public struct NookConfiguration: Sendable {
     /// The expanded home surface, shown between the framework top bar and Settings.
@@ -39,7 +39,7 @@ public struct NookConfiguration: Sendable {
     /// `@MainActor`: these content/theme closures build SwiftUI views and resolve the
     /// chrome palette, which only ever happens during main-actor view rendering.
     /// `@Sendable`: a `NookConfiguration` is assembled at launch and handed to the
-    /// main-actor coordinator, so the whole value is `Sendable` — every closure it
+    /// main-actor coordinator, so the whole value is `Sendable` - every closure it
     /// carries crosses that boundary and must be too.
     public var home: @Sendable @MainActor () -> AnyView
 
@@ -61,7 +61,7 @@ public struct NookConfiguration: Sendable {
     /// the built-in screen; the host view reads ``AppState`` via `@EnvironmentObject`.
     public var settings: (@Sendable @MainActor () -> AnyView)? = nil
 
-    /// Top-bar configuration — leading cluster (title/icon), and the two visibility
+    /// Top-bar configuration - leading cluster (title/icon), and the two visibility
     /// flags for the top bar and the Settings UI. Grouped so the related knobs
     /// travel together and future top-bar settings land here cleanly. See
     /// ``NookTopBarConfiguration``.
@@ -76,8 +76,8 @@ public struct NookConfiguration: Sendable {
     /// seed-vs-persisted semantics.
     public var preferenceDefaults: NookPreferenceDefaults = .default
 
-    /// Process-global chrome behavior — hover side-effects, the cold-launch shimmer, and
-    /// the appearance→backdrop mapping. On the single-module path this is forwarded onto
+    /// Process-global chrome behavior - hover side-effects, the cold-launch shimmer, and
+    /// the appearance->backdrop mapping. On the single-module path this is forwarded onto
     /// the synthesized ``NookHostConfiguration/chromeBehavior``; multi-module hosts set it
     /// on ``NookHostConfiguration`` directly. Defaults to ``NookChromeBehavior/default``
     /// (today's framework behavior). See ``NookChromeBehavior``.
@@ -93,31 +93,31 @@ public struct NookConfiguration: Sendable {
     /// See ``NookChromeMetrics``.
     public var metrics: NookChromeMetrics = .default
 
-    /// Host-tunable in-panel motion curves (home↔settings, banner, breadcrumb, leading
+    /// Host-tunable in-panel motion curves (home<->settings, banner, breadcrumb, leading
     /// cluster). Distinct from ``transitions`` (surface-level expand/collapse). Defaults
     /// to ``NookChromeMotion/default`` (today's springs). See ``NookChromeMotion``.
     public var motion: NookChromeMotion = .default
 
-    /// Host-product identity surfaced through the chrome — name, tagline, and brand mark
+    /// Host-product identity surfaced through the chrome - name, tagline, and brand mark
     /// (About card, show/hide hotkey label, menu-bar fallback, top-bar leading mark). On
     /// the single-module path this is forwarded onto the synthesized
     /// ``NookHostConfiguration/branding``; multi-module hosts set it on
     /// ``NookHostConfiguration`` directly. Defaults to ``NookHostBranding/default``.
     public var branding: NookHostBranding = .default
 
-    /// Whether the framework installs its menu-bar status item (the "Show …" / Settings /
+    /// Whether the framework installs its menu-bar status item (the "Show ..." / Settings /
     /// Quit fallback). Defaults to `true`. Set to `false` for a host that owns its own
     /// menu-bar presence or wants none. On the single-module path this is forwarded onto
     /// ``NookHostConfiguration/showsMenuBarExtra``.
     public var showsMenuBarExtra: Bool = true
 
-    /// Overrides the chrome's corner radii — the small rounding into the notch arch and
+    /// Overrides the chrome's corner radii - the small rounding into the notch arch and
     /// the larger rounding where the panel meets the wallpaper. `nil` (the default) uses
     /// the framework's radii, tuned to sit well under the menu bar on notched MacBooks.
     /// See ``NookStyle``.
     public var style: NookStyle? = nil
 
-    /// Overrides the expand / collapse / compact↔expanded animation curves. `nil` (the
+    /// Overrides the expand / collapse / compact<->expanded animation curves. `nil` (the
     /// default) uses the framework's soft springs. Supply a ``NookTransitionConfiguration``
     /// to retune or to slow the chrome down (set its `animationDuration` so awaited
     /// `expand()`/`compact()` still return once the chrome has visibly arrived).
@@ -136,8 +136,8 @@ public struct NookConfiguration: Sendable {
     ///
     /// Bottom command rows that should span the full content column should use
     /// `frame(maxWidth: .infinity, alignment: .leading)` on the row, then pad by
-    /// `nookContentInsets` on the sides and bottom — not shrink-wrap to their buttons
-    /// and not add a separate `.padding(.horizontal, …)` on the home root.
+    /// `nookContentInsets` on the sides and bottom - not shrink-wrap to their buttons
+    /// and not add a separate `.padding(.horizontal, ...)` on the home root.
     public var expandedWidth: CGFloat? = nil
 
     /// Called when the chrome transitions into the expanded surface (from any source).
@@ -154,20 +154,20 @@ public struct NookConfiguration: Sendable {
 
     /// Handles a file drop on the notch panel. Return `true` to accept the URLs
     /// (the nook stays expanded so any registration UI is visible), `false` to
-    /// reject. `nil` — the default — rejects all drops.
+    /// reject. `nil` - the default - rejects all drops.
     ///
     /// `NookComponents`' file shelf wires its `ShelfStore.accept` straight into
     /// this; a host can also route drops through its own import flow.
     public var onFileDrop: (@Sendable @MainActor ([URL]) -> Bool)?
 
-    /// Called once, on the main actor, at the end of `AppCoordinator.start()` — a
+    /// Called once, on the main actor, at the end of `AppCoordinator.start()` - a
     /// post-launch handle on the live coordinator.
     ///
     /// `NookComponents`' activity queue uses this to `bind` itself to the coordinator
     /// (which conforms to ``NookSurfacePresenting``); a host can also use it to drive
     /// the chrome or observe state after launch.
     ///
-    /// Typed `@MainActor` — it always runs on the main actor — so the callback may call
+    /// Typed `@MainActor` - it always runs on the main actor - so the callback may call
     /// main-actor-isolated API (e.g. `NookActivityQueue.bind`) directly.
     public var onReady: (@Sendable @MainActor (AppCoordinator) -> Void)?
 
@@ -188,7 +188,7 @@ public struct NookConfiguration: Sendable {
     ///
     /// The closure is `@MainActor` because it builds a SwiftUI view, and `@Sendable` so
     /// these (nonisolated) `mutating` setters can store it into the main-actor `home`
-    /// slot — which a `Sendable` `NookConfiguration` requires — without a "sending"
+    /// slot - which a `Sendable` `NookConfiguration` requires - without a "sending"
     /// violation. `Content: Sendable` lets the stored `@Sendable` wrapper close over the
     /// `Content` metatype; a SwiftUI view value is a `Sendable` value type in practice.
     public mutating func setHome<Content: View & Sendable>(
@@ -224,7 +224,7 @@ public struct NookConfiguration: Sendable {
     /// Registers host actions for the top bar's trailing cluster from a `@ViewBuilder`
     /// closure. The items render immediately left of the framework's keep-open lock and
     /// gear, themed and able to observe ``AppState``. See
-    /// ``NookTopBarConfiguration/trailingItems`` for the space/clipping guidance — keep
+    /// ``NookTopBarConfiguration/trailingItems`` for the space/clipping guidance - keep
     /// these compact glyph-style buttons.
     public mutating func setTopBarTrailingItems<Content: View & Sendable>(
         @ViewBuilder _ content: @escaping @Sendable @MainActor () -> Content
@@ -233,7 +233,7 @@ public struct NookConfiguration: Sendable {
     }
 }
 
-/// The framework top bar's host-configurable surface — the leading cluster
+/// The framework top bar's host-configurable surface - the leading cluster
 /// (title / icon), plus the two flags that strip the bar or the Settings UI for
 /// hosts that want a bare glance/widget chrome.
 ///
@@ -253,7 +253,7 @@ public struct NookTopBarConfiguration: Sendable {
 
     /// Whether the expanded surface renders the framework top bar (leading cluster,
     /// keep-open lock, gear). Defaults to `true`. Set to `false` for a bare expanded
-    /// surface — a pure glance/widget with no framework chrome.
+    /// surface - a pure glance/widget with no framework chrome.
     ///
     /// With the top bar off the gear is gone, so Settings is unreachable from the
     /// chrome regardless of ``showsSettings``; the keep-open lock is gone too (it
@@ -261,17 +261,17 @@ public struct NookTopBarConfiguration: Sendable {
     public var showsTopBar: Bool
 
     /// Whether the gear and the reachable Settings screen are part of the chrome.
-    /// Defaults to `true`. Set to `false` to drop the Settings UI entirely — the gear
-    /// is removed, the menu-bar "Settings…" item is dropped, and the expanded
+    /// Defaults to `true`. Set to `false` to drop the Settings UI entirely - the gear
+    /// is removed, the menu-bar "Settings..." item is dropped, and the expanded
     /// surface stays on the home view.
     public var showsSettings: Bool
 
     /// Whether the framework's transient status banner (driven by ``AppState/status``)
     /// renders under the top bar. Defaults to `true`. Set to `false` to suppress the
-    /// framework banner — e.g. a host surfacing status inside its own home content.
+    /// framework banner - e.g. a host surfacing status inside its own home content.
     public var showsStatusBanner: Bool
 
-    /// The label for the top bar's leading cluster. Defaults to `"Home"` — override
+    /// The label for the top bar's leading cluster. Defaults to `"Home"` - override
     /// so the bar communicates *product* context (a date, a section name) rather
     /// than the demo's navigation metaphor. The closure receives ``AppState`` for
     /// hosts whose label depends on it.
@@ -288,8 +288,8 @@ public struct NookTopBarConfiguration: Sendable {
 
     /// Host-supplied actions for the top bar's **trailing** cluster, rendered to the
     /// left of the framework's keep-open lock and gear (so the order reads
-    /// host items → lock → gear). `nil` (the default) reproduces the framework chrome
-    /// exactly — just the lock and gear. Use ``NookConfiguration/setTopBarTrailingItems(_:)``
+    /// host items -> lock -> gear). `nil` (the default) reproduces the framework chrome
+    /// exactly - just the lock and gear. Use ``NookConfiguration/setTopBarTrailingItems(_:)``
     /// to set it from a `@ViewBuilder`.
     ///
     /// The items render inside the same chrome environment as the rest of the top bar,
@@ -297,9 +297,9 @@ public struct NookTopBarConfiguration: Sendable {
     /// palette via `@Environment(\.nookResolvedTheme)`.
     ///
     /// > Important: Space is tight. The chrome's top edge sits at the menu-bar level, so
-    /// > the top bar runs *under* the physical notch on a notched display — anything
+    /// > the top bar runs *under* the physical notch on a notched display - anything
     /// > between the notch's edges is hardware-clipped. The trailing cluster lives to the
-    /// > right of the notch, leaving only ~80–100pt of usable width at the 480–520pt
+    /// > right of the notch, leaving only ~80-100pt of usable width at the 480-520pt
     /// > expanded widths. Host items should be compact glyph-style buttons (matching the
     /// > lock/gear weight), not wide labeled pills.
     ///
@@ -309,7 +309,7 @@ public struct NookTopBarConfiguration: Sendable {
     public var trailingItems: (@Sendable @MainActor () -> AnyView)?
 
     /// How the icon row spans the expanded content column. Default
-    /// ``Width/contentColumn`` — leading/trailing icons share the same horizontal
+    /// ``Width/contentColumn`` - leading/trailing icons share the same horizontal
     /// gutter as host home content. ``Width/intrinsic`` reproduces the legacy
     /// shrink-wrapped, centered bar.
     public var width: Width
@@ -332,6 +332,6 @@ public struct NookTopBarConfiguration: Sendable {
         self.width = width
     }
 
-    /// The framework-demo defaults — top bar on, Settings on, "Home" with the brand mark.
+    /// The framework-demo defaults - top bar on, Settings on, "Home" with the brand mark.
     public static let `default` = NookTopBarConfiguration()
 }

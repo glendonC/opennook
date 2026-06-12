@@ -9,16 +9,16 @@ import SwiftUI
 
 /// Layout constants for the **demo's** expanded notch surface.
 ///
-/// The chrome itself (`NookSurface.NookView`) is content-driven — it measures whatever
+/// The chrome itself (`NookSurface.NookView`) is content-driven - it measures whatever
 /// view you hand it via `.fixedSize()` and sizes the panel to fit. `width` here is purely
 /// the demo's own choice: a stable width so the panel doesn't resize when switching
 /// between the home and settings surfaces. Building your own notch app, you set whatever
-/// width your content needs — or drop the `.frame(width:)` entirely and let it size to
+/// width your content needs - or drop the `.frame(width:)` entirely and let it size to
 /// content. Nothing in the framework requires a fixed width.
 public enum NookLayout {
     /// Default expanded-surface width, used when a host does not set
     /// ``NookConfiguration/expandedWidth``. Comfortable for the settings panels; notch apps
-    /// commonly sit in the 500–650 pt range (boring.notch 640, NotchDrop 600).
+    /// commonly sit in the 500-650 pt range (boring.notch 640, NotchDrop 600).
     public static let width: CGFloat = 520
     public static let edgePadding: CGFloat = 8
     public static let compactSlotSize: CGFloat = 24

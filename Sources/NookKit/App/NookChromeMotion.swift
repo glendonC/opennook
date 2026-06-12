@@ -7,18 +7,18 @@
 
 import SwiftUI
 
-/// Host-tunable animation curves for the chrome's *in-panel* motion — the transitions
+/// Host-tunable animation curves for the chrome's *in-panel* motion - the transitions
 /// inside the expanded surface and top bar. Defaults reproduce today's springs exactly.
 ///
 /// This is distinct from ``NookConfiguration/transitions`` (``NookTransitionConfiguration``),
 /// which governs the surface-level expand / collapse / compact conversion. These curves
-/// drive the home↔settings swap, the status banner, the breadcrumb, and the leading
+/// drive the home<->settings swap, the status banner, the breadcrumb, and the leading
 /// cluster's back / hover reveals.
 ///
 /// Set via ``NookConfiguration/motion``. The values reach the views through the chrome
 /// environment (``EnvironmentValues/nookChromeMotion``).
 public struct NookChromeMotion: Sendable, Equatable {
-    /// Home↔Settings swap and the gear toggle (and the matching `viewMode` animations).
+    /// Home<->Settings swap and the gear toggle (and the matching `viewMode` animations).
     public var viewModeChange: Animation
 
     /// The leading cluster's back-control activation (exiting Settings / clearing a
@@ -48,7 +48,7 @@ public struct NookChromeMotion: Sendable, Equatable {
         self.breadcrumb = breadcrumb
     }
 
-    /// The framework-default springs — reproduces today's in-panel motion.
+    /// The framework-default springs - reproduces today's in-panel motion.
     public static let `default` = NookChromeMotion()
 }
 

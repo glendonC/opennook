@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -31,13 +31,13 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     }
 
     /// `true` when the surface should render the free-floating panel instead of the
-    /// notch-fused shape — a display with no notch, or a forced `.floating` presentation.
+    /// notch-fused shape - a display with no notch, or a forced `.floating` presentation.
     private var isFloating: Bool {
         nook.layoutForm == .floating
     }
 
     /// Residual safe-area insets the host's expanded view can read via
-    /// ``EnvironmentValues/nookContentInsets``. `.zero` while compact or hidden —
+    /// ``EnvironmentValues/nookContentInsets``. `.zero` while compact or hidden - 
     /// no host expanded content is rendered in those states. The expanded value
     /// is the geometric clearance left over after the chrome's own paddings;
     /// see ``NookContentInsets/expanded(form:topCornerRadius:bottomCornerRadius:chromeSafeAreaInset:)``.
@@ -59,7 +59,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         (top: 6, bottom: 14)
     }
 
-    /// Floating panels use convex corners — a card when expanded, a capsule when
+    /// Floating panels use convex corners - a card when expanded, a capsule when
     /// compact (radius = half the pill height). No notch ears to fuse, so the same
     /// radius applies to all four corners.
     private var floatingExpandedRadius: CGFloat { expandedCornerRadii.bottom }
@@ -104,11 +104,11 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     /// Backdrop sits behind chrome content, both flattened into a single layer, then clipped
     /// to the animatable notch shape. Compositing as one group means the spring animation can
-    /// scale content + backdrop atomically — no magic overshoot padding required to plug
+    /// scale content + backdrop atomically - no magic overshoot padding required to plug
     /// edge gaps mid-bounce.
     ///
     /// The matching `.contentShape(NookShape)` is critical: `.clipShape` only clips drawing,
-    /// not hit-testing. Without it, the hover region falls back to the rectangular bounds —
+    /// not hit-testing. Without it, the hover region falls back to the rectangular bounds - 
     /// which extend down into the would-be-expanded area because the expanded content's
     /// `.fixedSize()` doesn't actually collapse to 0×0 when wrapped in a max-frame. Result:
     /// hovering in the empty space below a compact nook triggers the hover-grow animation.
@@ -132,7 +132,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     /// Peripheral cue overlay. Sits above backdrop+content but inside the compositing group,
     /// so the shimmer stroke flattens with the chrome before the notch shape carves the visible
-    /// region — no edge gaps mid-bounce, no spillover beyond the arch.
+    /// region - no edge gaps mid-bounce, no spillover beyond the arch.
     private func feedbackOverlay() -> some View {
         NookFeedbackOverlay(
             event: nook.feedbackEvent,
@@ -205,7 +205,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         }()
         Color.clear
             .glassEffect(tinted, in: notchShape)
-            // The legibility pass is whatever the spec carries — the surface adds no
+            // The legibility pass is whatever the spec carries - the surface adds no
             // darken of its own on top of Apple's self-contrasting material.
             .overlay { glassShading(glass) }
     }
@@ -213,7 +213,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     /// The host-supplied legibility shading, rendered as a gradient. `nil` shading draws
     /// nothing, leaving the glass pristine. The gradient, its stops, and its direction all
-    /// come from the ``NookBackdrop/LiquidGlass`` spec — the surface never substitutes its
+    /// come from the ``NookBackdrop/LiquidGlass`` spec - the surface never substitutes its
     /// own, so a host can shape the falloff however it likes.
     @ViewBuilder
     private func glassShading(_ glass: NookBackdrop.LiquidGlass) -> some View {
@@ -227,7 +227,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     }
 
     /// Pre-Tahoe approximation: a glassy material, an optional tint, a legibility darken,
-    /// then the specular treatment that actually reads as "glass" — a top-down sheen and
+    /// then the specular treatment that actually reads as "glass" - a top-down sheen and
     /// a bright rim traced along ``notchShape``. The outer `.clipShape` trims the rim's
     /// outer half, leaving an inner highlight along the edge.
     @ViewBuilder
@@ -300,7 +300,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             }
 
             // Notch mode: a gap exactly the notch width, so the leading/trailing slots
-            // straddle the physical notch. Floating mode: no notch — just a small gap
+            // straddle the physical notch. Floating mode: no notch - just a small gap
             // keeping the two slots from touching inside the pill.
             Spacer()
                 .frame(width: isFloating ? 8 : nook.notchSize.width)
@@ -315,7 +315,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             }
         }
         .frame(height: nook.notchSize.height)
-        // `disableCompactLeading/Trailing` are construction-time `let`s on `Nook` —
+        // `disableCompactLeading/Trailing` are construction-time `let`s on `Nook` - 
         // they cannot change at runtime, so no `.onChange` reconciliation is needed.
         // The `@State` `compactLeadingWidth`/`compactTrailingWidth` retain their last
         // measured value when the slot views disappear (SwiftUI doesn't fire

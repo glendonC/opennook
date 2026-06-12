@@ -14,7 +14,7 @@ import SwiftUI
 /// into one scrolling stack. Each section's content is its own file under `Views/Settings/`.
 ///
 /// Layout is deliberately flat: section label, then content, on one shared left margin
-/// (aligned with the top bar via `\.nookContentInsets`), separated by whitespace only —
+/// (aligned with the top bar via `\.nookContentInsets`), separated by whitespace only - 
 /// no card fills, no rules.
 struct SettingsView: View {
     @ObservedObject var appState: AppState
@@ -46,7 +46,7 @@ struct SettingsView: View {
     }
 
     /// Flip the haptic preference and fire one pulse on the way *on* so the user feels
-    /// what they just enabled. Off doesn't pulse — silence is its whole point.
+    /// what they just enabled. Off doesn't pulse - silence is its whole point.
     private func toggleHapticFeedback() {
         var prefs = appState.appearancePreferences
         prefs.hapticFeedbackEnabled.toggle()
@@ -122,8 +122,8 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: settingsScrollMaxHeight, alignment: .leading)
     }
 
-    /// A collapsible section bound to ``expandedSections``: a disclosure header, and — when
-    /// open — the content indented under a connector hairline.
+    /// A collapsible section bound to ``expandedSections``: a disclosure header, and - when
+    /// open - the content indented under a connector hairline.
     @ViewBuilder
     private func section<Content: View>(
         _ title: String,

@@ -13,7 +13,7 @@ import SwiftUI
 ///
 /// Three outcomes: a solid opaque fill (the `.solid` surface style, or any time Reduce
 /// Transparency is on), a frosted vibrancy material with a slight darken pass on top, or
-/// a Liquid Glass material — each with a darken pass scaled by `backdropStrength`.
+/// a Liquid Glass material - each with a darken pass scaled by `backdropStrength`.
 public enum NookBackdropMapping {
     public static func notchBackdrop(
         preferences: NookAppearancePreferences,
@@ -29,7 +29,7 @@ public enum NookBackdropMapping {
         // `.solid` and Reduce Transparency both want the same answer: a real opaque
         // color, no visual-effect view. Pure black / white so the chrome reads as the
         // same surface as the physical notch. RT also collapses the translucent styles
-        // here — neither glass nor frost should render when the user opted out.
+        // here - neither glass nor frost should render when the user opted out.
         if preferences.surfaceStyle == .solid || reduceTransparency {
             return .solid(isDark ? .black : .white)
         }
@@ -47,7 +47,7 @@ public enum NookBackdropMapping {
                 darkenOpacity: baseDarken * strength
             ))
         case .liquidGlass:
-            // Neutral glass (no tint) — the real material refracts the wallpaper itself.
+            // Neutral glass (no tint) - the real material refracts the wallpaper itself.
             // A lighter darken than frost since glass keeps its own contrast; a bright
             // rim sells the edge on the pre-Tahoe approximation. The default shading runs
             // top-to-bottom and tapers to 40% at the bottom, so the surface reads glassier
@@ -63,7 +63,7 @@ public enum NookBackdropMapping {
                 ]))
             ))
         case .solid:
-            // Unreachable — handled by the guard above. Kept so the switch stays
+            // Unreachable - handled by the guard above. Kept so the switch stays
             // exhaustive without a `default` that would swallow a future style.
             return .solid(isDark ? .black : .white)
         }

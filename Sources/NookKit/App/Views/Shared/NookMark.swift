@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// The OpenNook brand mark — a minimal notch arc. Pair with a center dot in
+/// The OpenNook brand mark - a minimal notch arc. Pair with a center dot in
 /// ``NookMarkView``; matches `site/public/nook-mark.svg`.
 public struct NookMark: Shape {
     public init() {}

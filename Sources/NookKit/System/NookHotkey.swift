@@ -42,7 +42,7 @@ public struct NookHotkey: Equatable, Codable, Sendable {
         return symbols
     }
 
-    /// Every glyph to render, modifiers first then the key — e.g. `["⌘", "⌥", ";"]`.
+    /// Every glyph to render, modifiers first then the key - e.g. `["⌘", "⌥", ";"]`.
     public var displaySymbols: [String] { modifierSymbols + [keySymbol] }
 
     /// Flattened display string, e.g. `"⌘⌥;"`.
@@ -51,7 +51,7 @@ public struct NookHotkey: Equatable, Codable, Sendable {
 
 public extension NookHotkey {
     /// Builds a hotkey from a captured `keyDown` event. Returns `nil` if the combination
-    /// isn't usable as a global hotkey — it must include at least one of ⌘/⌥/⌃ (a
+    /// isn't usable as a global hotkey - it must include at least one of ⌘/⌥/⌃ (a
     /// shift-only or modifier-less key makes a poor, conflict-prone global shortcut).
     init?(event: NSEvent) {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)

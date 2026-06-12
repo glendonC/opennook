@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -10,13 +10,13 @@ import SwiftUI
 
 /// Per-instance overrides for the surface's animation curves. Nil values fall back to ``NookStyle`` defaults.
 public struct NookTransitionConfiguration: Sendable {
-    /// Hidden → expanded / hidden → compact.
+    /// Hidden -> expanded / hidden -> compact.
     public var openingAnimation: Animation?
-    /// Expanded → hidden / compact → hidden.
+    /// Expanded -> hidden / compact -> hidden.
     public var closingAnimation: Animation?
-    /// Compact ↔ expanded.
+    /// Compact <-> expanded.
     public var conversionAnimation: Animation?
-    /// When `true`, compact↔expanded skips the intermediate hide-and-show.
+    /// When `true`, compact<->expanded skips the intermediate hide-and-show.
     public var skipIntermediateHides: Bool
 
     /// Longest duration, in seconds, of any animation supplied above.

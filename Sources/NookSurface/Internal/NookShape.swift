@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -10,15 +10,15 @@ import SwiftUI
 
 /// The chrome's outline. Two forms, selected by ``NookChromeForm``:
 ///
-/// - ``NookChromeForm/notch`` — a notch-following shape: the top edge flares to full
+/// - ``NookChromeForm/notch`` - a notch-following shape: the top edge flares to full
 ///   width then curves *inward* by `topCornerRadius`, so the ears fuse flush with the
 ///   menu bar on either side of a physical notch; larger bottom-corners where the
 ///   panel meets the wallpaper.
-/// - ``NookChromeForm/floating`` — a plain convex rounded rectangle, for a free-floating
+/// - ``NookChromeForm/floating`` - a plain convex rounded rectangle, for a free-floating
 ///   panel on a display with no notch.
 ///
 /// `form` is a discrete per-window configuration and isn't animated; the two corner
-/// radii are, so a compact↔expanded transition still springs smoothly within a form.
+/// radii are, so a compact<->expanded transition still springs smoothly within a form.
 struct NookShape: Shape {
     private let form: NookChromeForm
     private var topCornerRadius: CGFloat
@@ -82,7 +82,7 @@ struct NookShape: Shape {
     }
 
     /// Convex rounded rectangle flush to `rect`, with independent top and bottom corner
-    /// radii. No flared ears — this is a panel that floats on its own, not one fused to
+    /// radii. No flared ears - this is a panel that floats on its own, not one fused to
     /// a notch. Radii are clamped so they can't overrun a small compact pill.
     private func floatingPath(in rect: CGRect) -> Path {
         let limit = min(rect.width, rect.height) / 2

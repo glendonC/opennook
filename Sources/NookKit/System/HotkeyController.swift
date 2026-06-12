@@ -10,7 +10,7 @@ import Foundation
 
 /// Registers any number of global hotkeys and routes each to its own handler.
 ///
-/// A multi-module host needs more than one shortcut at a time — the show/hide toggle,
+/// A multi-module host needs more than one shortcut at a time - the show/hide toggle,
 /// a module-cycle key, a direct-jump key per module. Each registration is keyed by a
 /// caller-chosen string id so it can be replaced or removed independently; a single
 /// shared Carbon event handler dispatches presses to the right handler by hotkey id.
@@ -19,14 +19,14 @@ import Foundation
 /// the registration/dispatch dictionaries are only ever touched from the main actor.
 /// Carbon delivers `kEventHotKeyPressed` callbacks on the main thread in practice, but
 /// that is not contractually guaranteed, so the C event handler does not touch any
-/// controller state directly — it hops the lookup-and-dispatch onto the main actor via
+/// controller state directly - it hops the lookup-and-dispatch onto the main actor via
 /// `dispatchHandler(forCarbonID:)`. That makes the single-actor invariant provable
 /// rather than accidental.
 @MainActor
 public final class HotkeyController {
     /// A hotkey handler. `@Sendable` because a registration is read from the
     /// non-isolated `deinit`, and because the Carbon event callback funnels through the
-    /// main actor before invoking it — the closure genuinely crosses no unsynchronized
+    /// main actor before invoking it - the closure genuinely crosses no unsynchronized
     /// state. Callers pass `@MainActor`-isolated closures, which satisfy this.
     public typealias Handler = @Sendable () -> Void
 
@@ -52,14 +52,14 @@ public final class HotkeyController {
     /// Active registrations, keyed by the caller's string id.
     private var registrations: [String: Registration] = [:]
 
-    /// Handlers keyed by Carbon hotkey id — the dispatch table the event callback uses.
+    /// Handlers keyed by Carbon hotkey id - the dispatch table the event callback uses.
     private var handlersByCarbonID: [UInt32: Handler] = [:]
 
     private var eventHandler: CarbonRef?
 
     /// Monotonic Carbon hotkey id source. Ids are never recycled: `unregister` removes
     /// the dispatch-table entry, so a stale id can never collide with a live handler,
-    /// and `UInt32` gives ~4 billion ids — far more than any session re-registers (the
+    /// and `UInt32` gives ~4 billion ids - far more than any session re-registers (the
     /// show/hide key re-registers once per user rebind). Recycling would buy nothing and
     /// risk a freed id being reused while a Carbon event for the old binding is in flight.
     private var nextCarbonID: UInt32 = 1
@@ -86,7 +86,7 @@ public final class HotkeyController {
 
     /// Registers a global hotkey under `id`, replacing any existing registration for the
     /// same `id`. Carbon `keyCode` is a `kVK_*` virtual key code; `modifiers` is a
-    /// Carbon modifier mask (`cmdKey | optionKey | …`). Returns `noErr` on success.
+    /// Carbon modifier mask (`cmdKey | optionKey | ...`). Returns `noErr` on success.
     @discardableResult
     public func register(
         _ id: String,
@@ -147,7 +147,7 @@ public final class HotkeyController {
     /// pressed hotkey's id from the event and dispatches to the matching `Handler`.
     ///
     /// The C callback runs on whatever thread Carbon delivers the event on. It must not
-    /// touch ``handlersByCarbonID`` directly — that dictionary is main-actor state. It
+    /// touch ``handlersByCarbonID`` directly - that dictionary is main-actor state. It
     /// only decodes the hotkey id and forwards it to ``dispatchHandler(forCarbonID:)``,
     /// which performs the lookup and invocation on the main actor.
     private func installEventHandlerIfNeeded() -> OSStatus {
@@ -199,7 +199,7 @@ public final class HotkeyController {
 
     // MARK: - Test seam
 
-    /// String ids currently registered. Internal-only — for the test suite to assert
+    /// String ids currently registered. Internal-only - for the test suite to assert
     /// that `register`, `unregister`, `unregisterAll` keep the dictionary honest
     /// independent of whether `RegisterEventHotKey` actually fired (it can fail in
     /// some test environments, e.g. CI without an app context).

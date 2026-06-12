@@ -93,7 +93,7 @@ struct SettingsShortcutRow: View {
                 stopRecording()
             }
             // Swallow the event either way so it doesn't reach the rest of the app
-            // while recording — including a partial combo that isn't valid yet.
+            // while recording - including a partial combo that isn't valid yet.
             return nil
         }
     }
@@ -108,7 +108,7 @@ struct SettingsShortcutRow: View {
     }
 }
 
-/// Surfaces hotkey-registration failures for the host-configured shortcuts — the
+/// Surfaces hotkey-registration failures for the host-configured shortcuts - the
 /// module direct-jump keys and the module-cycle key. The user-rebindable show/hide
 /// shortcut reports its own failure inline in ``SettingsShortcutRow``; this row covers
 /// the static shortcuts, which would otherwise fail silently. Renders nothing when

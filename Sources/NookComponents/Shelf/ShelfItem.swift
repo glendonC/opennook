@@ -25,8 +25,8 @@ import UniformTypeIdentifiers
 /// of silently corroding the shelf. Items persisted by older builds decode with
 /// ``BookmarkKind/unknown`` and are treated like `.nonScoped` for purge purposes.
 ///
-/// Under the App Sandbox, *touching the file's contents* — not just resolving the
-/// bookmark — requires bracketing the access with
+/// Under the App Sandbox, *touching the file's contents* - not just resolving the
+/// bookmark - requires bracketing the access with
 /// `startAccessingSecurityScopedResource()`/`stopAccessingSecurityScopedResource()`.
 /// Use ``withResolvedURL(_:)`` for any synchronous read; it does the bracketing.
 /// `resolveURL()` is for path-level use only (display, comparison) and does **not**
@@ -35,7 +35,7 @@ import UniformTypeIdentifiers
 public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     /// Stable id minted at shelf-add time. Never reused; survives bookmark re-capture.
     public let id: UUID
-    /// File name without extension — what the chip label shows.
+    /// File name without extension - what the chip label shows.
     public let displayName: String
     /// File extension without the leading dot, e.g. `"pdf"`. Empty for extensionless files.
     public let fileExtension: String
@@ -52,12 +52,12 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
 
     /// How a bookmark was captured.
     ///
-    /// - `scoped`: a `.withSecurityScope` bookmark — durable across launches under the
+    /// - `scoped`: a `.withSecurityScope` bookmark - durable across launches under the
     ///   App Sandbox.
     /// - `nonScoped`: a plain bookmark. Resolves fine outside the sandbox; **cannot**
     ///   resolve in a future sandboxed launch.
     /// - `unknown`: persisted by a build that predates this tag. Treated like
-    ///   `.nonScoped` for purge — preserved when it fails to resolve.
+    ///   `.nonScoped` for purge - preserved when it fails to resolve.
     public enum BookmarkKind: String, Codable, Sendable, CaseIterable {
         case scoped
         case nonScoped
@@ -82,8 +82,8 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Resolves the bookmark to a current URL, or `nil` if the file can no longer be
-    /// reached. A `nil` here is **not** proof the file was deleted — under the App
-    /// Sandbox it can also mean access was lost — so callers must not treat it as a
+    /// reached. A `nil` here is **not** proof the file was deleted - under the App
+    /// Sandbox it can also mean access was lost - so callers must not treat it as a
     /// deletion signal (see ``ShelfStore/purgeMissing()``).
     ///
     /// This does **not** start security-scoped access. It is for path-level use
@@ -94,12 +94,12 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Resolves the bookmark and runs `body` with security-scoped access active for the
-    /// call's duration — started before `body`, stopped after (a no-op for plain
+    /// call's duration - started before `body`, stopped after (a no-op for plain
     /// bookmarks and non-sandboxed hosts). Returns `nil`, without calling `body`, if the
     /// bookmark can't be resolved.
     ///
     /// Use this for any *synchronous* file read (icon, attributes, contents). It is not
-    /// suitable for work that outlives the call — e.g. an asynchronous drag session —
+    /// suitable for work that outlives the call - e.g. an asynchronous drag session - 
     /// because access stops as soon as `body` returns.
     public func withResolvedURL<T>(_ body: (URL) -> T) -> T? {
         guard let url = resolved()?.url else { return nil }
@@ -129,7 +129,7 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
 
     /// Returns a copy whose bookmark has been re-captured from `url`, or `nil` if a fresh
     /// bookmark can't be made. The caller supplies the already-resolved URL so a heal
-    /// pass doesn't resolve the bookmark a second time — see ``ShelfStore``.
+    /// pass doesn't resolve the bookmark a second time - see ``ShelfStore``.
     ///
     /// Re-capture is also a natural moment to **upgrade** a `.nonScoped`/`.unknown` item
     /// to `.scoped` when scoped capture now succeeds (e.g. the host left the sandbox
@@ -179,7 +179,7 @@ public struct ShelfItem: Identifiable, Codable, Hashable, Sendable {
     }
 
     /// Custom decoder so JSON written by an older build (no `bookmarkKind` field)
-    /// decodes cleanly to `.unknown` — which the purge rule treats as a non-scoped
+    /// decodes cleanly to `.unknown` - which the purge rule treats as a non-scoped
     /// bookmark, preserving it across launches. Same pattern as
     /// ``NookAppearancePreferences``.
     public init(from decoder: Decoder) throws {

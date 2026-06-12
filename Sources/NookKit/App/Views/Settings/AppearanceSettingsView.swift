@@ -35,15 +35,14 @@ public struct NookAppearanceSettingsSection: View {
                     Picker("Surface", selection: surfaceStyleBinding) {
                         Text("Solid").tag(NookSurfaceStyle.solid)
                         Text("Translucent").tag(NookSurfaceStyle.translucent)
+                        Text("Liquid Glass").tag(NookSurfaceStyle.liquidGlass)
                     }
                     .pickerStyle(.segmented)
                     .labelsHidden()
                     .controlSize(.small)
                 }
 
-                Text(surfaceStyleBinding.wrappedValue == .solid
-                    ? "Solid paints the chrome the same color as the notch — true black on dark, true white on light."
-                    : "Translucent shows the wallpaper through a frosted material.")
+                Text(surfaceStyleDescription)
                     .font(.system(size: 10, weight: .regular))
                     .foregroundStyle(theme.tertiaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
@@ -97,21 +96,36 @@ public struct NookAppearanceSettingsSection: View {
                 }
             }
 
-            if appState.appearancePreferences.surfaceStyle == .translucent {
+            if appState.appearancePreferences.surfaceStyle != .solid {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Translucency strength")
+                    Text(strengthLabel)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(theme.secondaryLabel)
                     Slider(value: backdropStrengthBinding, in: 0.35...1)
                         .controlSize(.small)
-                        .accessibilityLabel("Translucency strength")
-                    Text("Lower shows more wallpaper through the frosted chrome.")
+                        .accessibilityLabel(strengthLabel)
+                    Text("Lower shows more wallpaper through the chrome.")
                         .font(.system(size: 10, weight: .regular))
                         .foregroundStyle(theme.tertiaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+    }
+
+    private var surfaceStyleDescription: String {
+        switch surfaceStyleBinding.wrappedValue {
+        case .solid:
+            return "Solid paints the chrome the same color as the notch — true black on dark, true white on light."
+        case .translucent:
+            return "Translucent shows the wallpaper through a frosted material."
+        case .liquidGlass:
+            return "Liquid Glass refracts the wallpaper through Apple's glass material on macOS 26, with a frosted-glass fallback on earlier versions."
+        }
+    }
+
+    private var strengthLabel: String {
+        surfaceStyleBinding.wrappedValue == .liquidGlass ? "Glass strength" : "Translucency strength"
     }
 
     private var presentationDescription: String {

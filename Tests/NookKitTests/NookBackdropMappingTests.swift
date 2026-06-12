@@ -115,4 +115,58 @@ final class NookBackdropMappingTests: XCTestCase {
     func testDefaultBackdropIsSolidBlack() {
         XCTAssertEqual(NookBackdrop.solidBlack, .solid(.black))
     }
+
+    // MARK: - Liquid Glass
+
+    func testLiquidGlassDarkMapsToNeutralGlassWithDarkDarken() {
+        let backdrop = NookBackdropMapping.notchBackdrop(
+            preferences: preferences(palette: .dark, style: .liquidGlass),
+            effectiveColorScheme: .dark,
+            reduceTransparency: false
+        )
+        let expected = NookBackdrop.liquidGlass(.init(
+            highlightStrength: 0.6,
+            darkenOpacity: 0.22
+        ))
+        XCTAssertEqual(backdrop, expected)
+    }
+
+    func testLiquidGlassLightUsesLighterDarken() {
+        let backdrop = NookBackdropMapping.notchBackdrop(
+            preferences: preferences(palette: .light, style: .liquidGlass),
+            effectiveColorScheme: .light,
+            reduceTransparency: false
+        )
+        let expected = NookBackdrop.liquidGlass(.init(
+            highlightStrength: 0.6,
+            darkenOpacity: 0.05
+        ))
+        XCTAssertEqual(backdrop, expected)
+    }
+
+    /// Reduce Transparency collapses Liquid Glass to a solid fill too — the glass
+    /// material must not render when the user has opted out of translucency.
+    func testReduceTransparencyForcesSolidEvenWhenLiquidGlass() {
+        let backdrop = NookBackdropMapping.notchBackdrop(
+            preferences: preferences(palette: .dark, style: .liquidGlass),
+            effectiveColorScheme: .dark,
+            reduceTransparency: true
+        )
+        XCTAssertEqual(backdrop, .solid(.black), "RT forces a solid fill in any style")
+    }
+
+    func testBackdropStrengthScalesLiquidGlassDarken() {
+        var prefs = preferences(palette: .dark, style: .liquidGlass)
+        prefs.backdropStrength = 0.5
+        let backdrop = NookBackdropMapping.notchBackdrop(
+            preferences: prefs,
+            effectiveColorScheme: .dark,
+            reduceTransparency: false
+        )
+        let expected = NookBackdrop.liquidGlass(.init(
+            highlightStrength: 0.6,
+            darkenOpacity: 0.22 * 0.5
+        ))
+        XCTAssertEqual(backdrop, expected)
+    }
 }

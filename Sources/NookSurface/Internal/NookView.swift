@@ -166,6 +166,79 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
                 }
             case .solid(let color):
                 color
+            case .liquidGlass(let glass):
+                liquidGlassBackdrop(glass)
+            }
+        }
+    }
+
+    /// Liquid Glass backdrop. Apple's real glass material on macOS 26 Tahoe and later;
+    /// a layered approximation on earlier systems. Both shape the glass to the same
+    /// ``NookShape`` the chrome already clips to, so the rim and the eared/floating
+    /// outline stay in register.
+    @ViewBuilder
+    private func liquidGlassBackdrop(_ glass: NookBackdrop.LiquidGlass) -> some View {
+        if #available(macOS 26.0, *) {
+            realLiquidGlass(glass)
+        } else {
+            approximateLiquidGlass(glass)
+        }
+    }
+
+    @available(macOS 26.0, *)
+    @ViewBuilder
+    private func realLiquidGlass(_ glass: NookBackdrop.LiquidGlass) -> some View {
+        let tinted: Glass = {
+            guard let tint = glass.tint, glass.tintStrength > 0 else { return .regular }
+            return Glass.regular.tint(tint.opacity(glass.tintStrength))
+        }()
+        Color.clear
+            .glassEffect(tinted, in: notchShape)
+            // Real glass adapts its own contrast, so the legibility pass is applied at
+            // half weight here — just enough to keep chrome text crisp over a bright
+            // wallpaper without flattening the material's depth.
+            .overlay {
+                if glass.darkenOpacity > 0 {
+                    Color.black.opacity(glass.darkenOpacity * 0.5)
+                }
+            }
+    }
+
+    /// Pre-Tahoe approximation: a glassy material, an optional tint, a legibility darken,
+    /// then the specular treatment that actually reads as "glass" — a top-down sheen and
+    /// a bright rim traced along ``notchShape``. The outer `.clipShape` trims the rim's
+    /// outer half, leaving an inner highlight along the edge.
+    @ViewBuilder
+    private func approximateLiquidGlass(_ glass: NookBackdrop.LiquidGlass) -> some View {
+        ZStack {
+            VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+
+            if let tint = glass.tint, glass.tintStrength > 0 {
+                tint.opacity(glass.tintStrength)
+            }
+
+            if glass.darkenOpacity > 0 {
+                Color.black.opacity(glass.darkenOpacity)
+            }
+
+            if glass.highlightStrength > 0 {
+                LinearGradient(
+                    colors: [Color.white.opacity(0.16 * glass.highlightStrength), .clear],
+                    startPoint: .top,
+                    endPoint: .center
+                )
+                notchShape
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.5 * glass.highlightStrength),
+                                Color.white.opacity(0.06 * glass.highlightStrength)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
             }
         }
     }

@@ -11,8 +11,9 @@ import SwiftUI
 
 /// Maps appearance preferences into a nook backdrop.
 ///
-/// Two outcomes: a solid opaque fill (the `.solid` surface style, or any time Reduce
-/// Transparency is on), or a frosted vibrancy material with a slight darken pass on top.
+/// Three outcomes: a solid opaque fill (the `.solid` surface style, or any time Reduce
+/// Transparency is on), a frosted vibrancy material with a slight darken pass on top, or
+/// a Liquid Glass material — each with a darken pass scaled by `backdropStrength`.
 public enum NookBackdropMapping {
     public static func notchBackdrop(
         preferences: NookAppearancePreferences,
@@ -26,21 +27,38 @@ public enum NookBackdropMapping {
         }
 
         // `.solid` and Reduce Transparency both want the same answer: a real opaque
-        // color, no visual-effect view. Pure black / white so the chrome reads as
-        // the same surface as the physical notch.
-        let wantsSolid = preferences.surfaceStyle == .solid || reduceTransparency
-        if wantsSolid {
+        // color, no visual-effect view. Pure black / white so the chrome reads as the
+        // same surface as the physical notch. RT also collapses the translucent styles
+        // here — neither glass nor frost should render when the user opted out.
+        if preferences.surfaceStyle == .solid || reduceTransparency {
             return .solid(isDark ? .black : .white)
         }
 
-        // Translucent: one frosted sidebar material per appearance, with a darken
-        // pass so chrome content stays legible over a bright wallpaper.
+        // `backdropStrength` scales the legibility darken for either translucent style.
         let strength = min(max(preferences.backdropStrength, 0.15), 1)
-        let baseDarken = isDark ? 0.52 : 0.10
-        return .vibrancy(.init(
-            material: .sidebar,
-            blendingMode: .behindWindow,
-            darkenOpacity: baseDarken * strength
-        ))
+        switch preferences.surfaceStyle {
+        case .translucent:
+            // One frosted sidebar material per appearance, with a darken pass so chrome
+            // content stays legible over a bright wallpaper.
+            let baseDarken = isDark ? 0.52 : 0.10
+            return .vibrancy(.init(
+                material: .sidebar,
+                blendingMode: .behindWindow,
+                darkenOpacity: baseDarken * strength
+            ))
+        case .liquidGlass:
+            // Neutral glass (no tint) — the real material refracts the wallpaper itself.
+            // A lighter darken than frost since glass keeps its own contrast; a bright
+            // rim sells the edge on the pre-Tahoe approximation.
+            let baseDarken = isDark ? 0.22 : 0.05
+            return .liquidGlass(.init(
+                highlightStrength: 0.6,
+                darkenOpacity: baseDarken * strength
+            ))
+        case .solid:
+            // Unreachable — handled by the guard above. Kept so the switch stays
+            // exhaustive without a `default` that would swallow a future style.
+            return .solid(isDark ? .black : .white)
+        }
     }
 }

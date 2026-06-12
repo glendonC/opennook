@@ -109,10 +109,13 @@ public enum NookChromePalette: String, Codable, Sendable, CaseIterable {
 
 /// `.solid` paints the chrome the same opaque color as the menu-bar notch — true black on
 /// dark, true white on light — so the expanded panel reads as one continuous surface.
-/// `.translucent` shows the wallpaper through a frosted material instead.
+/// `.translucent` shows the wallpaper through a frosted material instead. `.liquidGlass`
+/// renders Apple's Liquid Glass material (macOS 26+), with a layered approximation on
+/// earlier systems; Reduce Transparency collapses both translucent styles to `.solid`.
 public enum NookSurfaceStyle: String, Codable, Sendable, CaseIterable {
     case solid
     case translucent
+    case liquidGlass
 }
 
 // MARK: - Persistence

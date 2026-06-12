@@ -178,13 +178,24 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// outline stay in register.
     @ViewBuilder
     private func liquidGlassBackdrop(_ glass: NookBackdrop.LiquidGlass) -> some View {
+        // `Glass` / `.glassEffect` exist only in the macOS 26 SDK (Xcode 26+, Swift 6.2).
+        // `@available` is a runtime gate and still needs those symbols present in the SDK
+        // being compiled against, so an older Xcode cannot build the real path at all.
+        // Gate it at compile time too: an older toolchain uses the approximation
+        // unconditionally, while the macOS 26 SDK keeps the real material (runtime-gated
+        // to macOS 26). This lets a consumer on an earlier Xcode still build the package.
+        #if compiler(>=6.2)
         if #available(macOS 26.0, *) {
             realLiquidGlass(glass)
         } else {
             approximateLiquidGlass(glass)
         }
+        #else
+        approximateLiquidGlass(glass)
+        #endif
     }
 
+    #if compiler(>=6.2)
     @available(macOS 26.0, *)
     @ViewBuilder
     private func realLiquidGlass(_ glass: NookBackdrop.LiquidGlass) -> some View {
@@ -198,6 +209,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             // darken of its own on top of Apple's self-contrasting material.
             .overlay { glassShading(glass) }
     }
+    #endif
 
     /// The host-supplied legibility shading, rendered as a gradient. `nil` shading draws
     /// nothing, leaving the glass pristine. The gradient, its stops, and its direction all

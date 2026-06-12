@@ -6,6 +6,14 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The Liquid Glass surface style now builds on Xcode versions earlier than 26.
+  Its `Glass` / `.glassEffect` use (the macOS 26 SDK) is compile-gated behind
+  `#if compiler(>=6.2)`, so an earlier toolchain compiles the pre-Tahoe
+  approximation instead of failing with "cannot find 'Glass' in scope"; on
+  macOS 26 the real material is still used at runtime.
+
 ## [0.3.0] - 2026-06-12
 
 The chrome-customization release. v0.3.0 opens up the framework chrome through

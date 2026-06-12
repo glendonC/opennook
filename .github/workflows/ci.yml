@@ -52,6 +52,12 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+      # Match the SPM jobs' toolchain: the Liquid Glass surface style references the
+      # macOS 26 SDK (`Glass` / `.glassEffect`), which only `latest-stable` carries -
+      # the runner's default Xcode does not, so the parity build fails without this.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Regenerate project from project.yml

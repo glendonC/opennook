@@ -4,7 +4,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 
-# The Xcode project is generated from project.yml by xcodegen — committing it
+# The Xcode project is generated from project.yml by xcodegen - committing it
 # produces noisy merge conflicts on every regenerate. project.yml is the
 # source of truth; run Scripts/regenerate-xcodeproj.sh after a fresh clone or
 # after editing project.yml.
@@ -15,5 +15,5 @@ Nook.xcodeproj/
 # built by Swift Package Index from .spi.yml, so this never needs committing.
 .docs-out/
 
-# Internal planning notes — not part of the published framework.
+# Internal planning notes - not part of the published framework.
 .notes/

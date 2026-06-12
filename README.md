@@ -118,7 +118,7 @@ swift test          # run the test suite
 ```
 
 Once it's running, press **⌥⌘;** (or use the menu-bar item) to expand the
-nook. You can rebind that shortcut in Settings → Shortcut & nook.
+nook. You can rebind that shortcut in Settings -> Shortcut & nook.
 
 For a real `.app` bundle (signing, notarization, Cmd-R in Xcode):
 
@@ -203,7 +203,7 @@ dependency container threaded into views.
 `toggleNook()`, `toggleKeepNookOpen()` are the lifecycle vocabulary; the global
 hotkey and menu-bar fallback already call into them.
 
-Rename the product (`Nook` → your app) by editing `project.yml`,
+Rename the product (`Nook` -> your app) by editing `project.yml`,
 `App/Info.plist`, and the `Package.swift` product name when you're ready to
 ship.
 
@@ -233,7 +233,7 @@ and runs on earlier systems. See
 [Surface materials](https://opennook.dev/guides/surface-materials/).
 
 **Chrome behavior.** Hover side-effects, the cold-launch shimmer, and the
-appearance→backdrop mapping:
+appearance->backdrop mapping:
 
 ```swift
 configuration.chromeBehavior = NookChromeBehavior(

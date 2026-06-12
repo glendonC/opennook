@@ -3,7 +3,7 @@
 # Runs the full build + test matrix on every push to main and every PR, plus a
 # license-header sanity check that pins the dual-license boundary
 # (Sources/NookSurface is MIT; everything else is Apache-2.0). The Xcode build
-# is included so the SPM ↔ Xcode parity README claim ("behavior cannot drift
+# is included so the SPM <-> Xcode parity README claim ("behavior cannot drift
 # between them") is actually verified.
 
 name: CI
@@ -23,7 +23,7 @@ jobs:
     name: SwiftPM build & test (Xcode ${{ matrix.xcode }})
     runs-on: macos-15
     strategy:
-      # One toolchain regression shouldn't cancel the others — we want to see the full
+      # One toolchain regression shouldn't cancel the others - we want to see the full
       # matrix result, especially which Xcode broke.
       fail-fast: false
       matrix:
@@ -90,11 +90,11 @@ jobs:
           mit_count=$(find Sources/NookSurface -name '*.swift' | wc -l | tr -d ' ')
           apache_count=$(find Sources Tests Examples App -name '*.swift' -not -path 'Sources/NookSurface/*' | wc -l | tr -d ' ')
           if [ "$mit_count" -lt 1 ]; then
-            echo "::error::no .swift files under Sources/NookSurface — did the MIT module move? License check would pass vacuously."
+            echo "::error::no .swift files under Sources/NookSurface - did the MIT module move? License check would pass vacuously."
             fail=1
           fi
           if [ "$apache_count" -lt 1 ]; then
-            echo "::error::no Apache-2.0 .swift files found — did the source layout move? License check would pass vacuously."
+            echo "::error::no Apache-2.0 .swift files found - did the source layout move? License check would pass vacuously."
             fail=1
           fi
 

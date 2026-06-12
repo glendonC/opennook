@@ -3,7 +3,7 @@
 import Foundation
 import PackageDescription
 
-/// Centralized strict-concurrency checking — applied to every target so the
+/// Centralized strict-concurrency checking - applied to every target so the
 /// examples (which a host developer reads as authoritative idiom) and tests
 /// (which a regression must not silently bypass) can't drift from the
 /// concurrency rules the library targets enforce.
@@ -22,14 +22,14 @@ var package = Package(
         .executable(name: "Nook", targets: ["NookExecutable"]),
         // Library product so the Xcode app target can `import NookApp` and
         // call `NookApp.main()` from `App/main.swift`. Same module the SPM
-        // trampoline links against — behavior cannot drift between the two
+        // trampoline links against - behavior cannot drift between the two
         // launch surfaces.
         .library(name: "NookApp", targets: ["NookApp"]),
-        // Optional Tier 3 add-on components (file shelf, …). A consumer adds this
+        // Optional Tier 3 add-on components (file shelf, ...). A consumer adds this
         // product to their target's dependencies only when they want it; it is not
         // pulled in by `NookApp`.
         .library(name: "NookComponents", targets: ["NookComponents"]),
-        // Example apps under `Examples/` — each a single `main.swift` showing one
+        // Example apps under `Examples/` - each a single `main.swift` showing one
         // way to build on OpenNook through public API only. Run with `swift run
         // HelloNook` (or `ClockNook` / `ThemedNook` / `ChromeNook` / `LayoutNook` /
         // `ShelfNook` / `ActivityNook` / `VolumeNook` / `MultiNook`).
@@ -50,7 +50,7 @@ var package = Package(
             // Strict-concurrency checking is opted in via an upcoming feature so the
             // `@MainActor`/`Sendable` correctness is compiler-enforced. Kept as an
             // upcoming feature (not a tools-version bump to 6.0) so this stays a
-            // non-breaking change for consumers — deliberate architecture decision.
+            // non-breaking change for consumers - deliberate architecture decision.
             swiftSettings: strictConcurrency
         ),
         .target(

@@ -1,0 +1,62 @@
+# Cut a GitHub Release when a semver tag is pushed.
+#
+# Human workflow:
+#   1. Move [Unreleased] notes into ## [X.Y.Z] - YYYY-MM-DD in CHANGELOG.md
+#   2. Merge to main
+#   3. git tag vX.Y.Z && git push origin vX.Y.Z
+#
+# This workflow validates the CHANGELOG section, builds DocC, and attaches the
+# static archive. Swift Package Index picks up the tag via .spi.yml separately.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish release
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Validate CHANGELOG entry
+        run: ./Scripts/validate-release-changelog.sh "${{ github.ref_name }}"
+
+      - name: Build DocC archive
+        run: ./Scripts/generate-docs.sh
+
+      - name: Package DocC output
+        run: |
+          set -euo pipefail
+          archive="opennook-docs-${{ github.ref_name }}.zip"
+          (cd .docs-out && zip -r "../${archive}" .)
+          echo "ARCHIVE=${archive}" >> "$GITHUB_ENV"
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          {
+            echo "body<<EOF"
+            ./Scripts/extract-changelog-section.sh "$version"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: OpenNook ${{ github.ref_name }}
+          body: ${{ steps.notes.outputs.body }}
+          files: ${{ env.ARCHIVE }}
+          generate_release_notes: false

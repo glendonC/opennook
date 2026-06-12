@@ -25,3 +25,22 @@ the iteration:
 
 `swift test` runs the test suite from the package root. Both paths share the
 same module artifacts via SwiftPM, so behavior cannot drift.
+
+## Cutting a release
+
+1. Move `[Unreleased]` notes into `## [X.Y.Z] - YYYY-MM-DD` in `CHANGELOG.md`
+   and update the compare links at the bottom.
+2. Merge to `main`.
+3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+Pushing a semver tag triggers `.github/workflows/release.yml`, which checks the
+CHANGELOG section, builds DocC, and publishes a GitHub Release with the notes
+and a `opennook-docs-vX.Y.Z.zip` attachment. Swift Package Index builds API
+docs from the same tag via `.spi.yml`.
+
+Validate locally before tagging:
+
+```sh
+./Scripts/validate-release-changelog.sh vX.Y.Z
+./Scripts/extract-changelog-section.sh X.Y.Z   # preview release notes
+```

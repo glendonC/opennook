@@ -14,12 +14,12 @@ import SwiftUI
 ///
 /// `AppCoordinator` owns the notch chrome but should not be welded to the concrete
 /// `Nook<AnyView, AnyView, AnyView>` generic specialization: a windowless test fake
-/// cannot be a `Nook`, and the coordinator's logic — module switching, lifecycle
-/// serialization, arbiter wiring — is what is worth testing without a real window.
+/// cannot be a `Nook`, and the coordinator's logic - module switching, lifecycle
+/// serialization, arbiter wiring - is what is worth testing without a real window.
 ///
 /// This protocol is the abstraction. It captures exactly the surface API the
 /// coordinator touches (verified against `AppCoordinator` and its extensions), and
-/// nothing more. It lives in NookKit — *not* in NookSurface, which stays MIT and thin,
+/// nothing more. It lives in NookKit - *not* in NookSurface, which stays MIT and thin,
 /// and *not* by widening `NookControllable`/`NookSurfacePresenting`. NookKit owns this
 /// protocol, so conforming the MIT `Nook` to it via a retroactive `extension` here is
 /// legal and leaves `Nook` itself untouched.
@@ -52,7 +52,7 @@ protocol NookSurfaceDriving: AnyObject {
     func hide() async
 
     /// Lifecycle hooks projected onto the surface. Re-wired on a module switch.
-    /// Explicitly `@MainActor`-isolated to match `Nook`'s contract — every observer
+    /// Explicitly `@MainActor`-isolated to match `Nook`'s contract - every observer
     /// touches main-actor state from these closures.
     var onExpand: (@MainActor () -> Void)? { get set }
     var onCompact: (@MainActor () -> Void)? { get set }
@@ -70,7 +70,7 @@ protocol NookSurfaceDriving: AnyObject {
     /// Emits on every `isLayoutGraceActive` change.
     var isLayoutGraceActivePublisher: AnyPublisher<Bool, Never> { get }
 
-    /// How the chrome presents itself — notch-fused, floating, or auto.
+    /// How the chrome presents itself - notch-fused, floating, or auto.
     var presentation: NookPresentation { get set }
 
     /// Pins the chrome window's `NSAppearance`. `nil` follows the system.

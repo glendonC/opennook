@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -13,9 +13,9 @@ import SwiftUI
 /// A notch-pinned floating panel with `expanded` / `compact` / `hidden` states.
 ///
 /// Three SwiftUI view types compose the surface:
-/// - `Expanded` — the full panel that drops below the menu-bar notch.
-/// - `CompactLeading` — the slot to the left of the notch when collapsed.
-/// - `CompactTrailing` — the slot to the right of the notch when collapsed.
+/// - `Expanded` - the full panel that drops below the menu-bar notch.
+/// - `CompactLeading` - the slot to the left of the notch when collapsed.
+/// - `CompactTrailing` - the slot to the right of the notch when collapsed.
 ///
 /// Driving the lifecycle:
 /// ```swift
@@ -42,7 +42,7 @@ import SwiftUI
 @MainActor
 public final class Nook<Expanded, CompactLeading, CompactTrailing>: ObservableObject, NookControllable
 where Expanded: View, CompactLeading: View, CompactTrailing: View {
-    /// The chrome's window controller, or `nil` while hidden. **Internal-only** — the
+    /// The chrome's window controller, or `nil` while hidden. **Internal-only** - the
     /// supported host seam for window inspection is ``hasLiveWindow``, and the
     /// supported mutation seam is ``configureWindow(_:)``. Exposing the controller
     /// publicly let hosts call `windowController?.close()` and tear the panel out
@@ -50,7 +50,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     var windowController: NSWindowController?
 
     /// `true` while the chrome has a live `NSWindow` mounted. The narrow public
-    /// surface area for observing window presence — replaces the previous
+    /// surface area for observing window presence - replaces the previous
     /// `windowController != nil` pattern hosts had to write.
     public var hasLiveWindow: Bool { windowController?.window != nil }
 
@@ -76,17 +76,17 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     /// Resolves the screen the chrome should occupy when a caller doesn't pass one
     /// explicitly. Host apps set this to project a persisted display preference
-    /// (built-in / main / a specific display) onto the surface — the closure is
+    /// (built-in / main / a specific display) onto the surface - the closure is
     /// consulted on every `expand`/`compact` with a `nil` screen, on hover-driven
     /// transitions, and whenever the display set changes. Returning `nil` falls
     /// through to the window's current screen, then the system's main screen.
     ///
     /// Explicitly `@MainActor`-isolated because it touches `NSScreen` and is invoked
-    /// from `@MainActor` paths — the annotation makes that contract explicit to a
+    /// from `@MainActor` paths - the annotation makes that contract explicit to a
     /// host setting it from a non-isolated context.
     public var screenProvider: (@MainActor () -> NSScreen?)?
 
-    /// How the chrome presents itself — notch-fused, free-floating, or `.auto` (notch on
+    /// How the chrome presents itself - notch-fused, free-floating, or `.auto` (notch on
     /// a notched display, floating elsewhere). See ``NookPresentation``.
     ///
     /// The effective layout is resolved per-window against the target screen; changing
@@ -103,20 +103,20 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     let compactLeadingContent: CompactLeading
     let compactTrailingContent: CompactTrailing
     /// Construction-time flags set by the no-compact convenience init. Immutable so
-    /// they can't be flipped mid-flight and trip the view's transition heuristics —
+    /// they can't be flipped mid-flight and trip the view's transition heuristics - 
     /// the no-compact case is a build-time choice, not runtime state.
     let disableCompactLeading: Bool
     let disableCompactTrailing: Bool
 
     /// Current lifecycle state. Host apps can observe this directly (it's `@Published`)
-    /// or react through the ``onExpand`` / ``onCompact`` / ``onHide`` callbacks — the
+    /// or react through the ``onExpand`` / ``onCompact`` / ``onHide`` callbacks - the
     /// callbacks fire on every transition, including hover- and drag-driven ones that
     /// never pass through a host-called `expand`/`compact`.
     @Published public private(set) var state: NookState = .hidden
     @Published private(set) var notchSize: CGSize = .zero
     @Published private(set) var menubarHeight: CGFloat = 0
 
-    /// Layout resolved for the current window's screen — `.notch` or `.floating`.
+    /// Layout resolved for the current window's screen - `.notch` or `.floating`.
     /// Recomputed every time the panel window is built (see `initializeWindow`); drives
     /// `NookView`'s shape and positioning.
     @Published private(set) var layoutForm: NookChromeForm = .notch
@@ -132,7 +132,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// in the expanded surface and the auto-expand from compact. The panel surfaces
     /// `NSDraggingDestination` callbacks; this published bool is the SwiftUI-friendly view.
     ///
-    /// This is a derived mirror of ``dragSession`` — kept as the published surface for
+    /// This is a derived mirror of ``dragSession`` - kept as the published surface for
     /// observers (`AppCoordinator` subscribes to `$isDragInFlight`). The authoritative
     /// session state is ``dragSession``; this bool is updated from its `didSet`.
     @Published public private(set) var isDragInFlight: Bool = false
@@ -141,16 +141,16 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// Returning `true` accepts the drop; `false` rejects it.
     ///
     /// This is the engine's product-agnostic seam, not a "file import" feature. The engine
-    /// only does presentation-container work — it extracts URLs from the drag pasteboard,
+    /// only does presentation-container work - it extracts URLs from the drag pasteboard,
     /// auto-expands a collapsed panel so a drop target is visible (drag-to-reveal), and
     /// hands the raw URLs to this callback. It does not interpret, store, or copy the
-    /// files. Whatever the URLs *mean* — a shelf, an import flow, a no-op — is entirely the
+    /// files. Whatever the URLs *mean* - a shelf, an import flow, a no-op - is entirely the
     /// app layer's concern; the engine never sees it.
     ///
     /// `@MainActor`-isolated: invoked from the surface's main-actor drag pipeline.
     public var onFileDrop: (@MainActor ([URL]) -> Bool)?
 
-    /// Fired when the chrome transitions **into** the expanded surface — from any source:
+    /// Fired when the chrome transitions **into** the expanded surface - from any source:
     /// a host-called `expand`, a hover-grow, or a file drag auto-expanding the panel.
     public var onExpand: (@MainActor () -> Void)?
 
@@ -161,8 +161,8 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// sequence collapses to compact, so `onHide` only fires on a genuine hide afterwards.
     public var onHide: (@MainActor () -> Void)?
 
-    /// Authoritative state of the in-flight file-drag session. The whole session — the
-    /// pre-drag `NookState` snapshot and whether a drag is over the panel at all — lives
+    /// Authoritative state of the in-flight file-drag session. The whole session - the
+    /// pre-drag `NookState` snapshot and whether a drag is over the panel at all - lives
     /// in this single enum so AppKit's uncoordinated enter/update/exit/end/drop callbacks
     /// cannot corrupt it (see ``DragSession``). ``isDragInFlight`` is kept in sync from
     /// the `didSet` so existing observers of that published bool are unaffected.
@@ -174,7 +174,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         }
     }
 
-    /// What the chrome paints behind compact + expanded content — vibrancy or solid.
+    /// What the chrome paints behind compact + expanded content - vibrancy or solid.
     @Published public var backdrop: NookBackdrop = .solidBlack
 
     /// Pins the chrome window's `NSAppearance`. `nil` follows the system appearance.
@@ -186,13 +186,13 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     ///
     /// **Deliberately not `@Published`** (unlike ``backdrop``). `NSAppearance` is an
     /// AppKit appearance proxy whose effect is the `NSWindow.appearance` set in
-    /// ``didSet`` — the SwiftUI content tree re-resolves its `colorScheme` from the
+    /// ``didSet`` - the SwiftUI content tree re-resolves its `colorScheme` from the
     /// hosting window automatically. There is no SwiftUI observer that would benefit
     /// from a Combine publish, so adding `@Published` would be theatrical motion
     /// without behavioural change.
     public var chromeAppearance: NSAppearance? {
         didSet {
-            // Pinning the appearance only pokes the live window — no rebuild — so unlike
+            // Pinning the appearance only pokes the live window - no rebuild - so unlike
             // `presentation` this needs no generation bump; an in-flight transition is
             // unaffected by an `NSAppearance` swap on the same window.
             windowController?.window?.appearance = chromeAppearance
@@ -213,18 +213,18 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// overlay's `TimelineView(.animation)` keeps ticking at 60fps forever after the cue ends
     /// (it only renders `Color.clear`, but the timeline never stops). Nilling the event lets
     /// `NookFeedbackOverlay` take its `else` branch and drop the timeline from the tree.
-    /// Repeating cues are exempt — they're meant to run until acknowledged.
+    /// Repeating cues are exempt - they're meant to run until acknowledged.
     private var feedbackClearTask: Task<Void, Never>?
 
-    /// The in-flight transition — expand, compact, *or hide* — or `nil` when idle.
+    /// The in-flight transition - expand, compact, *or hide* - or `nil` when idle.
     /// ``runTransition(_:)`` cancels this before spawning a replacement, so a superseded
     /// transition's `Task.sleep` throws promptly instead of running to term. The hide
     /// teardown now runs as one of these tracked tasks (it used to live in a separate,
-    /// untracked `closePanelTask` outside the generation system — see ``_hide(generation:)``).
+    /// untracked `closePanelTask` outside the generation system - see ``_hide(generation:)``).
     private var transitionTask: Task<Void, Never>?
 
     /// Monotonic transition token. ``runTransition(_:)`` bumps it **synchronously** at
-    /// each entry point — hover, drag, public `expand`/`compact` — so the token reflects
+    /// each entry point - hover, drag, public `expand`/`compact` - so the token reflects
     /// call order, not the order tasks happen to start running. A transition re-checks
     /// it via ``isCurrent(_:)`` at its top and after every suspension, and bails if a
     /// newer one has superseded it. This makes rapid hover-in/hover-out resolve cleanly
@@ -258,7 +258,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     }
 
     /// Internal designated init for the no-compact-content case. The `disableCompact*`
-    /// flags are stored as `let` so they can't drift at runtime — the no-compact case
+    /// flags are stored as `let` so they can't drift at runtime - the no-compact case
     /// is a build-time choice.
     private init(
         hoverBehavior: NookHoverBehavior,
@@ -319,8 +319,8 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     }
 
     /// Fire the host's lifecycle callbacks on every distinct state transition. A single
-    /// `$state` sink catches transitions from *all* sources uniformly — host-called
-    /// `expand`/`compact`, hover-driven grow/shrink, drag auto-expand — which is why the
+    /// `$state` sink catches transitions from *all* sources uniformly - host-called
+    /// `expand`/`compact`, hover-driven grow/shrink, drag auto-expand - which is why the
     /// hooks live here rather than on a higher-level coordinator. `dropFirst()` skips the
     /// initial `.hidden` published at construction; `removeDuplicates()` collapses no-op
     /// re-publishes so a hook never double-fires for one logical transition.
@@ -366,7 +366,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// `Nook` and frees us from an unstructured `Task` whose cancellation we never
     /// wired up.
     ///
-    /// While hidden there's no window worth keeping — drop any stale one so the next
+    /// While hidden there's no window worth keeping - drop any stale one so the next
     /// `expand`/`compact` rebuilds on the then-current preferred screen. While visible,
     /// recompute the target via ``resolvedScreen`` and re-show there, so a host's
     /// display preference (and its disconnect fallback) follows the chrome live.
@@ -430,7 +430,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     /// suspension. The returned task completes when `body` does, so an `await`ing caller
     /// (e.g. `expand()`) sees the transition through to settle.
     ///
-    /// Every transition — expand, compact, **and hide** — flows through here, so a new
+    /// Every transition - expand, compact, **and hide** - flows through here, so a new
     /// transition reliably supersedes whatever was in flight: the generation bump fails
     /// the predecessor's next `isCurrent` check, and the `cancel()` stops it sleeping.
     /// In particular a hover- or drag-driven `expand` cancels an in-flight hide's
@@ -450,7 +450,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
         return task
     }
 
-    /// `true` while `generation` is still the most recent transition — i.e. no newer
+    /// `true` while `generation` is still the most recent transition - i.e. no newer
     /// `expand`/`compact`/`hide` has been claimed since.
     func isCurrent(_ generation: Int) -> Bool { transitionGeneration == generation }
 
@@ -471,7 +471,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     /// Rebuild a currently-visible window in place (new screen, new presentation) so the
     /// new layout takes effect immediately. Supersedes any in-flight transition first so
-    /// it can't keep mutating the window being swapped — see ``supersedeInFlightTransition()``.
+    /// it can't keep mutating the window being swapped - see ``supersedeInFlightTransition()``.
     func rebuildVisibleWindow(on screen: NSScreen) {
         supersedeInFlightTransition()
         initializeWindow(screen: screen, orderFront: false)
@@ -483,7 +483,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
 public extension Nook {
     /// Expand the chrome. Pass `nil` (the default) to let ``resolvedScreen`` pick the
-    /// target — typically the host's persisted display preference via ``screenProvider``.
+    /// target - typically the host's persisted display preference via ``screenProvider``.
     func expand(on screen: NSScreen? = nil) async {
         guard let target = screen ?? resolvedScreen else { return }
         let skipHide = transitionConfiguration.skipIntermediateHides
@@ -502,8 +502,8 @@ public extension Nook {
         }.value
     }
 
-    /// Hide the chrome and tear the window down. Routed through ``runTransition(_:)`` —
-    /// exactly like `expand`/`compact` — so the hide and its teardown live fully inside
+    /// Hide the chrome and tear the window down. Routed through ``runTransition(_:)`` - 
+    /// exactly like `expand`/`compact` - so the hide and its teardown live fully inside
     /// the generation system: a newer transition reliably supersedes an in-flight hide,
     /// cancelling its task before its `fadeOutWindow`/`deinitializeWindow` can run.
     func hide() async {
@@ -519,8 +519,8 @@ public extension Nook {
     /// Play a one-shot peripheral cue along the chrome's perimeter. Default is the shimmer sweep.
     ///
     /// Use this for low-priority "something happened" signals the user can catch in
-    /// peripheral vision — a sync finished, a background task completed. Caller-owned
-    /// timing — no internal queueing or debouncing; rapid successive calls re-anchor
+    /// peripheral vision - a sync finished, a background task completed. Caller-owned
+    /// timing - no internal queueing or debouncing; rapid successive calls re-anchor
     /// `startedAt` and the in-flight animation restarts. A cue requested while the chrome
     /// is hidden is queued and replayed the next time the nook becomes visible.
     func playFeedback(
@@ -541,7 +541,7 @@ public extension Nook {
         )
         switch state {
         case .compact, .expanded:
-            // Chrome is visible (either as compact pill or expanded surface) — fire
+            // Chrome is visible (either as compact pill or expanded surface) - fire
             // immediately. The shimmer overlay strokes the same `NookShape` perimeter in
             // both states, so the visual reads on either.
             setFeedbackEvent(event)
@@ -569,7 +569,7 @@ extension Nook {
         feedbackClearTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             guard !Task.isCancelled, let self else { return }
-            // Only clear if this is still the event we armed for — a newer cue (which cancels
+            // Only clear if this is still the event we armed for - a newer cue (which cancels
             // this task) or a repeating cue must not be nilled out from under the overlay.
             if self.feedbackEvent?.id == id { self.feedbackEvent = nil }
             self.feedbackClearTask = nil
@@ -579,8 +579,8 @@ extension Nook {
 
 extension Nook {
     /// Expand the chrome onto `screen`. Runs on the main actor and `await`s the
-    /// transition to completion — including a settle pass that lets the open or
-    /// conversion animation finish — so an awaited `expand()` returns once the chrome
+    /// transition to completion - including a settle pass that lets the open or
+    /// conversion animation finish - so an awaited `expand()` returns once the chrome
     /// has visibly arrived, not after an unrelated fixed delay.
     ///
     /// `generation` is the token claimed synchronously by ``runTransition(_:)``. The
@@ -590,7 +590,7 @@ extension Nook {
         // Superseded before this task even started running.
         guard isCurrent(generation) else { return }
 
-        // Opening the nook acknowledges any *repeating* peripheral cue — those are
+        // Opening the nook acknowledges any *repeating* peripheral cue - those are
         // meant to keep nagging until the user looks, so once they're looking we kill
         // them. A one-shot cue (e.g. the launch shimmer greeting) is allowed to play
         // through the expand transition so the user actually sees it; the perimeter
@@ -603,7 +603,7 @@ extension Nook {
         if feedbackEvent?.repeats == true { feedbackEvent = nil }
         if pendingFeedback?.repeats == true { pendingFeedback = nil }
 
-        // Already expanded *on the requested screen* — nothing to do. A different
+        // Already expanded *on the requested screen* - nothing to do. A different
         // screen still needs work: the window must move, so fall through to the
         // rebuild path, which `needsNewWindow` below already handles.
         if state == .expanded, windowController?.window?.screen == screen { return }
@@ -617,7 +617,7 @@ extension Nook {
             try? await Task.sleep(for: openSettleDuration)
             // A screen-parameter change during the settle could have rebuilt the
             // window underneath us; bail rather than return success on a defunct view.
-            // `Task.isCancelled` belt-and-suspenders matches `_hide`'s pattern — a
+            // `Task.isCancelled` belt-and-suspenders matches `_hide`'s pattern - a
             // cancellation can only come from a generation-bumping supersession today,
             // so this is redundant with `isCurrent`, but the two together make the
             // bail condition robust against any future cancellation path.
@@ -642,7 +642,7 @@ extension Nook {
         guard isCurrent(generation) else { return }
 
         if disableCompactLeading, disableCompactTrailing {
-            // No compact content to show — "compact" collapses to a full hide. Run the
+            // No compact content to show - "compact" collapses to a full hide. Run the
             // hide *inline on this same generation* rather than calling the public
             // `hide()`: the latter claims a fresh generation via `runTransition` and
             // would supersede the very transition we're inside, dropping our teardown.
@@ -650,7 +650,7 @@ extension Nook {
             return
         }
 
-        // Already compact *on the requested screen* — nothing to do. A different
+        // Already compact *on the requested screen* - nothing to do. A different
         // screen still needs the window moved, so fall through to the rebuild path.
         if state == .compact, windowController?.window?.screen == screen { return }
 
@@ -675,13 +675,13 @@ extension Nook {
     }
 
     /// Hide the chrome and tear the window down. Runs as a tracked transition under
-    /// ``runTransition(_:)`` — `generation` is the token it claimed synchronously.
+    /// ``runTransition(_:)`` - `generation` is the token it claimed synchronously.
     ///
     /// Because the hide now lives fully inside the generation system, every step
     /// re-checks ``isCurrent(_:)`` after each suspension point: a newer transition
     /// (a hover-grow, a drag auto-expand, a host `expand`) bumps the generation and
-    /// cancels this task via `runTransition`, so the teardown — `keepVisible` poll,
-    /// intermediate-hide dwell, `fadeOutWindow`, `deinitializeWindow` — bails before it
+    /// cancels this task via `runTransition`, so the teardown - `keepVisible` poll,
+    /// intermediate-hide dwell, `fadeOutWindow`, `deinitializeWindow` - bails before it
     /// can deinit a window the newer transition has already claimed. Previously this
     /// teardown ran in an untracked `closePanelTask` outside the generation system, so a
     /// hover-grow racing it could have the window deinit'd out from under a
@@ -689,14 +689,14 @@ extension Nook {
     ///
     /// `.keepVisible` still defers the hide until the cursor leaves the panel, but the
     /// poll is now part of this awaited transition rather than a recursively-spawned
-    /// untracked task — an awaited `hide()` always resolves: cursor leaves, supersession,
+    /// untracked task - an awaited `hide()` always resolves: cursor leaves, supersession,
     /// task cancellation, or already-hidden.
     func _hide(generation: Int) async {
         // Superseded before this task even started running.
         guard isCurrent(generation) else { return }
         guard state != .hidden else { return }
 
-        // `.keepVisible` defers an explicit hide until the cursor leaves the panel — we
+        // `.keepVisible` defers an explicit hide until the cursor leaves the panel - we
         // don't yank the surface out from under an active hover. Poll inline; bail if a
         // newer transition supersedes us, or if hover behavior stops requesting deferral.
         if hoverBehavior.contains(.keepVisible), isHovering {
@@ -705,7 +705,7 @@ extension Nook {
                 try? await Task.sleep(for: Self.keepVisiblePollInterval)
             }
             // Superseded (or cancelled) while waiting for the cursor to leave: a newer
-            // transition owns the surface now — do not tear its window down.
+            // transition owns the surface now - do not tear its window down.
             guard isCurrent(generation), !Task.isCancelled else { return }
             // A superseded-then-restored race could have left us already hidden.
             guard state != .hidden else { return }
@@ -717,7 +717,7 @@ extension Nook {
         }
 
         try? await Task.sleep(for: intermediateHideDuration)
-        // A newer transition took over across the close-animation dwell — it owns the
+        // A newer transition took over across the close-animation dwell - it owns the
         // window now, so skip the teardown entirely.
         guard isCurrent(generation), !Task.isCancelled else { return }
 
@@ -772,13 +772,13 @@ extension Nook {
         max(transitionConfiguration.animationDuration ?? Self.defaultAnimationDuration, 0)
     }
 
-    /// Settle allowance after a fresh open animation (`.hidden` → visible) before an
+    /// Settle allowance after a fresh open animation (`.hidden` -> visible) before an
     /// awaited `expand()`/`compact()` returns.
     ///
     /// SwiftUI's `Animation` exposes no portable duration accessor, so the surface cannot
     /// time the chrome's visible arrival from the animation itself. Instead the
     /// settle delay is derived from the *configured* animation duration
-    /// (``settleAnimationDuration``) plus a fixed cushion for the window-show fade — so
+    /// (``settleAnimationDuration``) plus a fixed cushion for the window-show fade - so
     /// the await contract holds whether the host keeps the default curves or supplies a
     /// slower custom animation. Sized to match the previous 550 ms constant at the
     /// default 0.4 s duration.
@@ -797,7 +797,7 @@ extension Nook {
 
     /// Dwell at `.hidden` between a close animation and the following conversion (or
     /// teardown), when intermediate hides are not skipped. A partial dwell of the
-    /// closing animation — the chrome need not be fully gone before the next phase
+    /// closing animation - the chrome need not be fully gone before the next phase
     /// starts. Sized to match the previous 250 ms constant at the default 0.4 s duration.
     var intermediateHideDuration: Duration {
         .seconds(settleAnimationDuration * 0.625)
@@ -861,7 +861,7 @@ private extension Nook {
         // Two modifiers used to live on a `NookContentView` shim: a full-bleed
         // top-anchored frame and a conversion animation on hover. Inlining the
         // shim removes a one-line passthrough that earned its keep only as a
-        // named type — `NSHostingView` is the only consumer.
+        // named type - `NSHostingView` is the only consumer.
         let rootView = NookView(nook: self)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .animation(effectiveConversionAnimation, value: isHovering)
@@ -923,7 +923,7 @@ private extension Nook {
     }
 
     /// Show with the hosting layer starting at opacity 0, then animate to 1. The window itself
-    /// is at full alpha — only the SwiftUI content fades in, masking any first-frame layout pop.
+    /// is at full alpha - only the SwiftUI content fades in, masking any first-frame layout pop.
     func showWindow() {
         guard let window = windowController?.window else { return }
 
@@ -951,7 +951,7 @@ private extension Nook {
 }
 
 // The drag-session state machine and `NookDragDestination` conformance live in
-// `Internal/Nook+Drag.swift` — kept out of this file so Nook.swift stays focused
+// `Internal/Nook+Drag.swift` - kept out of this file so Nook.swift stays focused
 // on lifecycle/transition concerns. The stored `dragSession` property is declared
 // above (on `Nook` itself); the surrounding state machine and the destination
 // conformance are the extracted pieces.

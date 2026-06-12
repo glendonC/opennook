@@ -24,33 +24,33 @@ import Foundation
 /// `Sendable`: the registry entries hold only `Sendable` data (descriptors and
 /// `@Sendable` factory closures). A host configuration is assembled at the nonisolated
 /// top level of a `main.swift` and then handed to `NookApp.main`, which runs setup on
-/// the main actor — a real isolation crossing, so the conformance must be genuine.
+/// the main actor - a real isolation crossing, so the conformance must be genuine.
 public struct NookHostConfiguration: Sendable {
     private var entries: [NookModuleRegistry.Registration] = []
     private var explicitDefault: String?
 
-    /// Optional global shortcut that cycles to the next registered module. `nil` — the
-    /// default — means cycling is reachable only through the switcher.
+    /// Optional global shortcut that cycles to the next registered module. `nil` - the
+    /// default - means cycling is reachable only through the switcher.
     public var moduleCycleHotkey: NookHotkey?
 
-    /// Host-product identity surfaced through the framework chrome — the About card,
+    /// Host-product identity surfaced through the framework chrome - the About card,
     /// the show/hide hotkey label, the menu-bar fallback. Defaults to ``NookHostBranding/default``
     /// (`"Nook"` / nil) so an unconfigured host renders the demo strings.
     public var branding: NookHostBranding = .default
 
     /// Launch *seed* values for the process-global preferences (appearance, global
-    /// hotkey, display target). Applied at ``AppState`` construction — before first
-    /// paint and before hotkey registration — so a host ships its own out-of-box look
+    /// hotkey, display target). Applied at ``AppState`` construction - before first
+    /// paint and before hotkey registration - so a host ships its own out-of-box look
     /// and shortcut. Defaults to ``NookPreferenceDefaults/default`` (today's framework
     /// behavior). See ``NookPreferenceDefaults`` for the seed-vs-persisted semantics.
     public var preferenceDefaults: NookPreferenceDefaults = .default
 
-    /// Process-global chrome behavior — hover side-effects, the cold-launch shimmer, and
-    /// the appearance→backdrop mapping. Defaults to ``NookChromeBehavior/default``
+    /// Process-global chrome behavior - hover side-effects, the cold-launch shimmer, and
+    /// the appearance->backdrop mapping. Defaults to ``NookChromeBehavior/default``
     /// (today's framework behavior). See ``NookChromeBehavior``.
     public var chromeBehavior: NookChromeBehavior = .default
 
-    /// Whether the framework installs its menu-bar status item ("Show …" / Settings /
+    /// Whether the framework installs its menu-bar status item ("Show ..." / Settings /
     /// Quit). Defaults to `true`. Set to `false` for a host with its own menu-bar
     /// presence or none.
     public var showsMenuBarExtra: Bool = true
@@ -69,16 +69,16 @@ public struct NookHostConfiguration: Sendable {
     public init() {}
 
     /// Registers a module by descriptor and factory. The factory receives the module's
-    /// isolated ``NookModuleContext`` and is run lazily — only when the module is first
+    /// isolated ``NookModuleContext`` and is run lazily - only when the module is first
     /// activated, not at registration time.
     ///
     /// Traps on a duplicate `descriptor.id`. A module id keys persistence (the
     /// `UserDefaults` suite `"opennook.module.<id>"` and the per-module container
     /// folder), the switcher entry, the arbiter's per-module claim invalidation, and
     /// the direct-jump hotkey registration. Two registrations under the same id would
-    /// collide on every one of those silently — the second factory becomes dead code,
+    /// collide on every one of those silently - the second factory becomes dead code,
     /// the persistence suites alias, and the switcher renders two indistinguishable
-    /// entries — so we fail fast at the setup site (a `main.swift` programming bug)
+    /// entries - so we fail fast at the setup site (a `main.swift` programming bug)
     /// rather than ship the corruption into production.
     public mutating func register(
         _ descriptor: NookModuleDescriptor,
@@ -95,7 +95,7 @@ public struct NookHostConfiguration: Sendable {
     }
 
     /// Registers a module that is just a ``NookConfiguration`` with no extra product
-    /// state — the configuration is wrapped in a ``ClosureModule``.
+    /// state - the configuration is wrapped in a ``ClosureModule``.
     ///
     /// Inherits the duplicate-id `precondition` from the factory overload it delegates
     /// to.
@@ -124,7 +124,7 @@ public struct NookHostConfiguration: Sendable {
     /// Traps on an empty configuration: `NookHostConfiguration` is the multi-module
     /// entry point and is meaningless with zero registrations. An empty registry's
     /// `activeModuleID` resolves to `""`, which the arbiter treats as "background
-    /// module" for every claim — denying everything that isn't `.urgent`. That is a
+    /// module" for every claim - denying everything that isn't `.urgent`. That is a
     /// silent bug; failing fast at registration time surfaces it. Single-module hosts
     /// should use ``NookConfiguration`` directly, not `NookHostConfiguration`.
     @MainActor

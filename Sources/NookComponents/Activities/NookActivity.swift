@@ -17,7 +17,7 @@ public enum NookActivityPriority: Int, Comparable, Sendable {
     }
 }
 
-/// One transient activity to surface in the notch — a "download finished", a "build
+/// One transient activity to surface in the notch - a "download finished", a "build
 /// succeeded", a "message arrived".
 ///
 /// Hand activities to a ``NookActivityQueue``; it orders them by ``priority``, collapses

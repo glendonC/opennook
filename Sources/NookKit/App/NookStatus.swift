@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// Severity of a transient ``NookStatus`` message — drives the banner's glyph so an
+/// Severity of a transient ``NookStatus`` message - drives the banner's glyph so an
 /// informational or success message reads differently from an error.
 ///
 /// The framework chrome stays on its minimal palette (the glyph is tinted with the

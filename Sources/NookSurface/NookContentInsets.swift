@@ -35,7 +35,7 @@ import SwiftUI
 /// }
 /// ```
 ///
-/// The values represent residual clearance — the chrome's own pre-applied
+/// The values represent residual clearance - the chrome's own pre-applied
 /// paddings (the horizontal inset by `topCornerRadius`, the small bottom
 /// safe-area strip) are already subtracted, so an inset of `0` means "the
 /// chrome's geometry doesn't intrude into your frame on that edge."
@@ -62,7 +62,7 @@ public struct NookContentInsets: Equatable, Sendable {
         self.trailing = trailing
     }
 
-    /// No clearance needed — the default before the chrome computes its
+    /// No clearance needed - the default before the chrome computes its
     /// geometry (and the value reported in `.compact`/`.hidden`, where no host
     /// expanded content is laid out).
     public static let zero = NookContentInsets()
@@ -88,7 +88,7 @@ extension NookContentInsets {
     /// Each residual is `curve − chromePrePad`, floored at zero: the curve intrudes
     /// into the host frame by however much it exceeds the chrome's own inset on that
     /// edge. Tightening `chromeSafeAreaInsets.bottom` therefore *raises* the reported
-    /// bottom residual — with less pre-padding, a host pinning content into a bottom
+    /// bottom residual - with less pre-padding, a host pinning content into a bottom
     /// *corner* must inset more itself to clear the curve. Horizontally-centered
     /// content stays clear of the corners and can ignore the residual.
     static func expanded(

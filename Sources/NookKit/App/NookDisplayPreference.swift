@@ -13,11 +13,11 @@ import Foundation
 /// "which screen" is a real choice. This expresses that choice in a form that
 /// survives reboots and display reconfiguration:
 ///
-/// - ``Mode/builtIn`` — the laptop's built-in (notched) panel. The default: a notch
+/// - ``Mode/builtIn`` - the laptop's built-in (notched) panel. The default: a notch
 ///   app's chrome belongs where the physical notch is.
-/// - ``Mode/main`` — whichever display currently hosts the active menu bar
+/// - ``Mode/main`` - whichever display currently hosts the active menu bar
 ///   (`NSScreen.main`). Follows the user's focus across screens.
-/// - ``Mode/specific`` — a single named display, pinned by its stable display UUID
+/// - ``Mode/specific`` - a single named display, pinned by its stable display UUID
 ///   (``displayUUID``). Survives unplug/replug and arrangement changes.
 ///
 /// Resolving a preference to a concrete `NSScreen` is ``NookScreenLocator``'s job;

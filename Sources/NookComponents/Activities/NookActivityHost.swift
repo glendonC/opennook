@@ -40,7 +40,7 @@ public struct NookActivityHost<Content: View>: View {
     }
 }
 
-/// The default activity card — icon, title, subtitle. Reads `\.nookResolvedTheme` from
+/// The default activity card - icon, title, subtitle. Reads `\.nookResolvedTheme` from
 /// the environment so it tracks the configured chrome palette.
 public struct NookActivityCard: View {
     private let activity: NookActivity

@@ -12,7 +12,7 @@ import Foundation
 /// The device/volume/mute reads ``SystemVolumeObserver`` depends on.
 ///
 /// Factored behind a protocol so the observer's CoreAudio dependency is an injectable
-/// seam — production uses ``CoreAudioVolumeReader``; tests pass a fake so the
+/// seam - production uses ``CoreAudioVolumeReader``; tests pass a fake so the
 /// default-device rebind, the main-element-vs-per-channel fallback, mute reads, and
 /// clamping can all be exercised without a live audio device. This mirrors the
 /// injectable `sleep` closure on `NookActivityQueue`.
@@ -23,7 +23,7 @@ public protocol VolumeReading: Sendable {
     /// The current default output device, or `nil` when none is available.
     func defaultOutputDevice() -> AudioDeviceID?
 
-    /// The device's output volume — `nil` when neither a main-element scalar nor any
+    /// The device's output volume - `nil` when neither a main-element scalar nor any
     /// per-channel scalar can be read. Not required to be clamped; the observer clamps.
     func readVolume(_ device: AudioDeviceID) -> Double?
 
@@ -33,7 +33,7 @@ public protocol VolumeReading: Sendable {
 
 /// Observes the system's default-output-device volume and mute state.
 ///
-/// Built entirely on public CoreAudio property listeners — no private API, no special
+/// Built entirely on public CoreAudio property listeners - no private API, no special
 /// entitlement, App Store-safe. It tracks the *default output device* and re-binds when
 /// that changes (headphones plugged in, an output switched in Control Center), so the
 /// reported level always follows wherever sound is going.
@@ -55,7 +55,7 @@ public final class SystemVolumeObserver: ObservableObject {
 
     private var deviceID = AudioObjectID(kAudioObjectUnknown)
 
-    /// The injectable read seam — real CoreAudio in production, a fake in tests.
+    /// The injectable read seam - real CoreAudio in production, a fake in tests.
     private let reader: VolumeReading
 
     /// CoreAudio listener block type. `AudioObjectPropertyListenerBlock` is imported
@@ -74,7 +74,7 @@ public final class SystemVolumeObserver: ObservableObject {
 
     /// Internal counters: number of `AudioObjectAddPropertyListenerBlock` and
     /// `AudioObjectRemovePropertyListenerBlock` calls the observer has made over its
-    /// lifetime. Used by the test suite to verify add/remove balance — every Add must
+    /// lifetime. Used by the test suite to verify add/remove balance - every Add must
     /// be paired with a Remove. Atomic-int-safe because the observer is `@MainActor`
     /// and all mutations are on the main actor.
     var addedListenerCountForTesting: Int = 0
@@ -85,7 +85,7 @@ public final class SystemVolumeObserver: ObservableObject {
     public init(reader: VolumeReading = CoreAudioVolumeReader()) {
         self.reader = reader
         // `init` runs on the main actor (the type is `@MainActor`-isolated), so the
-        // binding below — which writes `@Published` state — is already correct. The
+        // binding below - which writes `@Published` state - is already correct. The
         // CoreAudio listener blocks registered here are dispatched on the main queue and
         // hop back to the main actor before mutating anything; no `Thread.isMainThread`
         // guard is needed now that the isolation is real and enforced by the compiler.
@@ -96,7 +96,7 @@ public final class SystemVolumeObserver: ObservableObject {
     deinit {
         // `deinit` is non-isolated and may run on any thread. It is sound regardless:
         // `AudioObjectRemovePropertyListenerBlock` is itself thread-safe, and the
-        // listener/device state read here is only ever written on the main actor — once
+        // listener/device state read here is only ever written on the main actor - once
         // the last reference is gone no listener block can still be racing this. The
         // listener removal is inlined here (rather than calling the main-actor
         // `removeDeviceListeners()`) precisely because `deinit` is non-isolated.
@@ -128,7 +128,7 @@ public final class SystemVolumeObserver: ObservableObject {
     }
 
     /// Test-only seam: runs the same listener teardown `deinit` does, but on the
-    /// main actor so it can bump the test counters. Idempotent — calling it twice
+    /// main actor so it can bump the test counters. Idempotent - calling it twice
     /// will only decrement once for any listener it actually removed.
     func tearDownForTesting() {
         removeDeviceListeners()
@@ -219,7 +219,7 @@ public final class SystemVolumeObserver: ObservableObject {
     // MARK: - Property addresses
 
     /// `nonisolated` so the non-isolated `deinit` and the `Sendable`
-    /// ``CoreAudioVolumeReader`` can both build addresses — the function is pure.
+    /// ``CoreAudioVolumeReader`` can both build addresses - the function is pure.
     nonisolated static func address(
         _ selector: AudioObjectPropertySelector,
         _ scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal
@@ -248,7 +248,7 @@ func resolveVolumeFallback(mainScalar: Double?, channelScalars: [Double]) -> Dou
     return channelScalars.reduce(0, +) / Double(channelScalars.count)
 }
 
-/// The production ``VolumeReading`` — talks to CoreAudio directly. Stateless and
+/// The production ``VolumeReading`` - talks to CoreAudio directly. Stateless and
 /// `Sendable`, so it is safe to capture into the observer's listener blocks.
 public struct CoreAudioVolumeReader: VolumeReading {
     public init() {}
@@ -263,14 +263,14 @@ public struct CoreAudioVolumeReader: VolumeReading {
         return status == noErr && device != AudioObjectID(kAudioObjectUnknown) ? device : nil
     }
 
-    /// Reads the device's output volume — the main-element scalar if it has one,
+    /// Reads the device's output volume - the main-element scalar if it has one,
     /// otherwise the average of every per-channel scalar the device advertises. The
     /// main-vs-channel decision is delegated to
     /// ``resolveVolumeFallback(mainScalar:channelScalars:)``.
     ///
     /// The per-channel pass enumerates the channels from the device's actual output
     /// stream configuration (``outputChannelCount(for:)``) rather than the previous
-    /// hard-coded `{1, 2}` — a 5.1 or 7.1 device's volume control lives on channels
+    /// hard-coded `{1, 2}` - a 5.1 or 7.1 device's volume control lives on channels
     /// 3-6 (center, LFE, rears) and the old probe missed them entirely.
     public func readVolume(_ device: AudioDeviceID) -> Double? {
         var mainScalar: Double?
@@ -287,7 +287,7 @@ public struct CoreAudioVolumeReader: VolumeReading {
 
         var channelScalars: [Double] = []
         let channelCount = Self.outputChannelCount(for: device)
-        // Probe at least channels 1+2 — even when the stream-configuration probe fails
+        // Probe at least channels 1+2 - even when the stream-configuration probe fails
         // or reports zero, stereo is the common case and we want the fallback path
         // unchanged for it.
         let upperBound = max(channelCount, 2)

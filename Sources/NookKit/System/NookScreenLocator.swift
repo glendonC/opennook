@@ -19,7 +19,7 @@ import CoreGraphics
 public enum NookScreenLocator {
     /// A currently-attached display, as surfaced to settings UI.
     public struct DisplayInfo: Identifiable, Equatable, Sendable {
-        /// Stable display UUID — the value stored in ``NookDisplayPreference``.
+        /// Stable display UUID - the value stored in ``NookDisplayPreference``.
         public let uuid: String
         /// Human-readable name (`NSScreen.localizedName`), e.g. "Built-in Retina Display".
         public let name: String
@@ -29,7 +29,7 @@ public enum NookScreenLocator {
         public var id: String { uuid }
     }
 
-    /// The `CGDirectDisplayID` backing a screen. Transient — valid only for the current
+    /// The `CGDirectDisplayID` backing a screen. Transient - valid only for the current
     /// display arrangement; never persist it.
     public static func displayID(for screen: NSScreen) -> CGDirectDisplayID? {
         let key = NSDeviceDescriptionKey("NSScreenNumber")
@@ -81,9 +81,9 @@ public enum NookScreenLocator {
     /// Pure fallback-chain policy: pick the index into `displays` that satisfies
     /// `preference`, degrading rather than vanishing when the chosen display is gone.
     ///
-    /// - `.specific`: the matching UUID, else built-in → main → first.
-    /// - `.builtIn`: built-in → main → first.
-    /// - `.main`: main → built-in → first.
+    /// - `.specific`: the matching UUID, else built-in -> main -> first.
+    /// - `.builtIn`: built-in -> main -> first.
+    /// - `.main`: main -> built-in -> first.
     ///
     /// Returns `nil` only when `displays` is empty. `mainIndex` is the index of the
     /// system's main display within `displays` (the AppKit path derives it from
@@ -115,7 +115,7 @@ public enum NookScreenLocator {
     ///
     /// The fallback chain keeps the chrome on-screen even when the chosen display is
     /// unplugged: a `.specific` display that isn't attached, or a `.builtIn` request on a
-    /// desktop Mac, both degrade to built-in → main → first-attached rather than vanishing.
+    /// desktop Mac, both degrade to built-in -> main -> first-attached rather than vanishing.
     /// Returns `nil` only when no display is attached at all. The policy lives in
     /// ``resolveIndex(preference:displays:mainIndex:)`` so it stays testable headlessly.
     public static func screen(matching preference: NookDisplayPreference) -> NSScreen? {

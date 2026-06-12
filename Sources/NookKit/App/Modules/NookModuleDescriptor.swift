@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// The cheap, registration-time identity of a notch module — everything the host and
+/// The cheap, registration-time identity of a notch module - everything the host and
 /// the module switcher need *before* the module itself is instantiated.
 ///
 /// A ``NookModule`` carries product state and views; a descriptor carries only the
@@ -19,7 +19,7 @@ import SwiftUI
 /// handed to the main actor as part of a ``NookHostConfiguration``, so it genuinely
 /// crosses an isolation boundary and the conformance must be real.
 public struct NookModuleDescriptor: Identifiable, Sendable {
-    /// Stable, unique identifier — reverse-DNS by convention (`"com.you.nuggie"`).
+    /// Stable, unique identifier - reverse-DNS by convention (`"com.you.nuggie"`).
     /// Used as the switcher key, the per-module `UserDefaults` suite name, and the
     /// on-disk container folder name, so it must not change across releases.
     public let id: String
@@ -29,13 +29,13 @@ public struct NookModuleDescriptor: Identifiable, Sendable {
 
     /// SF Symbol shown for this module in the module switcher. (The top-bar leading
     /// cluster is driven separately by ``NookTopBarConfiguration/leadingIcon`` and the
-    /// host brand mark — not by this descriptor.)
+    /// host brand mark - not by this descriptor.)
     public var icon: String
 
     /// Accent used to tint the module's switcher entry.
     public var accent: Color
 
-    /// Optional global hotkey that jumps straight to this module. `nil` — the default —
+    /// Optional global hotkey that jumps straight to this module. `nil` - the default - 
     /// means the module is reachable only via the switcher or the cycle hotkey.
     public var hotkey: NookHotkey?
 
@@ -49,7 +49,7 @@ public struct NookModuleDescriptor: Identifiable, Sendable {
         case unloadOnSwitchAway
 
         /// Keep the module instance alive in the background so its services and
-        /// activity queue keep running. It can still post activities — the
+        /// activity queue keep running. It can still post activities - the
         /// `SurfaceArbiter` gates whether a background module reaches the surface.
         case stayResident
     }

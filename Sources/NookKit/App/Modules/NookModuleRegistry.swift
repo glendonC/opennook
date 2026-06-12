@@ -12,7 +12,7 @@ import Foundation
 ///
 /// Registration is cheap (descriptors + factories); construction is deferred until a
 /// module is first activated. A constructed module is cached with its
-/// ``NookModuleContext`` until ``unload(_:)`` drops it — which the host does for a
+/// ``NookModuleContext`` until ``unload(_:)`` drops it - which the host does for a
 /// module whose ``NookModuleDescriptor/backgroundPolicy`` is `.unloadOnSwitchAway`.
 @MainActor
 public final class NookModuleRegistry {
@@ -29,7 +29,7 @@ public final class NookModuleRegistry {
 
     private let registrations: [Registration]
 
-    /// The module shown at launch — the host's explicit choice, else the first registered.
+    /// The module shown at launch - the host's explicit choice, else the first registered.
     public let defaultModuleID: String
 
     /// Optional global shortcut that cycles to the next module. `nil` when the host did
@@ -43,7 +43,7 @@ public final class NookModuleRegistry {
     public let branding: NookHostBranding
 
     /// Process-global chrome behavior (hover side-effects, cold-launch shimmer,
-    /// appearance→backdrop mapping). Held here for the same reason as ``branding`` — so
+    /// appearance->backdrop mapping). Held here for the same reason as ``branding`` - so
     /// ``ModuleHost`` and ``AppCoordinator`` can read it without a reference back to the
     /// host configuration. See ``NookChromeBehavior``.
     public let chromeBehavior: NookChromeBehavior
@@ -59,11 +59,11 @@ public final class NookModuleRegistry {
 
     /// One broker per host process, shared across every module. Registered into each
     /// module's ``AppServices`` as ``NookModuleContext`` is built, so a view in module A
-    /// and a view in module B both resolve the same instance — pins compose into one
+    /// and a view in module B both resolve the same instance - pins compose into one
     /// aggregate signal the coordinator can fold into ``AppCoordinator/isUserEngaged``.
     public let presentationPinning: NookPresentationPinning
 
-    /// One file picker per host process, shared across every module — same lifetime and
+    /// One file picker per host process, shared across every module - same lifetime and
     /// rationale as ``presentationPinning`` (it depends on that broker to hold the
     /// surface while a panel is up). Registered into each module's ``AppServices`` as
     /// ``NookModuleContext`` is built. See ``NookFilePicker``.
@@ -93,7 +93,7 @@ public final class NookModuleRegistry {
         self.filePicker = NookFilePicker(presentationPinning: presentationPinning)
     }
 
-    /// All registered modules' descriptors, in registration order — the switcher's list.
+    /// All registered modules' descriptors, in registration order - the switcher's list.
     public var descriptors: [NookModuleDescriptor] {
         registrations.map(\.descriptor)
     }

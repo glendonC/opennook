@@ -14,14 +14,14 @@ import UniformTypeIdentifiers
 ///
 /// **Why a module shouldn't roll its own `NSOpenPanel`.** The host is an agent app
 /// (`LSUIElement`) whose only window is a `.nonactivatingPanel`. Clicking the notch
-/// never activates the app — that is the point of a non-activating panel — so at the
+/// never activates the app - that is the point of a non-activating panel - so at the
 /// moment a module asks for a file, the app is *inactive*. An `NSOpenPanel` presented
 /// by an inactive agent app comes up non-key: it may appear behind the frontmost app
 /// and its sidebar / navigation stop responding to clicks. The fix is to request app
 /// activation immediately before presenting. Every module would otherwise have to
 /// rediscover this; the host owns it once, here.
 ///
-/// **Pinning.** A picker is a separate AppKit panel outside the notch window — the same
+/// **Pinning.** A picker is a separate AppKit panel outside the notch window - the same
 /// situation ``NookPresentationPinning`` exists for. While the panel is up the pointer
 /// has left the notch, so without intervention the surface auto-compacts (taking nothing
 /// visible with it, but dropping engagement) and a competing module's arbiter claim can
@@ -157,8 +157,8 @@ public struct NookSaveOptions: Sendable {
 ///
 /// The system starts security-scoped access on panel-returned URLs implicitly. This
 /// type balances that grant: it stops access for each URL when it is released
-/// (`deinit`), so a long-running process doesn't leak the scope. Do content reads —
-/// or capture a `.withSecurityScope` bookmark to persist access across launches —
+/// (`deinit`), so a long-running process doesn't leak the scope. Do content reads - 
+/// or capture a `.withSecurityScope` bookmark to persist access across launches - 
 /// while the selection is alive, ideally inside ``withAccess(_:)``. After the selection
 /// is released the URLs are path-level only and reads will fail under the sandbox.
 public final class NookFileSelection: Sendable {
@@ -166,7 +166,7 @@ public final class NookFileSelection: Sendable {
     /// destination URL.
     public let urls: [URL]
 
-    /// The first (or only) picked URL — convenient for the save / single-file case.
+    /// The first (or only) picked URL - convenient for the save / single-file case.
     public var url: URL? { urls.first }
 
     init(urls: [URL]) {
@@ -175,8 +175,8 @@ public final class NookFileSelection: Sendable {
 
     /// Runs `body` while the selection's security-scoped access is live, returning its
     /// result. The access is already active for the selection's lifetime; this method is
-    /// the recommended bracket for reads and bookmark capture so the intent — "use the
-    /// files now, while you're allowed to" — is explicit at the call site.
+    /// the recommended bracket for reads and bookmark capture so the intent - "use the
+    /// files now, while you're allowed to" - is explicit at the call site.
     @discardableResult
     public func withAccess<T>(_ body: ([URL]) throws -> T) rethrows -> T {
         try body(urls)
@@ -287,7 +287,7 @@ public final class NookFilePicker: NookFilePresenting {
         return await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<[URL], Never>) in
                 // If the surrounding task was already cancelled, don't even show the
-                // panel — resume empty. `begin` is never called, so there is exactly one
+                // panel - resume empty. `begin` is never called, so there is exactly one
                 // resume on this path.
                 if Task.isCancelled {
                     continuation.resume(returning: [])
@@ -300,7 +300,7 @@ public final class NookFilePicker: NookFilePresenting {
         } onCancel: {
             // Task cancelled (e.g. the presenting view went away). Dismiss the panel;
             // that routes through `begin`'s single completion with `.cancel`, which is
-            // the only place the continuation resumes — so no double-resume.
+            // the only place the continuation resumes - so no double-resume.
             Task { @MainActor [weak self] in
                 self?.activePanel?.cancel(nil)
             }

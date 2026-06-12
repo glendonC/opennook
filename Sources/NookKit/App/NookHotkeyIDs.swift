@@ -11,7 +11,7 @@
 /// fallback) can match against them without a magic-string literal that drifts from
 /// the registration call site in ``AppCoordinator``.
 ///
-/// Module-defined registrations use `"module.\(id)"` and `"cycle"` — these too are
+/// Module-defined registrations use `"module.\(id)"` and `"cycle"` - these too are
 /// declared here so a host can recognise them when iterating
 /// ``AppState/hotkeyRegistrationFailures``.
 enum NookHotkeyIDs {

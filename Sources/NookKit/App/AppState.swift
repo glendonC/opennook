@@ -8,7 +8,7 @@
 import Combine
 import Foundation
 
-/// Which framework chrome screen is filling the expanded surface — the active module's
+/// Which framework chrome screen is filling the expanded surface - the active module's
 /// home view, or the framework Settings panel.
 ///
 /// `NookExpandedView` routes off this. When the host disabled Settings
@@ -40,7 +40,7 @@ public struct HotkeyRegistrationFailure: Equatable, Sendable {
 }
 
 /// Mutable, observable state shared between the coordinator and views.
-/// Holds chrome-level concerns (view mode, appearance, keep-open, visibility) — product
+/// Holds chrome-level concerns (view mode, appearance, keep-open, visibility) - product
 /// data lives in whatever model layer a downstream fork adds on top.
 ///
 /// **Swap point for product state.** A downstream fork that needs cross-view product
@@ -53,7 +53,7 @@ public final class AppState: ObservableObject {
     @Published public private(set) var viewMode: NookViewMode = .home
 
     /// Persisted appearance personalization (palette, surface style, presentation,
-    /// haptics, keep-open). Assigning replaces the whole value — use
+    /// haptics, keep-open). Assigning replaces the whole value - use
     /// ``replaceAppearancePreferences(_:)`` to also persist the change.
     @Published public var appearancePreferences = NookAppearancePreferences.default
 
@@ -79,25 +79,25 @@ public final class AppState: ObservableObject {
     }
 
     /// `true` while the nook surface is expanded. This is a read-only mirror of the
-    /// surface's own ``NookState`` — the coordinator binds it to `Nook.$state`, so it
+    /// surface's own ``NookState`` - the coordinator binds it to `Nook.$state`, so it
     /// stays accurate for hover- and drag-driven transitions too, not just
     /// coordinator-initiated show/hide. Drive visibility through ``AppCoordinator``,
     /// never by writing this.
     ///
     /// This is purely a view-model mirror. It is NOT consulted by the surface arbiter
-    /// to decide "is the user engaged" — see ``AppCoordinator/isUserEngaged``, which
+    /// to decide "is the user engaged" - see ``AppCoordinator/isUserEngaged``, which
     /// reads an explicit user-intent flag to avoid mistaking the arbiter's own expand
     /// for user engagement.
     @Published public internal(set) var isNookVisible = false
 
-    /// Transient status channel — a short-lived ``NookStatus`` (message + severity) tied
+    /// Transient status channel - a short-lived ``NookStatus`` (message + severity) tied
     /// to a single nook session. Cleared by ``resetTransientStatus()`` on every
     /// show/toggle. Hotkey-registration failures must NOT live here: they outlive a nook
     /// session and need to stay visible until the registration is fixed. Those use
     /// ``hotkeyRegistrationFailures`` instead.
     @Published public var status: NookStatus?
 
-    /// Back-compatible string view of ``status`` — reading returns the current message,
+    /// Back-compatible string view of ``status`` - reading returns the current message,
     /// writing posts an `.error`-severity status (and `nil` clears it). Prefer
     /// ``showStatus(_:severity:)`` to post non-error severities.
     public var errorMessage: String? {
@@ -117,7 +117,7 @@ public final class AppState: ObservableObject {
     /// ``resetTransientStatus()``: a failed registration stays surfaced until that
     /// registration actually succeeds (or the offending hotkey is changed), at which
     /// point the coordinator clears that id's entry. Each entry reflects the CURRENT
-    /// outcome of its registration — not a last-writer-wins shared string.
+    /// outcome of its registration - not a last-writer-wins shared string.
     @Published public internal(set) var hotkeyRegistrationFailures: [String: HotkeyRegistrationFailure] = [:]
 
     /// Records the outcome of one hotkey registration attempt: `failure` non-nil keeps
@@ -136,19 +136,19 @@ public final class AppState: ObservableObject {
     @Published public var isRecordingHotkey = false
 
     /// Mirrors `Nook.isDragInFlight`. `true` while a system file-drag session is over the
-    /// panel — kept as a hook-point for downstream consumers that want drop targets.
+    /// panel - kept as a hook-point for downstream consumers that want drop targets.
     @Published public var isDragInFlight: Bool = false
 
     /// Optional secondary label rendered in the top bar after the leading title
     /// (`[icon] Module  ›  Breadcrumb`). Modules use this to surface the current
-    /// drill-down context — a selected deck, an open document, a chosen profile
-    /// — so the chrome reflects what the user is actually looking at, instead of
+    /// drill-down context - a selected deck, an open document, a chosen profile
+    /// - so the chrome reflects what the user is actually looking at, instead of
     /// the module's static name. Set to `nil` to clear.
     ///
     /// The chrome treats this as a soft state hint: it doesn't affect ``viewMode``
     /// or the back-to-home affordance. A module that wants the breadcrumb to be
     /// clickable (e.g. "click to pop back one level") owns that interaction
-    /// inside its own surface — the chrome only renders the text.
+    /// inside its own surface - the chrome only renders the text.
     @Published public var moduleBreadcrumb: String?
 
     /// Loads the persisted appearance, hotkey, and display preferences from
@@ -160,7 +160,7 @@ public final class AppState: ObservableObject {
     /// Loads the persisted appearance, hotkey, and display preferences from
     /// `UserDefaults`, falling back to the host's launch *seed* (rather than the
     /// framework `.default`) for any entry that has never been persisted. See
-    /// ``NookPreferenceDefaults`` for the seed semantics — the seed is never written
+    /// ``NookPreferenceDefaults`` for the seed semantics - the seed is never written
     /// here, so a persisted user choice always wins.
     public init(preferenceDefaults: NookPreferenceDefaults) {
         appearancePreferences = NookAppearanceStore.load(default: preferenceDefaults.appearance)
@@ -170,7 +170,7 @@ public final class AppState: ObservableObject {
 
     /// Replaces ``appearancePreferences`` and writes the new value to `UserDefaults`. A
     /// no-op when the value is unchanged. Prefer this over assigning the property
-    /// directly — direct assignment skips persistence.
+    /// directly - direct assignment skips persistence.
     public func replaceAppearancePreferences(_ preferences: NookAppearancePreferences) {
         guard preferences != appearancePreferences else {
             return

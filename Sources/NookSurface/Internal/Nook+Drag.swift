@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -19,7 +19,7 @@ import AppKit
 // transitions are idempotent.
 //
 // Lives in its own file so `Nook.swift` stays focused on lifecycle/transition
-// concerns. The stored `dragSession` property is still declared on `Nook` itself —
+// concerns. The stored `dragSession` property is still declared on `Nook` itself - 
 // only the surrounding state machine and the destination-callback conformance
 // extract here.
 
@@ -31,8 +31,8 @@ extension Nook {
     /// guarantee a state machine can lean on: `draggingExited` can arrive *before*
     /// `draggingEnded` for one session, a slow or rejected `onFileDrop` can let a fresh
     /// `draggingEntered` interleave, and `draggingUpdated` fires repeatedly. Rather than
-    /// scatter `stateBeforeDrag`/`isDragInFlight` mutations across those entry points —
-    /// correct only by luck of ordering — the whole session lives in this one enum with
+    /// scatter `stateBeforeDrag`/`isDragInFlight` mutations across those entry points - 
+    /// correct only by luck of ordering - the whole session lives in this one enum with
     /// idempotent transitions.
     enum DragSession: Equatable {
         /// No drag over the panel.
@@ -52,7 +52,7 @@ extension Nook: NookDragDestination {
     /// idempotent no-ops that preserve the original snapshot.
     func nookPanelDraggingEntered(_ urls: [URL]) -> NSDragOperation {
         guard case .idle = dragSession else {
-            // Already active — a forwarded `draggingUpdated`, or a duplicate enter.
+            // Already active - a forwarded `draggingUpdated`, or a duplicate enter.
             // Keep the original snapshot; the advertised operation is unchanged.
             return .copy
         }
@@ -89,7 +89,7 @@ extension Nook: NookDragDestination {
     }
 
     /// End the current drag session exactly once. Reads the snapshot out of the session
-    /// state, flips it to `.idle`, and — if asked — restores the captured prior state.
+    /// state, flips it to `.idle`, and - if asked - restores the captured prior state.
     /// Calling this when already `.idle` is a no-op, which is what makes the destination
     /// robust against AppKit's duplicate and out-of-order exit/end/drop callbacks.
     private func endDragSession(restorePriorState: Bool) {

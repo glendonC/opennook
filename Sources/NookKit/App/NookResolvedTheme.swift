@@ -11,7 +11,7 @@ import SwiftUI
 /// Resolved palette for one layout pass: respects the chrome palette, system appearance,
 /// and Reduce Transparency.
 ///
-/// Every color is built **explicitly** from black or white at a fixed opacity — never from
+/// Every color is built **explicitly** from black or white at a fixed opacity - never from
 /// system-adaptive colors like `Color.primary`. A nook lives on a non-activating panel
 /// whose SwiftUI `colorScheme` environment is unreliable, so an adaptive color could resolve
 /// for the wrong appearance (e.g. white text on the white light-mode panel). Resolving the
@@ -27,7 +27,7 @@ public struct NookResolvedTheme: Sendable {
 
     public var headerInactiveIcon: Color
 
-    /// The interactive tint for chrome controls — the active lock/gear glyphs, focus rings,
+    /// The interactive tint for chrome controls - the active lock/gear glyphs, focus rings,
     /// and the surface `.tint`. Defaults to the macOS system accent (`controlAccentColor`)
     /// so the chrome matches the user's system unless a host overrides it. Set this in a
     /// custom palette to make the chrome track *your* brand color instead of system blue.
@@ -43,7 +43,7 @@ public struct NookResolvedTheme: Sendable {
     /// directly and feed it to ``NookConfiguration/theme``; the framework's own
     /// palette is produced by ``resolve(preferences:effectiveColorScheme:reduceTransparency:)``.
     ///
-    /// Every color should be an explicit black/white-at-opacity value — see the type
+    /// Every color should be an explicit black/white-at-opacity value - see the type
     /// note above on why system-adaptive colors render wrong on the nook's panel.
     ///
     /// `accent` and `fontDesign` are defaulted, so a palette can fill only the color
@@ -135,7 +135,7 @@ public extension EnvironmentValues {
 
 public extension NookResolvedTheme {
     /// Resolves chrome using saved prefs, the **application's effective appearance** for
-    /// “Match Mac” (SwiftUI’s `colorScheme` is unreliable on menu-bar panels), and Reduce
+    /// "Match Mac" (SwiftUI's `colorScheme` is unreliable on menu-bar panels), and Reduce
     /// Transparency.
     ///
     /// Reads the appearance off `NSApplication.shared` rather than the `NSApp` global so

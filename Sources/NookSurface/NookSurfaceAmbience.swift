@@ -22,7 +22,7 @@ public struct NookAmbientColorPreferenceKey: PreferenceKey {
 }
 
 /// A top-to-bottom wash rendered behind expanded surface content when a `NookAmbientColorPreferenceKey`
-/// value is present. Purely decorative and non-interactive — the engine draws it but does
+/// value is present. Purely decorative and non-interactive - the engine draws it but does
 /// not interpret it.
 public struct NookAmbientColorBackground: View {
     let color: Color

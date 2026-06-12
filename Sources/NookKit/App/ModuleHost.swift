@@ -15,7 +15,7 @@ import SwiftUI
 /// single observable seam that makes that possible: the surface's expanded and compact
 /// content are *router views* observing this object, so re-publishing
 /// ``configuration`` re-renders the surface with the new module's content, theme, and
-/// chrome — without rebuilding the `Nook` or its window.
+/// chrome - without rebuilding the `Nook` or its window.
 ///
 /// In a single-module host the active module never changes; the object still exists so
 /// the coordinator has a uniform path to the active configuration and context.
@@ -27,7 +27,7 @@ public final class ModuleHost: ObservableObject {
     /// The id of the module whose content currently fills the surface.
     @Published public private(set) var activeModuleID: String
 
-    /// The active module's surface configuration — home/compact content, theme, chrome
+    /// The active module's surface configuration - home/compact content, theme, chrome
     /// opt-outs, lifecycle hooks. Re-publishing this is what a module switch *is*; the
     /// router views observe it.
     @Published public private(set) var configuration: NookConfiguration
@@ -39,7 +39,7 @@ public final class ModuleHost: ObservableObject {
         self.configuration = registry.module(for: id)?.makeConfiguration() ?? NookConfiguration()
     }
 
-    /// Single-module convenience — wraps one ``NookConfiguration`` as a lone module so
+    /// Single-module convenience - wraps one ``NookConfiguration`` as a lone module so
     /// the existing `NookApp.main(_:)` entry points stay a special case of the host.
     public convenience init(configuration: NookConfiguration) {
         var host = NookHostConfiguration()
@@ -66,12 +66,12 @@ public final class ModuleHost: ObservableObject {
     /// The active module's isolated context.
     public var activeContext: NookModuleContext? { registry.context(for: activeModuleID) }
 
-    /// The active module's service bag — what the surface binds to `\.appServices`.
+    /// The active module's service bag - what the surface binds to `\.appServices`.
     /// Falls back to an empty bag in the impossible case that no context can be resolved
     /// (the active module is always registered, so in practice this branch is unreachable).
     public var activeServices: AppServices { activeContext?.services ?? AppServices() }
 
-    /// `true` when more than one module is registered — i.e. a switcher is meaningful.
+    /// `true` when more than one module is registered - i.e. a switcher is meaningful.
     public var isMultiModule: Bool { registry.descriptors.count > 1 }
 
     /// Optional global shortcut that cycles modules, as configured by the host.
@@ -81,8 +81,8 @@ public final class ModuleHost: ObservableObject {
     /// the show/hide hotkey label, the menu-bar fallback). See ``NookHostBranding``.
     public var branding: NookHostBranding { registry.branding }
 
-    /// Process-global chrome behavior — hover side-effects, the cold-launch shimmer, and
-    /// the appearance→backdrop mapping. See ``NookChromeBehavior``.
+    /// Process-global chrome behavior - hover side-effects, the cold-launch shimmer, and
+    /// the appearance->backdrop mapping. See ``NookChromeBehavior``.
     public var chromeBehavior: NookChromeBehavior { registry.chromeBehavior }
 
     /// Whether the framework installs its menu-bar status item. See
@@ -93,12 +93,12 @@ public final class ModuleHost: ObservableObject {
     /// ``NookHostConfiguration/moduleSwitcherPlacement``.
     public var switcherPlacement: NookModuleSwitcherPlacement { registry.switcherPlacement }
 
-    /// Modules that want the user's attention while in the background — the switcher
+    /// Modules that want the user's attention while in the background - the switcher
     /// badges these. A backgrounded module (or a component running on its behalf) calls
     /// ``requestAttention(for:)``; switching to a module clears its badge.
     @Published public private(set) var attentionModuleIDs: Set<String> = []
 
-    /// Flags `moduleID` as wanting attention. Ignored for the foreground module — it is
+    /// Flags `moduleID` as wanting attention. Ignored for the foreground module - it is
     /// already on screen, so there is nothing to badge.
     public func requestAttention(for moduleID: String) {
         guard moduleID != activeModuleID else { return }
@@ -114,9 +114,9 @@ public final class ModuleHost: ObservableObject {
     /// re-configures the incoming one, and unloads the outgoing module when its
     /// ``NookModuleDescriptor/backgroundPolicy`` is `.unloadOnSwitchAway`.
     ///
-    /// This is pure module bookkeeping. The surface-side effects of a switch — re-wiring
+    /// This is pure module bookkeeping. The surface-side effects of a switch - re-wiring
     /// the `Nook`'s lifecycle hooks, the once-per-module `onReady`, the synthetic
-    /// `onExpand` — are ``AppCoordinator``'s, driven off the `$configuration` re-publish.
+    /// `onExpand` - are ``AppCoordinator``'s, driven off the `$configuration` re-publish.
     ///
     /// Returns `false` without changing anything when `id` is unregistered or already
     /// the active module.

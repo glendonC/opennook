@@ -9,8 +9,8 @@ import AppKit
 import NookSurface
 import SwiftUI
 
-/// Top-level expanded notch surface. Renders the framework chrome — top bar plus the
-/// Settings panel — and hosts the host app's registered `home` content in between.
+/// Top-level expanded notch surface. Renders the framework chrome - top bar plus the
+/// Settings panel - and hosts the host app's registered `home` content in between.
 ///
 /// The home surface is injected, not forked: `NookConfiguration` supplies the `home`
 /// closure (defaulting to ``NookPlaceholderHomeView``). The top bar and Settings stay
@@ -18,7 +18,7 @@ import SwiftUI
 ///
 /// Sizing: the chrome sizes the panel to whatever this view measures. The demo pins a
 /// stable `NookLayout.width` so the panel doesn't resize between the home and settings
-/// surfaces — remove that `.frame(width:)` to let the panel size purely to content.
+/// surfaces - remove that `.frame(width:)` to let the panel size purely to content.
 public struct NookExpandedView: View {
     @ObservedObject var appState: AppState
 
@@ -39,7 +39,7 @@ public struct NookExpandedView: View {
     /// See ``NookConfiguration/settings``.
     let settings: (@Sendable @MainActor () -> AnyView)?
 
-    /// The framework top bar's host-configurable surface — leading cluster, top-bar
+    /// The framework top bar's host-configurable surface - leading cluster, top-bar
     /// visibility, Settings visibility. See ``NookTopBarConfiguration``.
     let topBar: NookTopBarConfiguration
 
@@ -65,7 +65,7 @@ public struct NookExpandedView: View {
     /// Insets injected by the chrome (`NookSurface`) relative to this view's
     /// outer frame. The VStack below sits inside ``NookLayout/edgePadding``, so
     /// re-inject a reduced copy of the insets for the top-bar and the host's
-    /// home/settings surface to read — they see clearance relative to their
+    /// home/settings surface to read - they see clearance relative to their
     /// own frame, not the outer one.
     @Environment(\.nookContentInsets) private var outerContentInsets
 
@@ -117,7 +117,7 @@ public struct NookExpandedView: View {
     }
 
     /// Vertical-only insets for descendants after ``columnGutter`` is applied once
-    /// on the expanded column — prevents double horizontal padding drift.
+    /// on the expanded column - prevents double horizontal padding drift.
     private var verticalContentInsets: NookContentInsets {
         NookContentInsets(top: columnGutter.top, bottom: columnGutter.bottom)
     }
@@ -231,7 +231,7 @@ public struct NookExpandedView: View {
         }
     }
 
-    /// Host-registered home surface. Supplied via ``NookConfiguration`` — no fork needed.
+    /// Host-registered home surface. Supplied via ``NookConfiguration`` - no fork needed.
     private var homeSurface: some View {
         home()
     }

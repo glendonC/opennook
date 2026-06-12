@@ -12,7 +12,7 @@ import SwiftUI
 ///
 /// Minimal by design: a tiny home cluster on the left (matched to right-side icon
 /// weight), and the keep-open / gear glyphs on the right. The only chrome-level
-/// toggle is between the home surface and settings — everything else belongs to
+/// toggle is between the home surface and settings - everything else belongs to
 /// whatever home view a downstream fork plugs in.
 struct NookTopBar: View {
     @ObservedObject var appState: AppState
@@ -57,7 +57,7 @@ struct NookTopBar: View {
     @Environment(\.nookChromeMetrics) private var metrics
     @Environment(\.nookChromeMotion) private var motion
 
-    /// Host branding — used for the leading-cluster brand mark when no `leadingIcon` is
+    /// Host branding - used for the leading-cluster brand mark when no `leadingIcon` is
     /// configured. Injected by the expanded router. See ``NookHostBranding``.
     @Environment(\.nookHostBranding) private var branding
 
@@ -177,9 +177,9 @@ struct NookTopBar: View {
         .fixedSize(horizontal: true, vertical: false)
     }
 
-    /// On home the configured title stays visible next to its icon; in settings —
+    /// On home the configured title stays visible next to its icon; in settings - 
     /// or when a module has pushed a `moduleBreadcrumb` (a drilled-in product
-    /// sub-context) — the label collapses until the user hovers the glyph, which
+    /// sub-context) - the label collapses until the user hovers the glyph, which
     /// doubles as the back control. Clicking it exits Settings or clears the
     /// breadcrumb; the module observes that clear and pops its own sub-state.
     private var homeLeadingCluster: some View {

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -14,8 +14,8 @@ final class NookPanel: NSPanel {
     ///
     /// `.screenSaver` (the next named level above `.statusBar`) is silently
     /// undeliverable for system drag sessions, so we stay below it. The exact magnitude
-    /// is not load-bearing — any value strictly between `.statusBar` (25) and
-    /// `.screenSaver` (1000) works the same — but `+8` mirrors AppKit's own spacing
+    /// is not load-bearing - any value strictly between `.statusBar` (25) and
+    /// `.screenSaver` (1000) works the same - but `+8` mirrors AppKit's own spacing
     /// between adjacent named window levels and leaves headroom for a host to layer
     /// transient surfaces above the chrome without rewriting this offset.
     static let levelOffsetAboveStatusBar: Int = 8
@@ -56,10 +56,10 @@ final class NookPanel: NSPanel {
 
 /// Transparent overlay view that intercepts AppKit drag-and-drop events and forwards
 /// them to a `NookDragDestination`. Sits on top of the SwiftUI hosting view so drag
-/// events reach us before `NSHostingView` swallows them — `hitTest(_:)` returns `nil`
+/// events reach us before `NSHostingView` swallows them - `hitTest(_:)` returns `nil`
 /// so mouse events pass through to the SwiftUI surface untouched.
 ///
-/// Drag handling can't live on the panel itself — `NSDraggingDestination` is informal
+/// Drag handling can't live on the panel itself - `NSDraggingDestination` is informal
 /// on `NSWindow` in Swift, and `NSHostingView` has its own internal drag-types
 /// registration that consumes events before they reach a parent NSView. Routing
 /// through this overlay is the standard AppKit pattern that survives both.
@@ -79,7 +79,7 @@ final class NookDragInterceptingView: NSView {
     /// Pass mouse events through to whatever sits below us in the view hierarchy
     /// (the SwiftUI hosting view). Drag-and-drop uses a separate AppKit code path
     /// that doesn't go through `hitTest(_:)`, so this only neutralizes pointer
-    /// interactions — drag events still land in `draggingEntered(_:)` etc.
+    /// interactions - drag events still land in `draggingEntered(_:)` etc.
     override func hitTest(_ point: NSPoint) -> NSView? {
         nil
     }
@@ -90,7 +90,7 @@ final class NookDragInterceptingView: NSView {
         return dragDestination?.nookPanelDraggingEntered(urls) ?? []
     }
 
-    /// Forward updates as `entered` again — `Nook` is idempotent on enter — so the
+    /// Forward updates as `entered` again - `Nook` is idempotent on enter - so the
     /// returned drag operation stays accurate as the cursor moves within the view.
     override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
         let urls = readFileURLs(from: sender.draggingPasteboard)

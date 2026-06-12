@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -9,7 +9,7 @@
 import SwiftUI
 
 extension NSScreen {
-    /// Heuristic — Apple notched displays expose auxiliary widths on both sides of the camera.
+    /// Heuristic - Apple notched displays expose auxiliary widths on both sides of the camera.
     var hasNotch: Bool {
         auxiliaryTopLeftArea?.width != nil && auxiliaryTopRightArea?.width != nil
     }

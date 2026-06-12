@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2025 Kai Azim — DynamicNotchKit (original)
-// Copyright (c) 2026 Glendon Chin — OpenNook modifications
+// Copyright (c) 2025 Kai Azim - DynamicNotchKit (original)
+// Copyright (c) 2026 Glendon Chin - OpenNook modifications
 //
 // Licensed under the MIT License.
 // Original kit license: /ThirdPartyLicenses/DynamicNotchKit.txt
@@ -42,7 +42,7 @@ public struct NookStyle: Equatable, Sendable {
 
     /// Safe-area strip the chrome reserves around the host's expanded content, applied
     /// as `.safeAreaInset` on each edge of the expanded surface. This is the chrome's
-    /// own clearance — distinct from any padding a host wrapper (e.g. `NookExpandedView`)
+    /// own clearance - distinct from any padding a host wrapper (e.g. `NookExpandedView`)
     /// adds inside it.
     ///
     /// The default (``standardExpandedContentInsets``) reproduces the historical fixed
@@ -50,7 +50,7 @@ public struct NookStyle: Equatable, Sendable {
     /// so the published ``NookContentInsets/top`` reports the full `topCornerRadius`) and
     /// 8 on the other three edges.
     ///
-    /// Tightening `bottom` lets content sit closer to the rounded bottom — useful when a
+    /// Tightening `bottom` lets content sit closer to the rounded bottom - useful when a
     /// host wants to reclaim the dead band below its last row. Because the bottom corners
     /// curve inward by `bottomCornerRadius`, content pinned into a *bottom corner* will
     /// intersect that curve once `bottom` drops below it; the published
@@ -86,6 +86,6 @@ public struct NookStyle: Equatable, Sendable {
     public var openingAnimation: Animation { .bouncy(duration: 0.4) }
     /// The surface's built-in collapse animation. See ``openingAnimation``.
     public var closingAnimation: Animation { .smooth(duration: 0.4) }
-    /// The surface's built-in compact↔expanded animation. See ``openingAnimation``.
+    /// The surface's built-in compact<->expanded animation. See ``openingAnimation``.
     public var conversionAnimation: Animation { .snappy(duration: 0.4) }
 }

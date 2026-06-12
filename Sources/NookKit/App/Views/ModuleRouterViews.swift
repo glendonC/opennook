@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Expanded-surface router. `Nook` builds its expanded content closure exactly once,
-/// so to swap modules at runtime the *view* — not the closure — must observe the
+/// so to swap modules at runtime the *view* - not the closure - must observe the
 /// ``ModuleHost``. When ``ModuleHost/configuration`` is re-published, this view's body
 /// re-evaluates and rebuilds ``NookExpandedView`` from the new configuration: new home
 /// content, new theme, new chrome opt-outs.
@@ -42,7 +42,7 @@ struct ModuleRouterExpandedView: View {
             moduleSwitcher: leadingClusterSwitcher
         )
         // Identity tracks the active module so a switch tears down the old content and
-        // inserts the new — letting the transition cross-fade rather than diff in place.
+        // inserts the new - letting the transition cross-fade rather than diff in place.
         .id(moduleHost.activeModuleID)
         .transition(.opacity)
         // Host-product identity (brand mark, About card, show-hide hotkey label) lives on
@@ -66,7 +66,7 @@ struct ModuleRouterExpandedView: View {
     }
 }
 
-/// Compact-slot router — the collapsed-pill counterpart to ``ModuleRouterExpandedView``.
+/// Compact-slot router - the collapsed-pill counterpart to ``ModuleRouterExpandedView``.
 /// One instance per slot; both observe the same ``ModuleHost`` so a module switch
 /// re-renders the leading and trailing glyphs together.
 struct ModuleRouterCompactView: View {
@@ -88,7 +88,7 @@ struct ModuleRouterCompactView: View {
             content: content
         )
         // The compact slots render in their own view tree (not under NookExpandedView),
-        // so inject the metrics here too — the default compact glyphs read
+        // so inject the metrics here too - the default compact glyphs read
         // `compactSlotSize` from it.
         .environment(\.nookChromeMetrics, configuration.metrics)
     }

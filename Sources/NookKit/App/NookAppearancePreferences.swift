@@ -9,7 +9,7 @@ import Foundation
 import NookSurface
 import SwiftUI
 
-/// Persistent personalization for the Nook chrome — appearance (materials, palette),
+/// Persistent personalization for the Nook chrome - appearance (materials, palette),
 /// layout, and chrome behavior that should survive across launches.
 public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     /// Follow the macOS appearance, or pin the chrome to dark / light.
@@ -18,12 +18,12 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     /// Solid (opaque, matches the notch) or translucent (frosted, shows the wallpaper).
     public var surfaceStyle: NookSurfaceStyle
 
-    /// Notch-fused or free-floating chrome — `.auto` follows the display. See
+    /// Notch-fused or free-floating chrome - `.auto` follows the display. See
     /// ``NookPresentation``. This is what lets OpenNook work on a Mac with no notch.
     public var presentation: NookPresentation
 
     /// When on, completion-style events play a one-shot trackpad haptic via
-    /// `NSHapticFeedbackManager`. Off by default — macOS haptics only fire when the user's
+    /// `NSHapticFeedbackManager`. Off by default - macOS haptics only fire when the user's
     /// hand is on a Force Touch trackpad with system haptics enabled, so this is a bonus
     /// completion signal, never the primary feedback channel.
     public var hapticFeedbackEnabled: Bool
@@ -58,7 +58,7 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
         self.backdropStrength = backdropStrength
     }
 
-    /// Framework defaults — what `NookApp.main()` ships if the host has never written
+    /// Framework defaults - what `NookApp.main()` ships if the host has never written
     /// preferences.
     public static let `default` = NookAppearancePreferences()
 
@@ -99,7 +99,7 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     }
 }
 
-/// Pins the chrome palette to follow macOS or to a fixed light/dark — independent of
+/// Pins the chrome palette to follow macOS or to a fixed light/dark - independent of
 /// the wallpaper-aware ``NookSurfaceStyle``.
 public enum NookChromePalette: String, Codable, Sendable, CaseIterable {
     case followSystem
@@ -107,8 +107,8 @@ public enum NookChromePalette: String, Codable, Sendable, CaseIterable {
     case light
 }
 
-/// `.solid` paints the chrome the same opaque color as the menu-bar notch — true black on
-/// dark, true white on light — so the expanded panel reads as one continuous surface.
+/// `.solid` paints the chrome the same opaque color as the menu-bar notch - true black on
+/// dark, true white on light - so the expanded panel reads as one continuous surface.
 /// `.translucent` shows the wallpaper through a frosted material instead. `.liquidGlass`
 /// renders Apple's Liquid Glass material (macOS 26+), with a layered approximation on
 /// earlier systems; Reduce Transparency collapses both translucent styles to `.solid`.

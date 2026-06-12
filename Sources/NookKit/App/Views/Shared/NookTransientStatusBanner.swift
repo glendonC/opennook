@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Transient status surfaced directly under the top bar.
 ///
-/// Reads ``AppState/status`` — a short-lived message + severity cleared on every
+/// Reads ``AppState/status`` - a short-lived message + severity cleared on every
 /// show/toggle via ``AppState/resetTransientStatus()``. The severity selects the glyph.
 struct NookTransientStatusBanner: View {
     @ObservedObject var appState: AppState

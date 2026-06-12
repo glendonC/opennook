@@ -16,7 +16,7 @@ import UniformTypeIdentifiers
 ///
 /// 1. The shelf lives on a `.nonactivatingPanel`. Drags originated from a SwiftUI
 ///    hosting view inside such a panel often fail when the pasteboard item is bound
-///    to the view's window lifetime — a deferred file representation registers
+///    to the view's window lifetime - a deferred file representation registers
 ///    cheaply at drag-start and runs the file write only when the receiver accepts.
 /// 2. Receivers that demand file *promises* (Mail compose, web upload widgets, many
 ///    sandboxed apps) reject contents-of providers but accept a promise.
@@ -78,7 +78,7 @@ func writeShelfItem(_ item: ShelfItem, to destination: URL) -> Error? {
 /// on the destination name), copies the contents under scope, and hands the URL to
 /// the system.
 ///
-/// Staging via `FileManager.url(for: .itemReplacementDirectory, …)` rather than a
+/// Staging via `FileManager.url(for: .itemReplacementDirectory, ...)` rather than a
 /// `nook-shelf-out-<UUID>` directory under `temporaryDirectory`: the
 /// `itemReplacementDirectory` is the OS-blessed staging area for "move into place"
 /// operations, and macOS reaps it aggressively after the receiver consumes the file.
@@ -91,7 +91,7 @@ func makeShelfDragItemProvider(for item: ShelfItem) -> NSItemProvider {
     let provider = NSItemProvider()
     provider.suggestedName = item.displayName
 
-    // Capture by value — `ShelfItem` is `Sendable`. The closure must not capture the
+    // Capture by value - `ShelfItem` is `Sendable`. The closure must not capture the
     // host SwiftUI view or any actor-isolated state.
     let captured = item
 
@@ -121,7 +121,7 @@ func makeShelfDragItemProvider(for item: ShelfItem) -> NSItemProvider {
         if let error = writeShelfItem(captured, to: destination) {
             completionHandler(nil, false, error)
         } else {
-            // `coordinated: false` — the staging file needs no NSFileCoordinator
+            // `coordinated: false` - the staging file needs no NSFileCoordinator
             // brokering for the receiver to read it. macOS reaps the item-replacement
             // directory once the receiver consumes the promise.
             completionHandler(destination, false, nil)

@@ -10,7 +10,7 @@ import Combine
 import SwiftUI
 
 // Re-exported so a host app needs only `import NookApp` to reach the registration API
-// (`NookConfiguration`, `NookResolvedTheme`, `AppState`, …) and the surface types.
+// (`NookConfiguration`, `NookResolvedTheme`, `AppState`, ...) and the surface types.
 @_exported import NookKit
 @_exported import NookSurface
 
@@ -56,7 +56,7 @@ public enum NookApp {
         main(host)
     }
 
-    /// "Register a view, go" — boots a notch app whose expanded home surface is the
+    /// "Register a view, go" - boots a notch app whose expanded home surface is the
     /// supplied view. Everything else (top bar, Settings, compact glyphs, theme) keeps
     /// the framework defaults.
     ///
@@ -73,8 +73,8 @@ public enum NookApp {
 
     /// Boots a notch app, building the ``NookConfiguration`` on the main actor.
     ///
-    /// Use this overload when setup constructs main-actor-isolated types — a
-    /// `NookComponents` `ShelfStore` or `NookActivityQueue`, a host view model — which
+    /// Use this overload when setup constructs main-actor-isolated types - a
+    /// `NookComponents` `ShelfStore` or `NookActivityQueue`, a host view model - which
     /// can't be created from the (non-isolated) top level of a `main.swift`:
     ///
     /// ```swift
@@ -105,7 +105,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         self.moduleHost = moduleHost
         // Seed the process-global preferences from the host's launch defaults before the
         // coordinator starts, so the first paint and the initial hotkey registration use
-        // them (an `onReady` hook would run too late — after both).
+        // them (an `onReady` hook would run too late - after both).
         self.coordinator = AppCoordinator(
             appState: AppState(preferenceDefaults: host.preferenceDefaults),
             moduleHost: moduleHost
@@ -135,8 +135,8 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = item
         rebuildMenu()
 
-        // The "Settings…" item tracks the active module's `showsSettings`, which can
-        // differ across modules — so rebuild the menu whenever the active module changes
+        // The "Settings..." item tracks the active module's `showsSettings`, which can
+        // differ across modules - so rebuild the menu whenever the active module changes
         // instead of freezing the launch module's chrome into the menu bar.
         moduleHost.$activeModuleID
             .dropFirst()
@@ -155,9 +155,9 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(showNook),
             keyEquivalent: ";"
         ))
-        // "Settings…" tracks the chrome: dropped when the active module disabled Settings,
+        // "Settings..." tracks the chrome: dropped when the active module disabled Settings,
         // since there is no Settings UI to open. "Toggle Stay Expanded" is kept regardless
-        // — it's chrome-independent and is the only keep-open control left once the top
+        // - it's chrome-independent and is the only keep-open control left once the top
         // bar (and its lock) is hidden.
         if moduleHost.configuration.topBar.showsSettings {
             menu.addItem(NSMenuItem(
@@ -172,7 +172,7 @@ private final class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: "k"
         ))
 
-        // Modules — a multi-module host that left switching in the menu bar (the default
+        // Modules - a multi-module host that left switching in the menu bar (the default
         // placement) gets a section here: one item per module, a check on the active one,
         // selecting switches. This keeps switching off the host's expanded surface.
         if moduleHost.switcherPlacement.listsModulesInMenuBar && moduleHost.isMultiModule {

@@ -12,7 +12,7 @@ import Foundation
 ///
 /// A module owns its home view, compact slots, theme, lifecycle hooks (all expressed
 /// through the ``NookConfiguration`` it produces) and its product state and services
-/// (held as stored properties — the module instance *is* its own dependency container).
+/// (held as stored properties - the module instance *is* its own dependency container).
 ///
 /// A module is built by its factory with an isolated ``NookModuleContext``; conventionally
 /// it captures the context and persists through `context.defaults` / `context.containerURL`.
@@ -24,7 +24,7 @@ public protocol NookModule: AnyObject {
     /// registered with.
     var descriptor: NookModuleDescriptor { get }
 
-    /// Builds the surface configuration — home/compact content, theme, chrome opt-outs,
+    /// Builds the surface configuration - home/compact content, theme, chrome opt-outs,
     /// lifecycle hooks. Called when the module becomes active; the result is cached by
     /// the host until the next activation.
     func makeConfiguration() -> NookConfiguration
@@ -40,7 +40,7 @@ public protocol NookModule: AnyObject {
 
     /// Called when switching away, BEFORE ``onDeactivate()`` and any
     /// ``NookModuleDescriptor/backgroundPolicy``-driven teardown. Returns once the
-    /// module has stopped all surface activity — drained any in-flight transient
+    /// module has stopped all surface activity - drained any in-flight transient
     /// presentation and released any surface claim it holds.
     ///
     /// This is the async quiesce seam: ``onDeactivate()`` stays synchronous and is for

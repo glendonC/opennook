@@ -11,7 +11,7 @@ import SwiftUI
 /// A key into the per-module ``AppServices`` container.
 ///
 /// This is the SwiftUI `EnvironmentKey` pattern applied to dependency injection: a
-/// service is keyed by a *key type* it declares — not by its own runtime type — and the
+/// service is keyed by a *key type* it declares - not by its own runtime type - and the
 /// key carries a `defaultValue` so resolution is total (never optional). A module
 /// declares one key per service it offers:
 ///
@@ -29,7 +29,7 @@ public protocol ServiceKey {
     associatedtype Value
 
     /// The value ``AppServices/resolve(_:)`` returns when nothing was registered for
-    /// this key — the dependency-injection analogue of `EnvironmentKey.defaultValue`.
+    /// this key - the dependency-injection analogue of `EnvironmentKey.defaultValue`.
     static var defaultValue: Value { get }
 }
 
@@ -48,13 +48,13 @@ public protocol ServiceKey {
 /// }
 /// context.services.register(ClipboardServiceKey.self, ClipboardService())
 ///
-/// // ...a view resolves it — non-optional, falling back to the key's default:
+/// // ...a view resolves it - non-optional, falling back to the key's default:
 /// @Environment(\.appServices) private var services
 /// let clipboard = services.resolve(ClipboardServiceKey.self)
 /// ```
 ///
 /// `@MainActor`-isolated: registration happens when a module is constructed and
-/// resolution happens during view rendering — both on the main actor. The mutable
+/// resolution happens during view rendering - both on the main actor. The mutable
 /// `storage` is therefore only ever touched from one actor, which strict concurrency
 /// can now prove. `init()` is `nonisolated` (it only sets the empty dictionary) so the
 /// `EnvironmentKey.defaultValue` static can still be constructed from any context; a
@@ -95,8 +95,8 @@ public final class AppServices {
 }
 
 private struct AppServicesEnvironmentKey: EnvironmentKey {
-    // A single shared empty container. `AppServices` is a `@MainActor` class — hence
-    // `Sendable` — with a `nonisolated init`, so this static is concurrency-safe and
+    // A single shared empty container. `AppServices` is a `@MainActor` class - hence
+    // `Sendable` - with a `nonisolated init`, so this static is concurrency-safe and
     // satisfies `EnvironmentKey.defaultValue` without crossing actors.
     static let defaultValue = AppServices()
 }

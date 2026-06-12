@@ -14,7 +14,7 @@ import NookSurface
 /// contention with a stack of granted claims:
 ///
 /// - A claim is granted only if it outranks whatever currently holds the surface, the
-///   user is not engaging the surface, and — for a claim from a background module — its
+///   user is not engaging the surface, and - for a claim from a background module - its
 ///   priority is `.urgent`.
 /// - A higher-priority claim preempts a lower one: it is pushed on top and shows
 ///   immediately. The preempted claim stays on the stack; when it ends it simply leaves
@@ -24,7 +24,7 @@ import NookSurface
 ///
 /// The arbiter is policy only. It owns no surface state machine: every expand/compact/
 /// hide it performs is handed to `runSerial`, which threads it through
-/// `AppCoordinator.enqueueLifecycle` — the one serial chain all surface transitions run
+/// `AppCoordinator.enqueueLifecycle` - the one serial chain all surface transitions run
 /// on. The arbiter never serializes anything itself.
 @MainActor
 final class SurfaceArbiter {
@@ -41,7 +41,7 @@ final class SurfaceArbiter {
     /// token absent from this set as stale and a guaranteed no-op.
     private var liveTokens: Set<NookSurfaceToken> = []
 
-    /// The surface state captured before the first claim took the surface — what the
+    /// The surface state captured before the first claim took the surface - what the
     /// surface restores to once the stack empties. `nil` while no claim is outstanding.
     private var baseRestoreState: NookState?
 
@@ -103,8 +103,8 @@ final class SurfaceArbiter {
             // A background module reaches the surface only with an urgent claim.
             if claim.moduleID != activeModuleID(), claim.priority < .urgent { return }
             // The user owns the surface whenever they are engaging it.
-            // `isUserEngaged()` reflects user intent + hover — NOT mirror surface
-            // state — so the arbiter's own `expand()` below never trips this gate
+            // `isUserEngaged()` reflects user intent + hover - NOT mirror surface
+            // state - so the arbiter's own `expand()` below never trips this gate
             // on a subsequent preempting claim.
             if isUserEngaged() { return }
             // Only a strictly higher priority preempts the claim already on screen.
@@ -124,7 +124,7 @@ final class SurfaceArbiter {
         return granted
     }
 
-    /// Starts the wall-clock watchdog for a granted claim — a presenter that never
+    /// Starts the wall-clock watchdog for a granted claim - a presenter that never
     /// calls `endTransientPresentation` (crashed, has a bug, leaked) is the worst case
     /// this guards against. Cleaning up here keeps the stack bounded and prevents the
     /// "every subsequent claim is denied because a phantom claim still holds the
@@ -137,7 +137,7 @@ final class SurfaceArbiter {
         let moduleID = claim.moduleID
         watchdogs[token] = Task { [weak self] in
             // `Task.sleep` throws on cancellation; the typed-throws fold turns that
-            // into a nil — `end`/`invalidateClaims` cancel the task on a clean exit,
+            // into a nil - `end`/`invalidateClaims` cancel the task on a clean exit,
             // and we silently return.
             guard (try? await Task.sleep(for: maxDuration)) != nil else { return }
             guard let self else { return }
@@ -157,13 +157,13 @@ final class SurfaceArbiter {
         watchdogs.removeValue(forKey: token)?.cancel()
     }
 
-    /// Invalidates every outstanding claim owned by `moduleID` — used when that module
+    /// Invalidates every outstanding claim owned by `moduleID` - used when that module
     /// is being switched away from. Its content is leaving the surface anyway, so the
     /// claims are dropped (not transferred, not frozen) and their tokens go stale.
     ///
     /// This is a synchronous, in-memory policy mutation: it does NOT restore the surface
     /// (the switch transaction owns surface state for the incoming module) and does NOT
-    /// open its own `runSerial` — it is invoked from inside an already-open serial block.
+    /// open its own `runSerial` - it is invoked from inside an already-open serial block.
     func invalidateClaims(ownedBy moduleID: String) {
         let dropped = stack.filter { $0.claim.moduleID == moduleID }
         guard !dropped.isEmpty else { return }
@@ -178,7 +178,7 @@ final class SurfaceArbiter {
     }
 
     /// Releases the claim for `token`. When it was the last outstanding claim the
-    /// surface restores to its pre-presentation state — unless the user has since
+    /// surface restores to its pre-presentation state - unless the user has since
     /// engaged it, in which case their state is left as-is.
     ///
     /// A token whose module was switched away (or otherwise invalidated) is stale: it is
@@ -190,7 +190,7 @@ final class SurfaceArbiter {
             cancelWatchdog(for: token)
             guard let index = stack.firstIndex(where: { $0.token == token }) else { return }
             stack.remove(at: index)
-            // A surviving claim still holds the surface — leave it expanded.
+            // A surviving claim still holds the surface - leave it expanded.
             guard stack.isEmpty else { return }
 
             let restoreTo = baseRestoreState ?? .compact

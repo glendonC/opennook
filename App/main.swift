@@ -8,7 +8,7 @@
 // Xcode app-target trampoline. Cmd-R / xcodebuild assembles a real `.app`
 // bundle around this binary with `App/Info.plist`. Behaviour is identical
 // to the SPM executable trampoline at `Sources/NookExecutable/main.swift`
-// — both delegate to the shared library entry point in `NookApp`.
+// - both delegate to the shared library entry point in `NookApp`.
 
 import NookApp
 

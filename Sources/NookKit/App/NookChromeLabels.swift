@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Host-overridable strings the framework chrome renders — for localization or product
+/// Host-overridable strings the framework chrome renders - for localization or product
 /// naming (e.g. "Preferences" instead of "Settings"). Defaults reproduce today's English.
 ///
 /// Set via ``NookConfiguration/labels``. The values reach the top bar and the status

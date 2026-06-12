@@ -133,6 +133,14 @@ jobs:
           fi
           echo "License headers OK."
 
+  ascii:
+    name: ASCII typography (comments & docs)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check banned typography in comments and markdown prose
+        run: ./Scripts/check-ascii.sh
+
   docs:
     name: DocC build
     runs-on: macos-15

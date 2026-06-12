@@ -36,7 +36,7 @@ jobs:
             experimental: true
     continue-on-error: ${{ matrix.experimental == true }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ matrix.xcode }}
@@ -66,7 +66,7 @@ jobs:
     name: Xcode build (parity with SPM)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # Match the SPM jobs' toolchain: the Liquid Glass surface style references the
       # macOS 26 SDK (`Glass` / `.glassEffect`), which only `latest-stable` carries -
       # the runner's default Xcode does not, so the parity build fails without this.
@@ -92,7 +92,7 @@ jobs:
     name: Launch smoke (examples + Nook)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
@@ -103,7 +103,7 @@ jobs:
     name: UI smoke (notch panel)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
@@ -116,7 +116,7 @@ jobs:
     name: License-header sanity
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check NookSurface files carry SPDX MIT, everything else Apache-2.0
         run: |
           set -euo pipefail
@@ -176,7 +176,7 @@ jobs:
     name: ASCII typography (comments & docs)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check banned typography in comments and markdown prose
         run: ./Scripts/check-ascii.sh
 
@@ -184,7 +184,7 @@ jobs:
     name: Swift format (lint)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: maxim-lobanov/setup-xcode@v1
@@ -197,7 +197,7 @@ jobs:
     name: DocC build
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # The Liquid Glass surface code references the macOS 26 SDK; match the other
       # jobs so symbol extraction compiles the real path.
       - uses: maxim-lobanov/setup-xcode@v1
@@ -213,7 +213,7 @@ jobs:
     name: Docs site build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version-file: site/.node-version

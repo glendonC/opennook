@@ -1,6 +1,5 @@
 ---
 import config from 'virtual:starlight/user-config';
-import type { Props } from '@astrojs/starlight/props';
 
 import LanguageSelect from 'virtual:starlight/components/LanguageSelect';
 import Search from 'virtual:starlight/components/Search';
@@ -14,15 +13,15 @@ const shouldRenderSearch =
 
 <div class="header sl-flex">
   <div class="title-wrapper sl-flex">
-    <SiteTitle {...Astro.props} />
+    <SiteTitle />
   </div>
   <div class="sl-flex search-wrap">
-    {shouldRenderSearch && <Search {...Astro.props} />}
+    {shouldRenderSearch && <Search />}
   </div>
   <div class="sl-hidden md:sl-flex header-utilities">
-    <SocialIcons {...Astro.props} />
-    <ThemeSelect {...Astro.props} />
-    <LanguageSelect {...Astro.props} />
+    <SocialIcons />
+    <ThemeSelect />
+    <LanguageSelect />
   </div>
 </div>
 

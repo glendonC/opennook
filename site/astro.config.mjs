@@ -14,9 +14,9 @@ export default defineConfig({
         src: './src/assets/nook-mark.svg',
         replacesTitle: false,
       },
-      social: {
-        github: 'https://github.com/glendonC/opennook',
-      },
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/glendonC/opennook' },
+      ],
       editLink: { baseUrl: undefined },
       lastUpdated: false,
       defaultLocale: 'en',

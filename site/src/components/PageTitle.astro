@@ -1,7 +1,5 @@
 ---
-import type { Props } from '@astrojs/starlight/props';
-
-const { entry, id } = Astro.props;
+const { entry, id } = Astro.locals.starlightRoute;
 const title = entry.data.title;
 const mdHref = `/${id}.md`;
 ---

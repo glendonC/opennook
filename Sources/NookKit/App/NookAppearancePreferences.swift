@@ -78,7 +78,8 @@ public struct NookAppearancePreferences: Equatable, Codable, Sendable {
     // default in the initializer and a matching `decodeIfPresent` line here.
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.chromePalette = try container.decodeIfPresent(NookChromePalette.self, forKey: .chromePalette) ?? .followSystem
+        self.chromePalette =
+            try container.decodeIfPresent(NookChromePalette.self, forKey: .chromePalette) ?? .followSystem
         self.surfaceStyle = try container.decodeIfPresent(NookSurfaceStyle.self, forKey: .surfaceStyle) ?? .solid
         self.presentation = try container.decodeIfPresent(NookPresentation.self, forKey: .presentation) ?? .auto
         self.hapticFeedbackEnabled = try container.decodeIfPresent(Bool.self, forKey: .hapticFeedbackEnabled) ?? false
@@ -131,7 +132,7 @@ enum NookAppearanceStore {
     /// when nothing is persisted or the record is unreadable. The fallback is the host's
     /// launch seed (see ``NookPreferenceDefaults``) and is never written here.
     static func load(default fallback: NookAppearancePreferences) -> NookAppearancePreferences {
-        guard let data = UserDefaults.standard.data(forKey: defaultsKey) else {
+        guard let data = NookPreferenceStorage.defaults.data(forKey: defaultsKey) else {
             return fallback
         }
         do {
@@ -144,7 +145,7 @@ enum NookAppearanceStore {
     static func save(_ preferences: NookAppearancePreferences) {
         do {
             let data = try JSONEncoder().encode(preferences)
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            NookPreferenceStorage.defaults.set(data, forKey: defaultsKey)
         } catch {
             // Best-effort persistence; ignore encode failures.
         }

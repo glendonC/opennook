@@ -87,7 +87,7 @@ final class NookPreferenceDefaultsTests: XCTestCase {
 
             for key in PreferenceStoreTestIsolation.storeKeys {
                 XCTAssertNil(
-                    UserDefaults.standard.data(forKey: key),
+                    NookPreferenceStorage.defaults.data(forKey: key),
                     "Seeding wrote \(key) to UserDefaults; it should stay a pure fallback."
                 )
             }

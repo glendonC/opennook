@@ -49,11 +49,11 @@ public struct NookHotkey: Equatable, Codable, Sendable {
     public var display: String { displaySymbols.joined() }
 }
 
-public extension NookHotkey {
+extension NookHotkey {
     /// Builds a hotkey from a captured `keyDown` event. Returns `nil` if the combination
     /// isn't usable as a global hotkey - it must include at least one of ⌘/⌥/⌃ (a
     /// shift-only or modifier-less key makes a poor, conflict-prone global shortcut).
-    init?(event: NSEvent) {
+    public init?(event: NSEvent) {
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         var carbon: UInt32 = 0
         if flags.contains(.command) { carbon |= UInt32(cmdKey) }
@@ -106,7 +106,7 @@ enum NookHotkeyStore {
     /// when nothing is persisted or the record is unreadable. The fallback is the host's
     /// launch seed (see ``NookPreferenceDefaults``) and is never written here.
     static func load(default fallback: NookHotkey) -> NookHotkey {
-        guard let data = UserDefaults.standard.data(forKey: defaultsKey) else {
+        guard let data = NookPreferenceStorage.defaults.data(forKey: defaultsKey) else {
             return fallback
         }
         return (try? JSONDecoder().decode(NookHotkey.self, from: data)) ?? fallback
@@ -114,7 +114,7 @@ enum NookHotkeyStore {
 
     static func save(_ hotkey: NookHotkey) {
         if let data = try? JSONEncoder().encode(hotkey) {
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            NookPreferenceStorage.defaults.set(data, forKey: defaultsKey)
         }
     }
 }

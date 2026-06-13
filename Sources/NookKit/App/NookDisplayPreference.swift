@@ -98,7 +98,7 @@ enum NookDisplayStore {
     /// when nothing is persisted or the record is unreadable. The fallback is the host's
     /// launch seed (see ``NookPreferenceDefaults``) and is never written here.
     static func load(default fallback: NookDisplayPreference) -> NookDisplayPreference {
-        guard let data = UserDefaults.standard.data(forKey: defaultsKey) else {
+        guard let data = NookPreferenceStorage.defaults.data(forKey: defaultsKey) else {
             return fallback
         }
         return (try? JSONDecoder().decode(NookDisplayPreference.self, from: data)) ?? fallback
@@ -106,7 +106,7 @@ enum NookDisplayStore {
 
     static func save(_ preference: NookDisplayPreference) {
         if let data = try? JSONEncoder().encode(preference) {
-            UserDefaults.standard.set(data, forKey: defaultsKey)
+            NookPreferenceStorage.defaults.set(data, forKey: defaultsKey)
         }
     }
 }

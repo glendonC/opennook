@@ -14,7 +14,7 @@ import SwiftUI
 /// into one scrolling stack. Each section's content is its own file under `Views/Settings/`.
 ///
 /// Layout is deliberately flat: section label, then content, on one shared left margin
-/// (aligned with the top bar via `\.nookContentInsets`), separated by whitespace only - 
+/// (aligned with the top bar via `\.nookContentInsets`), separated by whitespace only,
 /// no card fills, no rules.
 struct SettingsView: View {
     @ObservedObject var appState: AppState
@@ -74,7 +74,9 @@ struct SettingsView: View {
                         SettingActionLine(
                             icon: appState.keepNookOpen ? "pin.fill" : "pin",
                             title: "Stay expanded",
-                            detail: appState.keepNookOpen ? "On — nook stays open after hover ends" : "Off — closes when the pointer leaves",
+                            detail: appState.keepNookOpen
+                                ? "On — nook stays open after hover ends"
+                                : "Off — closes when the pointer leaves",
                             accent: chromeInteractionAccent,
                             action: onToggleKeepOpen
                         )

@@ -47,10 +47,10 @@ public struct NookVolumeIndicator: View {
     public static func symbolName(volume: Double, isMuted: Bool) -> String {
         if isMuted { return "speaker.slash.fill" }
         switch volume {
-        case ..<0.01: return "speaker.fill"
-        case ..<0.34: return "speaker.wave.1.fill"
-        case ..<0.67: return "speaker.wave.2.fill"
-        default: return "speaker.wave.3.fill"
+            case ..<0.01: return "speaker.fill"
+            case ..<0.34: return "speaker.wave.1.fill"
+            case ..<0.67: return "speaker.wave.2.fill"
+            default: return "speaker.wave.3.fill"
         }
     }
 }

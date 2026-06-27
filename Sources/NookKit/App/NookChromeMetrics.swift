@@ -505,9 +505,9 @@ private struct NookChromeMetricsKey: EnvironmentKey {
     static let defaultValue: NookChromeMetrics = .default
 }
 
-public extension EnvironmentValues {
+extension EnvironmentValues {
     /// Host-tunable chrome layout metrics. See ``NookChromeMetrics``.
-    var nookChromeMetrics: NookChromeMetrics {
+    public var nookChromeMetrics: NookChromeMetrics {
         get { self[NookChromeMetricsKey.self] }
         set { self[NookChromeMetricsKey.self] = newValue }
     }

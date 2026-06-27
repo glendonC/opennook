@@ -77,8 +77,9 @@ public struct NookExpandedView: View {
         toggleKeepOpen: @escaping () -> Void,
         hide: @escaping () -> Void,
         resetAllSettings: @escaping () -> Void,
-        theme: @escaping @Sendable @MainActor (AppState) -> NookResolvedTheme
-            = { NookResolvedTheme.live(appState: $0) },
+        theme: @escaping @Sendable @MainActor (AppState) -> NookResolvedTheme = {
+            NookResolvedTheme.live(appState: $0)
+        },
         home: @escaping @Sendable @MainActor () -> AnyView = { AnyView(NookPlaceholderHomeView()) },
         settings: (@Sendable @MainActor () -> AnyView)? = nil,
         topBar: NookTopBarConfiguration = .default,
@@ -131,28 +132,28 @@ public struct NookExpandedView: View {
             .frame(width: width)
             .padding(metrics.edgePadding)
             .environment(\.nookResolvedTheme, resolvedTheme)
-        .environment(\.nookChromeLabels, labels)
-        .environment(\.nookChromeMetrics, metrics)
-        .environment(\.nookChromeMotion, motion)
-        .environment(\.nookChromeTypography, typography)
-        .environment(\.appServices, services)
-        // Expose `AppState` to the host-registered `home` surface so it can observe
-        // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
-        // bespoke parameter.
-        .environmentObject(appState)
-        // The nook lives on a `.nonactivatingPanel` so opening it never steals focus from
-        // the user's editor. Side effect: until the user clicks the surface, AppKit
-        // desaturates accent-tinted controls. Forcing `.active` makes the chrome paint as
-        // if focused without changing key-window behaviour.
-        .environment(\.controlActiveState, .active)
-        .tint(resolvedTheme.accent)
-        .fontDesign(resolvedTheme.fontDesign)
-        .preferredColorScheme(appState.appearancePreferences.chromeColorSchemeOverride)
-        .onChange(of: appState.viewMode) { _ in
-            isHomeIconHovered = false
-        }
-        .onExitCommand(perform: hide)
-        .animation(motion.viewModeChange, value: appState.viewMode)
+            .environment(\.nookChromeLabels, labels)
+            .environment(\.nookChromeMetrics, metrics)
+            .environment(\.nookChromeMotion, motion)
+            .environment(\.nookChromeTypography, typography)
+            .environment(\.appServices, services)
+            // Expose `AppState` to the host-registered `home` surface so it can observe
+            // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
+            // bespoke parameter.
+            .environmentObject(appState)
+            // The nook lives on a `.nonactivatingPanel` so opening it never steals focus from
+            // the user's editor. Side effect: until the user clicks the surface, AppKit
+            // desaturates accent-tinted controls. Forcing `.active` makes the chrome paint as
+            // if focused without changing key-window behaviour.
+            .environment(\.controlActiveState, .active)
+            .tint(resolvedTheme.accent)
+            .fontDesign(resolvedTheme.fontDesign)
+            .preferredColorScheme(appState.appearancePreferences.chromeColorSchemeOverride)
+            .onChange(of: appState.viewMode) { _ in
+                isHomeIconHovered = false
+            }
+            .onExitCommand(perform: hide)
+            .animation(motion.viewModeChange, value: appState.viewMode)
     }
 
     @ViewBuilder

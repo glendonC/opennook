@@ -57,16 +57,17 @@ struct DisplaySettingsSection: View {
 
     private var descriptionText: String {
         switch appState.displayPreference.mode {
-        case .builtIn:
-            return "The chrome stays on the built-in (notched) display."
-        case .main:
-            return "The chrome follows the display that currently hosts the menu bar."
-        case .specific:
-            let connected = appState.displayPreference.displayUUID
-                .map { uuid in displays.contains { $0.uuid == uuid } } ?? false
-            return connected
-                ? "The chrome is pinned to a specific display."
-                : "The chosen display isn't connected — using the built-in display until it returns."
+            case .builtIn:
+                return "The chrome stays on the built-in (notched) display."
+            case .main:
+                return "The chrome follows the display that currently hosts the menu bar."
+            case .specific:
+                let connected =
+                    appState.displayPreference.displayUUID
+                    .map { uuid in displays.contains { $0.uuid == uuid } } ?? false
+                return connected
+                    ? "The chrome is pinned to a specific display."
+                    : "The chosen display isn't connected — using the built-in display until it returns."
         }
     }
 
@@ -77,8 +78,9 @@ struct DisplaySettingsSection: View {
             (tag: Self.specificTagPrefix + display.uuid, label: display.name)
         }
         if appState.displayPreference.mode == .specific,
-           let uuid = appState.displayPreference.displayUUID,
-           !displays.contains(where: { $0.uuid == uuid }) {
+            let uuid = appState.displayPreference.displayUUID,
+            !displays.contains(where: { $0.uuid == uuid })
+        {
             options.append((tag: Self.specificTagPrefix + uuid, label: "Saved display (not connected)"))
         }
         return options
@@ -89,9 +91,9 @@ struct DisplaySettingsSection: View {
             get: {
                 let preference = appState.displayPreference
                 switch preference.mode {
-                case .builtIn: return Self.builtInTag
-                case .main: return Self.mainTag
-                case .specific: return Self.specificTagPrefix + (preference.displayUUID ?? "")
+                    case .builtIn: return Self.builtInTag
+                    case .main: return Self.mainTag
+                    case .specific: return Self.specificTagPrefix + (preference.displayUUID ?? "")
                 }
             },
             set: { tag in

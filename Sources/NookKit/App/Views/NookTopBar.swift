@@ -66,10 +66,10 @@ struct NookTopBar: View {
     var body: some View {
         Group {
             switch width {
-            case .contentColumn:
-                contentColumnBar
-            case .intrinsic:
-                intrinsicBar
+                case .contentColumn:
+                    contentColumnBar
+                case .intrinsic:
+                    intrinsicBar
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -130,7 +130,7 @@ struct NookTopBar: View {
                             stops: [
                                 .init(color: .black, location: 0),
                                 .init(color: .black, location: 0.5),
-                                .init(color: .clear, location: 1)
+                                .init(color: .clear, location: 1),
                             ],
                             startPoint: .leading,
                             endPoint: .trailing

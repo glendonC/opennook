@@ -208,9 +208,9 @@ private struct NookChromeTypographyKey: EnvironmentKey {
     static let defaultValue: NookChromeTypography = .default
 }
 
-public extension EnvironmentValues {
+extension EnvironmentValues {
     /// Host-tunable chrome typography. See ``NookChromeTypography``.
-    var nookChromeTypography: NookChromeTypography {
+    public var nookChromeTypography: NookChromeTypography {
         get { self[NookChromeTypographyKey.self] }
         set { self[NookChromeTypographyKey.self] = newValue }
     }

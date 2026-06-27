@@ -62,19 +62,19 @@ struct SettingsDataCommandRow: View {
 
     private var iconTint: Color {
         switch style {
-        case .standard:
-            isHovering ? theme.accent : theme.headerInactiveIcon
-        case .destructive:
-            Color.red.opacity(0.92)
+            case .standard:
+                isHovering ? theme.accent : theme.headerInactiveIcon
+            case .destructive:
+                Color.red.opacity(0.92)
         }
     }
 
     private var titleTint: Color {
         switch style {
-        case .standard:
-            isHovering ? theme.accent : theme.primaryLabel
-        case .destructive:
-            Color.red.opacity(0.95)
+            case .standard:
+                isHovering ? theme.accent : theme.primaryLabel
+            case .destructive:
+                Color.red.opacity(0.95)
         }
     }
 }

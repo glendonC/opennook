@@ -118,13 +118,13 @@ public struct NookAppearanceSettingsSection: View {
 
     private var surfaceStyleDescription: String {
         switch surfaceStyleBinding.wrappedValue {
-        case .solid:
-            return "Solid paints the chrome the same color as the notch — true black on dark, true white on light."
-        case .translucent:
-            return "Translucent shows the wallpaper through a frosted material."
-        case .liquidGlass:
-            return "Liquid Glass refracts the wallpaper through Apple's glass material on macOS 26, "
-                + "with a frosted-glass fallback on earlier versions."
+            case .solid:
+                return "Solid paints the chrome the same color as the notch — true black on dark, true white on light."
+            case .translucent:
+                return "Translucent shows the wallpaper through a frosted material."
+            case .liquidGlass:
+                return "Liquid Glass refracts the wallpaper through Apple's glass material on macOS 26, "
+                    + "with a frosted-glass fallback on earlier versions."
         }
     }
 
@@ -134,12 +134,12 @@ public struct NookAppearanceSettingsSection: View {
 
     private var presentationDescription: String {
         switch presentationBinding.wrappedValue {
-        case .auto:
-            return "Auto uses the notch shape on a notched display and a floating panel on any other."
-        case .notch:
-            return "Notch always uses the notch shape, even on a display without one."
-        case .floating:
-            return "Floating always shows a free-standing panel below the menu bar."
+            case .auto:
+                return "Auto uses the notch shape on a notched display and a floating panel on any other."
+            case .notch:
+                return "Notch always uses the notch shape, even on a display without one."
+            case .floating:
+                return "Floating always shows a free-standing panel below the menu bar."
         }
     }
 

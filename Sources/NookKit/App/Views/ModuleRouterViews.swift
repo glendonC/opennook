@@ -36,6 +36,7 @@ struct ModuleRouterExpandedView: View {
             labels: configuration.labels,
             metrics: configuration.metrics,
             motion: configuration.motion,
+            typography: configuration.typography,
             width: configuration.expandedWidth ?? NookLayout.width,
             // Only fold a switcher into the chrome when the host opted in; otherwise the
             // surface is untouched and switching lives in the menu bar / hotkeys.
@@ -88,8 +89,9 @@ struct ModuleRouterCompactView: View {
             content: content
         )
         // The compact slots render in their own view tree (not under NookExpandedView),
-        // so inject the metrics here too - the default compact glyphs read
-        // `compactSlotSize` from it.
+        // so inject the chrome metrics and typography here too - the default compact
+        // glyphs read `compactSlotSize` / `compactLeadingGlyph` from them.
         .environment(\.nookChromeMetrics, configuration.metrics)
+        .environment(\.nookChromeTypography, configuration.typography)
     }
 }

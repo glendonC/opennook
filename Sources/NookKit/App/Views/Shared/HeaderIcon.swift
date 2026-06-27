@@ -9,20 +9,23 @@ import SwiftUI
 
 /// Static header icon (no hover, no action) used by the persistent "Home" cluster.
 ///
-/// Mirrors `HeaderIcon`'s 11pt / 24×24 / `headerInactiveIcon` styling so the home glyph
-/// reads at the same minimal weight as the lock / gear / search icons on the right side
-/// of the topbar. The deliberately muted tone (vs. `primaryLabel`) keeps it as chrome
-/// rather than competing with whatever the user actually came to do.
+/// Mirrors `HeaderIcon`'s glyph font and frame styling (``NookChromeTypography/headerIcon``
+/// / ``NookChromeMetrics/headerIconSize``) so the home glyph reads at the same minimal
+/// weight as the lock / gear / search icons on the right side of the topbar. The
+/// deliberately muted tone (vs. `primaryLabel`) keeps it as chrome rather than competing
+/// with whatever the user actually came to do.
 struct StaticHeaderIcon: View {
     let systemName: String
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     var body: some View {
         Image(systemName: systemName)
-            .font(.system(size: 11, weight: .semibold))
+            .font(typography.headerIcon)
             .foregroundStyle(theme.headerInactiveIcon)
-            .frame(width: 24, height: 24)
+            .frame(width: metrics.headerIconSize, height: metrics.headerIconSize)
     }
 }
 
@@ -36,22 +39,34 @@ struct HeaderIcon: View {
     let action: () -> Void
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(isActive ? activeColor : (isHovering ? theme.primaryLabel.opacity(0.92) : theme.headerInactiveIcon))
-                .frame(width: 24, height: 24)
-                .background(isHovering ? theme.subtleFill : .clear, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .font(typography.headerIcon)
+                .foregroundStyle(foreground)
+                .frame(width: metrics.headerIconSize, height: metrics.headerIconSize)
+                .background(
+                    isHovering ? theme.subtleFill : .clear,
+                    in: RoundedRectangle(cornerRadius: metrics.headerIconCornerRadius, style: .continuous)
+                )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .stroke(isHovering ? theme.subtleStroke : .clear, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: metrics.headerIconCornerRadius, style: .continuous)
+                        .stroke(isHovering ? theme.subtleStroke : .clear, lineWidth: metrics.headerIconStrokeWidth)
                 )
         }
         .buttonStyle(.plain)
         .help(help)
         .onHover { isHovering = $0 }
+    }
+
+    /// Active state wins; otherwise the glyph lifts to the emphasized primary label on
+    /// hover and rests on the muted inactive tone.
+    private var foreground: Color {
+        if isActive { return activeColor }
+        return isHovering ? theme.primaryLabel.opacity(metrics.headerIconHoverLabelOpacity) : theme.headerInactiveIcon
     }
 }

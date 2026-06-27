@@ -43,12 +43,14 @@ public struct NookExpandedView: View {
     /// visibility, Settings visibility. See ``NookTopBarConfiguration``.
     let topBar: NookTopBarConfiguration
 
-    /// Host-overridable chrome strings, layout metrics, and in-panel motion. Injected
-    /// into the environment for the top bar / banner to read. See ``NookChromeLabels`` /
-    /// ``NookChromeMetrics`` / ``NookChromeMotion``.
+    /// Host-overridable chrome strings, layout metrics, in-panel motion, and typography.
+    /// Injected into the environment for the top bar / banner to read. See
+    /// ``NookChromeLabels`` / ``NookChromeMetrics`` / ``NookChromeMotion`` /
+    /// ``NookChromeTypography``.
     let labels: NookChromeLabels
     let metrics: NookChromeMetrics
     let motion: NookChromeMotion
+    let typography: NookChromeTypography
 
     /// Fixed width for the expanded surface. Host apps set this through
     /// ``NookConfiguration/expandedWidth``; the default is ``NookLayout/width``.
@@ -83,6 +85,7 @@ public struct NookExpandedView: View {
         labels: NookChromeLabels = .default,
         metrics: NookChromeMetrics = .default,
         motion: NookChromeMotion = .default,
+        typography: NookChromeTypography = .default,
         width: CGFloat = NookLayout.width,
         moduleSwitcher: NookModuleSwitcher? = nil
     ) {
@@ -98,6 +101,7 @@ public struct NookExpandedView: View {
         self.labels = labels
         self.metrics = metrics
         self.motion = motion
+        self.typography = typography
         self.width = width
         self.moduleSwitcher = moduleSwitcher
     }
@@ -130,6 +134,7 @@ public struct NookExpandedView: View {
         .environment(\.nookChromeLabels, labels)
         .environment(\.nookChromeMetrics, metrics)
         .environment(\.nookChromeMotion, motion)
+        .environment(\.nookChromeTypography, typography)
         .environment(\.appServices, services)
         // Expose `AppState` to the host-registered `home` surface so it can observe
         // chrome-level state (e.g. `isDragInFlight`) without each closure needing a
@@ -152,7 +157,7 @@ public struct NookExpandedView: View {
 
     @ViewBuilder
     private var expandedColumn: some View {
-        let stack = VStack(alignment: .leading, spacing: 8) {
+        let stack = VStack(alignment: .leading, spacing: metrics.expandedColumnSpacing) {
             if topBar.showsTopBar {
                 topBarRow
 

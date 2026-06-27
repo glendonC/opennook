@@ -154,9 +154,9 @@ Like `preferenceDefaults`, it is host-process-global: a single-module host sets
 it on `NookConfiguration`; a multi-module host sets it on
 `NookHostConfiguration.chromeBehavior`.
 
-## Labels, metrics, motion
+## Labels, metrics, typography, motion
 
-Three small value types tune the chrome's strings, fixed layout values, and
+Four small value types tune the chrome's strings, fixed layout values, fonts, and
 in-panel springs. Each defaults to a value that reproduces today's framework
 exactly, and each reaches the views through a chrome environment value, so a host
 sets only the fields it cares about.
@@ -179,8 +179,8 @@ the gear, and the banner's dismiss button.
 
 ### Metrics
 
-`NookChromeMetrics` exposes the few fixed point values that were previously baked
-into the views. Defaults reproduce today's layout:
+`NookChromeMetrics` exposes the fixed point values that were previously baked into
+the chrome views. Defaults reproduce today's layout:
 
 ```swift
 configuration.metrics.edgePadding = 8          // panel edge to content inset
@@ -189,10 +189,40 @@ configuration.metrics.breadcrumbMaxWidth = 140 // top-bar breadcrumb width befor
 configuration.metrics.topBarHeight = 24        // fixed height of the top bar icon row
 ```
 
+It also carries the element-level sizes, corner radii, spacing, and the opacity
+multipliers layered on the resolved palette - the values the top bar, header
+icons, compact pill, and status banner used to hardcode. A few of them (every
+field defaults to today's value, so set only what you want to change):
+
+```swift
+configuration.metrics.headerIconSize = 24          // lock / gear / home glyph frame
+configuration.metrics.headerIconCornerRadius = 7   // header-icon hover chip radius
+configuration.metrics.trailingClusterSpacing = 4   // gap between trailing items / lock / gear
+configuration.metrics.brandMarkOpacity = 0.92      // leading brand-mark emphasis
+configuration.metrics.bannerCornerRadius = 10      // status banner corner radius
+```
+
 `edgePadding` is distinct from `NookStyle.expandedContentInsets`; host home views
 should read the residual clearance through `nookContentInsets` rather than
 mirroring it with extra padding. See [Layout and content
 insets](/guides/layout-and-insets/) and `Examples/LayoutNook/main.swift`.
+
+### Typography
+
+`NookChromeTypography` sets the fonts for the chrome's own text and glyphs - the
+top bar, the compact pill, and the status banner. Each role is a `Font`; defaults
+reproduce today's sizes and weights. Because the framework defaults carry no
+explicit design, the resolved `fontDesign` (see [Theming](/guides/theming/)) still
+cascades over them - set `.rounded` once on the theme and every chrome role
+follows. This restyles the *chrome's* type only; a registered home view, custom
+Settings, or trailing items control their own fonts.
+
+```swift
+configuration.typography.headerIcon = .system(size: 11, weight: .semibold)  // lock / gear / home glyphs
+configuration.typography.topBarLabel = .system(size: 11, weight: .regular)  // title, breadcrumb, switcher label
+configuration.typography.compactLeadingGlyph = .system(size: 10, weight: .semibold)
+configuration.typography.bannerMessage = .system(size: 10.5, weight: .medium)
+```
 
 ### Motion
 

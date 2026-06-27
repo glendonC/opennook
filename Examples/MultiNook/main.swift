@@ -8,8 +8,9 @@
 // MultiNook - one host process, several interchangeable notch apps.
 //
 // A NookHostConfiguration registers a set of modules; the host shows one at a time and
-// the user switches between them through the switcher strip at the top of the expanded
-// surface, or with the module-cycle shortcut. Run with `swift run MultiNook`.
+// the user switches between them from the Modules menu-bar section (the default
+// `moduleSwitcherPlacement`), or with the module-cycle shortcut. See the placement
+// options near the bottom of this file. Run with `swift run MultiNook`.
 
 import NookApp
 import SwiftUI

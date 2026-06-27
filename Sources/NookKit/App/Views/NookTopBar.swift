@@ -50,12 +50,14 @@ struct NookTopBar: View {
     /// by these values so host rows and the top bar share one horizontal gutter.
     @Environment(\.nookContentInsets) private var contentInsets
 
-    /// Host-overridable chrome strings, layout metrics, and in-panel motion (see
-    /// ``NookChromeLabels`` / ``NookChromeMetrics`` / ``NookChromeMotion``). Injected by
-    /// ``NookExpandedView``; default reproduces today's chrome.
+    /// Host-overridable chrome strings, layout metrics, in-panel motion, and typography
+    /// (see ``NookChromeLabels`` / ``NookChromeMetrics`` / ``NookChromeMotion`` /
+    /// ``NookChromeTypography``). Injected by ``NookExpandedView``; defaults reproduce
+    /// today's chrome.
     @Environment(\.nookChromeLabels) private var labels
     @Environment(\.nookChromeMetrics) private var metrics
     @Environment(\.nookChromeMotion) private var motion
+    @Environment(\.nookChromeTypography) private var typography
 
     /// Host branding - used for the leading-cluster brand mark when no `leadingIcon` is
     /// configured. Injected by the expanded router. See ``NookHostBranding``.
@@ -91,7 +93,7 @@ struct NookTopBar: View {
     }
 
     private var intrinsicBar: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: metrics.topBarItemSpacing) {
             leadingBarContent
             Spacer(minLength: 0)
             trailingCluster
@@ -100,26 +102,26 @@ struct NookTopBar: View {
     }
 
     private var leadingBarContent: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: metrics.topBarItemSpacing) {
             homeLeadingCluster
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.leading, contentInsets.leading)
 
             if appState.isSettingsView {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(typography.breadcrumbChevron)
                     .foregroundStyle(resolvedTheme.quaternaryLabel)
 
                 Text(labels.settingsBreadcrumb)
-                    .font(.system(size: 11, weight: .regular))
+                    .font(typography.topBarLabel)
                     .foregroundStyle(resolvedTheme.secondaryLabel)
             } else if let breadcrumb = appState.moduleBreadcrumb, !breadcrumb.isEmpty {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 8, weight: .bold))
+                    .font(typography.breadcrumbChevron)
                     .foregroundStyle(resolvedTheme.quaternaryLabel)
 
                 Text(breadcrumb)
-                    .font(.system(size: 11, weight: .regular))
+                    .font(typography.topBarLabel)
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
                     .frame(width: metrics.breadcrumbMaxWidth, alignment: .leading)
@@ -143,7 +145,7 @@ struct NookTopBar: View {
     }
 
     private var trailingCluster: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: metrics.trailingClusterSpacing) {
             if let trailingItems {
                 trailingItems()
             }
@@ -177,7 +179,7 @@ struct NookTopBar: View {
         .fixedSize(horizontal: true, vertical: false)
     }
 
-    /// On home the configured title stays visible next to its icon; in settings - 
+    /// On home the configured title stays visible next to its icon; in settings -
     /// or when a module has pushed a `moduleBreadcrumb` (a drilled-in product
     /// sub-context) - the label collapses until the user hovers the glyph, which
     /// doubles as the back control. Clicking it exits Settings or clears the
@@ -187,7 +189,7 @@ struct NookTopBar: View {
         let showPersistentHomeTitle = appState.isHomeView && !appState.isSettingsView && !hasBreadcrumb
         let title = leadingTitle(appState)
 
-        return HStack(spacing: 6) {
+        return HStack(spacing: metrics.leadingClusterSpacing) {
             if showPersistentHomeTitle, let moduleSwitcher {
                 // Multi-module host that opted into an in-surface switcher: the leading
                 // cluster IS the switcher (it replaces the plain title - no extra band,
@@ -204,14 +206,14 @@ struct NookTopBar: View {
                     StaticHeaderIcon(systemName: leadingIcon)
                 } else {
                     branding.markView(
-                        size: 11,
-                        strokeWidth: 1.1,
-                        color: resolvedTheme.secondaryLabel.opacity(0.92)
+                        size: metrics.brandMarkSize,
+                        strokeWidth: metrics.brandMarkStrokeWidth,
+                        color: resolvedTheme.secondaryLabel.opacity(metrics.brandMarkOpacity)
                     )
-                    .frame(width: 11, height: 11)
+                    .frame(width: metrics.brandMarkSize, height: metrics.brandMarkSize)
                 }
                 Text(title)
-                    .font(.system(size: 11, weight: .regular))
+                    .font(typography.topBarLabel)
                     .foregroundStyle(resolvedTheme.secondaryLabel)
                     .lineLimit(1)
             } else {
@@ -236,7 +238,7 @@ struct NookTopBar: View {
 
                 if isHomeIconHovered {
                     Text(title)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(typography.topBarLabel)
                         .foregroundStyle(resolvedTheme.secondaryLabel)
                         .lineLimit(1)
                         .transition(
@@ -264,6 +266,9 @@ private struct ModuleSwitcherMenu: View {
     let theme: NookResolvedTheme
     let branding: NookHostBranding
 
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
+
     var body: some View {
         Menu {
             ForEach(switcher.modules) { descriptor in
@@ -280,14 +285,14 @@ private struct ModuleSwitcherMenu: View {
                 }
             }
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: metrics.leadingClusterSpacing) {
                 icon
                 Text(activeTitle)
-                    .font(.system(size: 11, weight: .regular))
+                    .font(typography.topBarLabel)
                     .foregroundStyle(theme.secondaryLabel)
                     .lineLimit(1)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 7, weight: .semibold))
+                    .font(typography.switcherChevron)
                     .foregroundStyle(theme.tertiaryLabel)
             }
         }
@@ -306,11 +311,11 @@ private struct ModuleSwitcherMenu: View {
             StaticHeaderIcon(systemName: symbol)
         } else {
             branding.markView(
-                size: 11,
-                strokeWidth: 1.1,
-                color: theme.secondaryLabel.opacity(0.92)
+                size: metrics.brandMarkSize,
+                strokeWidth: metrics.brandMarkStrokeWidth,
+                color: theme.secondaryLabel.opacity(metrics.brandMarkOpacity)
             )
-            .frame(width: 11, height: 11)
+            .frame(width: metrics.brandMarkSize, height: metrics.brandMarkSize)
         }
     }
 }

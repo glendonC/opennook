@@ -98,6 +98,11 @@ public struct NookConfiguration: Sendable {
     /// to ``NookChromeMotion/default`` (today's springs). See ``NookChromeMotion``.
     public var motion: NookChromeMotion = .default
 
+    /// Host-tunable chrome typography (top-bar, compact-pill, and status-banner fonts).
+    /// Defaults to ``NookChromeTypography/default`` (today's fonts). Restyles the chrome's
+    /// own text, not host-supplied content. See ``NookChromeTypography``.
+    public var typography: NookChromeTypography = .default
+
     /// Host-product identity surfaced through the chrome - name, tagline, and brand mark
     /// (About card, show/hide hotkey label, menu-bar fallback, top-bar leading mark). On
     /// the single-module path this is forwarded onto the synthesized

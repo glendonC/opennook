@@ -15,14 +15,15 @@ import SwiftUI
 /// apps register their own via ``NookConfiguration/setCompactLeading(_:)``.
 public struct NookCompactLeadingView: View {
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
     @Environment(\.nookChromeMetrics) private var metrics
 
     public init() {}
 
     public var body: some View {
         Image(systemName: "house")
-            .font(.system(size: 10, weight: .semibold))
-            .foregroundStyle(theme.primaryLabel.opacity(0.88))
+            .font(typography.compactLeadingGlyph)
+            .foregroundStyle(theme.primaryLabel.opacity(metrics.compactLeadingGlyphOpacity))
             .frame(width: metrics.compactSlotSize, height: metrics.compactSlotSize)
     }
 }
@@ -36,9 +37,9 @@ public struct NookCompactTrailingView: View {
 
     public var body: some View {
         NookMarkView(
-            size: 11,
-            strokeWidth: 1.1,
-            color: theme.primaryLabel.opacity(0.82)
+            size: metrics.compactTrailingMarkSize,
+            strokeWidth: metrics.compactTrailingMarkStrokeWidth,
+            color: theme.primaryLabel.opacity(metrics.compactTrailingMarkOpacity)
         )
         .frame(width: metrics.compactSlotSize, height: metrics.compactSlotSize)
     }

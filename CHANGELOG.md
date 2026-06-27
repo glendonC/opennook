@@ -6,6 +6,29 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `NookChromeTypography` - a host-tunable token type for the chrome's own fonts
+  (top bar, compact pill, status banner). Set via `NookConfiguration.typography`;
+  defaults reproduce the framework exactly, and the resolved `fontDesign` still
+  cascades over the roles. Restyles chrome text without forking, the typography
+  counterpart to the existing color (`NookResolvedTheme`) and layout
+  (`NookChromeMetrics`) seams.
+- `NookChromeMetrics` gained the element-level dimensions, corner radii, spacing,
+  and emphasis-opacity values that were previously baked into the chrome views
+  (header icons, the leading brand mark, the compact pill, and the status
+  banner). All new fields default to today's values, so the change is additive
+  and non-breaking. Migrating the views to read these tokens means a host can now
+  restyle the top bar, compact pill, and banner through public API only.
+
+### Changed
+
+- The chrome views (top bar, header icons, compact pill, status banner) now read
+  every font, size, radius, spacing, and opacity from `NookChromeTypography` /
+  `NookChromeMetrics` instead of inline literals. No visual change at the
+  defaults. The built-in Settings panel and `NookComponents` keep their current
+  styling; tokenizing those is a follow-up.
+
 ## [0.3.1] - 2026-06-12
 
 ### Fixed

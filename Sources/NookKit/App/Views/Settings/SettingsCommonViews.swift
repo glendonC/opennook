@@ -13,16 +13,24 @@ struct ShortcutKeySquircle: View {
     let symbol: String
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     var body: some View {
         Text(symbol)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(theme.primaryLabel.opacity(0.92))
-            .frame(minWidth: 24, minHeight: 22)
-            .background(theme.subtleFill.opacity(0.55), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .font(typography.settingsRowTitle)
+            .foregroundStyle(theme.primaryLabel.opacity(metrics.shortcutKeyCapLabelOpacity))
+            .frame(minWidth: metrics.shortcutKeyCapMinWidth, minHeight: metrics.shortcutKeyCapMinHeight)
+            .background(
+                theme.subtleFill.opacity(metrics.shortcutKeyCapFillOpacity),
+                in: RoundedRectangle(cornerRadius: metrics.shortcutKeyCapCornerRadius, style: .continuous)
+            )
             .overlay(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .stroke(theme.subtleStroke.opacity(0.35), lineWidth: 1)
+                RoundedRectangle(cornerRadius: metrics.shortcutKeyCapCornerRadius, style: .continuous)
+                    .stroke(
+                        theme.subtleStroke.opacity(metrics.shortcutKeyCapStrokeOpacity),
+                        lineWidth: metrics.shortcutKeyCapStrokeWidth
+                    )
             )
     }
 }
@@ -31,6 +39,8 @@ public struct SettingsSectionLabel: View {
     let title: String
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     public init(_ title: String) {
         self.title = title
@@ -38,8 +48,8 @@ public struct SettingsSectionLabel: View {
 
     public var body: some View {
         Text(title.uppercased())
-            .font(.system(size: 9, weight: .semibold))
+            .font(typography.settingsSectionLabel)
             .foregroundStyle(theme.quaternaryLabel)
-            .tracking(0.42)
+            .tracking(metrics.settingsSectionLabelTracking)
     }
 }

@@ -18,6 +18,8 @@ public struct SettingActionLine: View {
     let action: () -> Void
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
     @State private var isHovering = false
 
     public init(
@@ -36,26 +38,26 @@ public struct SettingActionLine: View {
 
     public var body: some View {
         Button(action: action) {
-            HStack(alignment: .top, spacing: 10) {
+            HStack(alignment: .top, spacing: metrics.settingsRowSpacing) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(typography.settingsEmphasis)
                     .foregroundStyle(isHovering ? accent : theme.headerInactiveIcon)
-                    .frame(width: 18)
+                    .frame(width: metrics.settingsIconWidth)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: metrics.settingsTextSpacing) {
                     Text(title)
-                        .font(.system(size: 12, weight: .regular))
+                        .font(typography.settingsCommandTitle)
                         .foregroundStyle(isHovering ? accent : theme.primaryLabel)
 
                     Text(detail)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(typography.settingsRowDetail)
                         .foregroundStyle(theme.secondaryLabel)
                         .lineLimit(2)
                 }
 
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, metrics.settingsRowVerticalPadding)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

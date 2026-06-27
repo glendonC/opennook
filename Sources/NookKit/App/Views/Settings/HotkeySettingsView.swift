@@ -16,28 +16,30 @@ struct SettingsShortcutRow: View {
     @ObservedObject var appState: AppState
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
     @Environment(\.nookHostBranding) private var branding
     @State private var isRecording = false
     @State private var eventMonitor: Any?
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: metrics.settingsGroupSpacing) {
             Image(systemName: "keyboard")
-                .font(.system(size: 11, weight: .semibold))
+                .font(typography.settingsEmphasis)
                 .foregroundStyle(theme.headerInactiveIcon)
-                .frame(width: 18)
+                .frame(width: metrics.settingsIconWidth)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: metrics.settingsTextSpacing) {
                 Text("Show \(branding.hostName)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(theme.primaryLabel.opacity(0.95))
+                    .font(typography.settingsRowTitle)
+                    .foregroundStyle(theme.primaryLabel.opacity(metrics.settingsTitleEmphasisOpacity))
                 if let failure = appState.hotkeyRegistrationFailures[NookHotkeyIDs.toggle] {
                     Text(failure.message)
-                        .font(.system(size: 9, weight: .regular))
+                        .font(typography.settingsHint)
                         .foregroundStyle(Color.orange)
                 } else {
                     Text(isRecording ? "Press a shortcut — Esc to cancel" : "Global shortcut — click to change")
-                        .font(.system(size: 9, weight: .regular))
+                        .font(typography.settingsHint)
                         .foregroundStyle(theme.tertiaryLabel)
                 }
             }
@@ -47,14 +49,19 @@ struct SettingsShortcutRow: View {
             Button(action: toggleRecording) {
                 if isRecording {
                     Text("Listening…")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(theme.primaryLabel.opacity(0.9))
-                        .padding(.horizontal, 10)
-                        .frame(minHeight: 22)
-                        .background(theme.subtleFill.opacity(0.7), in: Capsule())
-                        .overlay(Capsule().stroke(theme.accent.opacity(0.6), lineWidth: 1))
+                        .font(typography.settingsFieldLabel)
+                        .foregroundStyle(theme.primaryLabel.opacity(metrics.settingsRecordingLabelOpacity))
+                        .padding(.horizontal, metrics.settingsRecordingHorizontalPadding)
+                        .frame(minHeight: metrics.settingsRecordingMinHeight)
+                        .background(theme.subtleFill.opacity(metrics.settingsRecordingFillOpacity), in: Capsule())
+                        .overlay(
+                            Capsule().stroke(
+                                theme.accent.opacity(metrics.settingsRecordingStrokeOpacity),
+                                lineWidth: metrics.settingsRecordingStrokeWidth
+                            )
+                        )
                 } else {
-                    HStack(spacing: 4) {
+                    HStack(spacing: metrics.shortcutKeyCapSpacing) {
                         ForEach(Array(appState.hotkey.displaySymbols.enumerated()), id: \.offset) { _, symbol in
                             ShortcutKeySquircle(symbol: symbol)
                         }
@@ -63,9 +70,12 @@ struct SettingsShortcutRow: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, metrics.settingsRowVerticalPadding)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Show \(branding.hostName) shortcut, currently \(appState.hotkey.displaySymbols.joined(separator: " "))")
+        .accessibilityLabel(
+            "Show \(branding.hostName) shortcut, "
+                + "currently \(appState.hotkey.displaySymbols.joined(separator: " "))"
+        )
         .accessibilityHint("Activates to record a new shortcut")
         .onDisappear { stopRecording() }
     }
@@ -116,6 +126,9 @@ struct SettingsShortcutRow: View {
 struct SettingsHotkeyFailureRow: View {
     @ObservedObject var appState: AppState
 
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
+
     /// Failures for every shortcut except the show/hide toggle, sorted for stable order.
     private var staticFailures: [HotkeyRegistrationFailure] {
         appState.hotkeyRegistrationFailures
@@ -126,18 +139,18 @@ struct SettingsHotkeyFailureRow: View {
 
     var body: some View {
         if !staticFailures.isEmpty {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: metrics.settingsFailureRowSpacing) {
                 ForEach(staticFailures, id: \.shortcutName) { failure in
-                    HStack(alignment: .center, spacing: 12) {
+                    HStack(alignment: .center, spacing: metrics.settingsGroupSpacing) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(typography.settingsEmphasis)
                             .foregroundStyle(Color.orange)
-                            .frame(width: 18)
-                        VStack(alignment: .leading, spacing: 2) {
+                            .frame(width: metrics.settingsIconWidth)
+                        VStack(alignment: .leading, spacing: metrics.settingsTextSpacing) {
                             Text(failure.shortcutName)
-                                .font(.system(size: 11, weight: .medium))
+                                .font(typography.settingsRowTitle)
                             Text(failure.message)
-                                .font(.system(size: 9, weight: .regular))
+                                .font(typography.settingsHint)
                                 .foregroundStyle(Color.orange)
                         }
                         Spacer(minLength: 8)
@@ -146,7 +159,7 @@ struct SettingsHotkeyFailureRow: View {
                     .accessibilityLabel("\(failure.shortcutName) shortcut unavailable: \(failure.message)")
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, metrics.settingsRowVerticalPadding)
         }
     }
 }

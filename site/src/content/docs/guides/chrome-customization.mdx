@@ -209,13 +209,19 @@ insets](/guides/layout-and-insets/) and `Examples/LayoutNook/main.swift`.
 
 ### Typography
 
-`NookChromeTypography` sets the fonts for the chrome's own text and glyphs - the
-top bar, the compact pill, and the status banner. Each role is a `Font`; defaults
-reproduce today's sizes and weights. Because the framework defaults carry no
-explicit design, the resolved `fontDesign` (see [Theming](/guides/theming/)) still
-cascades over them - set `.rounded` once on the theme and every chrome role
-follows. This restyles the *chrome's* type only; a registered home view, custom
-Settings, or trailing items control their own fonts.
+`NookChromeTypography` sets the fonts for the framework's own text and glyphs.
+Each role is a `Font`; defaults reproduce today's sizes and weights. Because the
+framework defaults carry no explicit design, the resolved `fontDesign` (see
+[Theming](/guides/theming/)) still cascades over them - set `.rounded` once on the
+theme and every role follows. This restyles the *framework's* type only; a
+registered home view, custom Settings, or trailing items control their own fonts.
+
+Roles cover the chrome (top bar, compact pill, status banner) shown below, plus
+the placeholder home, the built-in Settings panel (rows, pickers, the shortcut key
+cap, the disclosure section), and the optional `NookComponents` shelf, activity
+card, and volume glyph - so every framework-drawn surface is restylable. The same
+applies to `NookChromeMetrics`, whose fields extend past the chrome into those
+surfaces' dimensions, radii, spacing, and emphasis opacities.
 
 ```swift
 configuration.typography.headerIcon = .system(size: 11, weight: .semibold)  // lock / gear / home glyphs

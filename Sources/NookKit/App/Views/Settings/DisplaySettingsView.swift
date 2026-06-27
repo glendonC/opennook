@@ -17,6 +17,8 @@ import SwiftUI
 struct DisplaySettingsSection: View {
     @ObservedObject var appState: AppState
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     @State private var displays: [NookScreenLocator.DisplayInfo] = NookScreenLocator.connectedDisplays()
 
@@ -25,7 +27,7 @@ struct DisplaySettingsSection: View {
     private static let specificTagPrefix = "uuid:"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
             Picker("Display", selection: selectionBinding) {
                 Text("Built-in display").tag(Self.builtInTag)
                 Text("Display with active menu bar").tag(Self.mainTag)
@@ -42,11 +44,13 @@ struct DisplaySettingsSection: View {
             .accessibilityLabel("Display")
 
             Text(descriptionText)
-                .font(.system(size: 10, weight: .regular))
+                .font(typography.settingsCaption)
                 .foregroundStyle(theme.tertiaryLabel)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+        .onReceive(
+            NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+        ) { _ in
             displays = NookScreenLocator.connectedDisplays()
         }
     }

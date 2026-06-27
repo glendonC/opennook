@@ -22,6 +22,7 @@ struct SettingsView: View {
     let onResetAllSettings: () -> Void
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeMetrics) private var metrics
 
     /// Curve-derived leading/trailing insets from the chrome. Matching them here aligns the
     /// section labels and rows with the top bar's leading cluster on a notched display.
@@ -56,7 +57,7 @@ struct SettingsView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: metrics.settingsSectionSpacing) {
                 section("Appearance") {
                     NookAppearanceSettingsSection(appState: appState)
                 }
@@ -66,7 +67,7 @@ struct SettingsView: View {
                 }
 
                 section("Shortcut & nook") {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: metrics.settingsGroupSpacing) {
                         SettingsShortcutRow(appState: appState)
                         if !appState.hotkeyRegistrationFailures.keys.filter({ $0 != NookHotkeyIDs.toggle }).isEmpty {
                             SettingsHotkeyFailureRow(appState: appState)
@@ -93,7 +94,7 @@ struct SettingsView: View {
                 }
 
                 section("Data") {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: metrics.settingsGroupSpacing) {
                         SettingsDataCommandRow(
                             title: "Preview status banner",
                             subtitle: "Shows the transient message channel under the top bar",
@@ -119,7 +120,7 @@ struct SettingsView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.bottom, 14)
+            .padding(.bottom, metrics.settingsContentBottomPadding)
         }
         .frame(maxWidth: .infinity, maxHeight: settingsScrollMaxHeight, alignment: .leading)
     }
@@ -152,22 +153,20 @@ private struct SettingsDisclosureSection<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @Environment(\.nookResolvedTheme) private var theme
-
-    /// Width of the leading icon gutter the top bar's home/lock/gear icons occupy (24×24).
-    /// The disclosure chevron centers in the same gutter so the arrows sit directly under
-    /// the top-left home icon, and the connector hairline runs down its middle.
-    private let iconGutter: CGFloat = 24
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let iconGutter = metrics.settingsDisclosureGutter
+        VStack(alignment: .leading, spacing: metrics.settingsBlockSpacing) {
             Button {
                 withAnimation(.spring(response: 0.30, dampingFraction: 0.86)) {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: metrics.settingsInlineSpacing) {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(typography.settingsDisclosureChevron)
                         .foregroundStyle(theme.quaternaryLabel)
                         .rotationEffect(.degrees(isExpanded ? 90 : 0))
                         .frame(width: iconGutter)
@@ -179,17 +178,17 @@ private struct SettingsDisclosureSection<Content: View>: View {
             .buttonStyle(.plain)
 
             if isExpanded {
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: metrics.settingsGroupSpacing) {
                     // Connector: a thin vertical rule that fills the content height, tying the
                     // indented items back to the header. Centered under the chevron gutter.
                     RoundedRectangle(cornerRadius: 0.5, style: .continuous)
-                        .fill(theme.subtleStroke.opacity(0.5))
-                        .frame(width: 1)
+                        .fill(theme.subtleStroke.opacity(metrics.settingsConnectorOpacity))
+                        .frame(width: metrics.settingsConnectorWidth)
 
                     content()
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.leading, (iconGutter - 1) / 2)
+                .padding(.leading, (iconGutter - metrics.settingsConnectorWidth) / 2)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }

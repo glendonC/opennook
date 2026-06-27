@@ -23,23 +23,25 @@ struct SettingsDataCommandRow: View {
     let action: () -> Void
 
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
-            HStack(alignment: .center, spacing: 10) {
+            HStack(alignment: .center, spacing: metrics.settingsRowSpacing) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(typography.settingsCommandIcon)
                     .foregroundStyle(iconTint)
-                    .frame(width: 18)
+                    .frame(width: metrics.settingsIconWidth)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: metrics.settingsTextSpacing) {
                     Text(title)
-                        .font(.system(size: 12, weight: .regular))
+                        .font(typography.settingsCommandTitle)
                         .foregroundStyle(titleTint)
                         .multilineTextAlignment(.leading)
                     Text(subtitle)
-                        .font(.system(size: 11, weight: .regular))
+                        .font(typography.settingsRowDetail)
                         .foregroundStyle(theme.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
@@ -48,10 +50,10 @@ struct SettingsDataCommandRow: View {
                 Spacer(minLength: 0)
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(typography.settingsCommandChevron)
                     .foregroundStyle(isHovering ? iconTint : theme.quaternaryLabel)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, metrics.settingsRowVerticalPadding)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -83,6 +85,8 @@ struct SettingsDataCommandRow: View {
 /// defaults.
 struct SettingsAboutCard: View {
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
     @Environment(\.nookHostBranding) private var branding
 
     /// Reads `CFBundleShortVersionString` from the running bundle. The SPM `swift run`
@@ -98,25 +102,25 @@ struct SettingsAboutCard: View {
         "A demo notch app built with OpenNook, an open-source framework for macOS notch apps."
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: metrics.settingsRowSpacing) {
             branding.markView(
                 size: 14,
                 strokeWidth: 1.2,
                 color: theme.headerInactiveIcon
             )
-            .frame(width: 18)
+            .frame(width: metrics.settingsIconWidth)
 
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: metrics.settingsAboutTextSpacing) {
+                HStack(spacing: metrics.settingsInlineSpacing) {
                     Text(branding.hostName)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(theme.primaryLabel.opacity(0.95))
+                        .font(typography.settingsEmphasis)
+                        .foregroundStyle(theme.primaryLabel.opacity(metrics.settingsTitleEmphasisOpacity))
                     Text("v\(version)")
-                        .font(.system(size: 10, weight: .regular, design: .monospaced))
+                        .font(typography.settingsVersionLabel)
                         .foregroundStyle(theme.tertiaryLabel)
                 }
                 Text(branding.hostTagline ?? Self.defaultTagline)
-                    .font(.system(size: 10, weight: .regular))
+                    .font(typography.settingsCaption)
                     .foregroundStyle(theme.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }

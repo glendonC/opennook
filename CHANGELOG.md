@@ -8,26 +8,31 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- `NookChromeTypography` - a host-tunable token type for the chrome's own fonts
-  (top bar, compact pill, status banner). Set via `NookConfiguration.typography`;
-  defaults reproduce the framework exactly, and the resolved `fontDesign` still
-  cascades over the roles. Restyles chrome text without forking, the typography
-  counterpart to the existing color (`NookResolvedTheme`) and layout
-  (`NookChromeMetrics`) seams.
+- `NookChromeTypography` - a host-tunable token type for the framework's own
+  fonts. Set via `NookConfiguration.typography`; defaults reproduce the framework
+  exactly, and the resolved `fontDesign` still cascades over the roles. Restyles
+  framework text without forking, the typography counterpart to the existing color
+  (`NookResolvedTheme`) and layout (`NookChromeMetrics`) seams. Roles cover the
+  top bar, compact pill, and status banner, plus the placeholder home, the
+  built-in Settings panel, and the optional `NookComponents` add-ons.
 - `NookChromeMetrics` gained the element-level dimensions, corner radii, spacing,
-  and emphasis-opacity values that were previously baked into the chrome views
-  (header icons, the leading brand mark, the compact pill, and the status
-  banner). All new fields default to today's values, so the change is additive
-  and non-breaking. Migrating the views to read these tokens means a host can now
-  restyle the top bar, compact pill, and banner through public API only.
+  and emphasis-opacity values that were previously baked into the framework views -
+  the chrome (header icons, leading brand mark, compact pill, status banner), the
+  placeholder home, the Settings panel (rows, pickers, the shortcut key cap, the
+  accent swatches, the disclosure section), and the `NookComponents` shelf,
+  activity card, and volume glyph. All new fields default to today's values, so
+  the change is additive and non-breaking.
 
 ### Changed
 
-- The chrome views (top bar, header icons, compact pill, status banner) now read
-  every font, size, radius, spacing, and opacity from `NookChromeTypography` /
-  `NookChromeMetrics` instead of inline literals. No visual change at the
-  defaults. The built-in Settings panel and `NookComponents` keep their current
-  styling; tokenizing those is a follow-up.
+- The framework views now read every font, size, radius, spacing, and opacity from
+  `NookChromeTypography` / `NookChromeMetrics` instead of inline literals - the
+  chrome (top bar, header icons, compact pill, status banner), the placeholder
+  home, the built-in Settings panel, and the `NookComponents` add-ons. No visual
+  change at the defaults; a host can now restyle any of these surfaces through
+  public API only. (A few intentionally-structural literals stay inline: motion
+  spring/offset magnitudes, the breadcrumb gradient mask, the fixed severity and
+  destructive-action colors, and zero-floor spacers.)
 
 ## [0.3.1] - 2026-06-12
 

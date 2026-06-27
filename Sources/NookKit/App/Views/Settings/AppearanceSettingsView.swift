@@ -12,13 +12,15 @@ import SwiftUI
 public struct NookAppearanceSettingsSection: View {
     @ObservedObject public var appState: AppState
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     public init(appState: AppState) {
         self.appState = appState
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: metrics.settingsBlockSpacing) {
             labeledPicker(title: "Theme", accessibilityLabel: "Theme") {
                 Picker("Theme", selection: chromePaletteBinding) {
                     Text("Match Mac").tag(NookChromePalette.followSystem)
@@ -30,7 +32,7 @@ public struct NookAppearanceSettingsSection: View {
                 .controlSize(.small)
             }
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
                 labeledPicker(title: "Surface", accessibilityLabel: "Chrome surface") {
                     Picker("Surface", selection: surfaceStyleBinding) {
                         Text("Solid").tag(NookSurfaceStyle.solid)
@@ -43,12 +45,12 @@ public struct NookAppearanceSettingsSection: View {
                 }
 
                 Text(surfaceStyleDescription)
-                    .font(.system(size: 10, weight: .regular))
+                    .font(typography.settingsCaption)
                     .foregroundStyle(theme.tertiaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
                 labeledPicker(title: "Layout", accessibilityLabel: "Chrome layout") {
                     Picker("Layout", selection: presentationBinding) {
                         Text("Auto").tag(NookPresentation.auto)
@@ -61,16 +63,16 @@ public struct NookAppearanceSettingsSection: View {
                 }
 
                 Text(presentationDescription)
-                    .font(.system(size: 10, weight: .regular))
+                    .font(typography.settingsCaption)
                     .foregroundStyle(theme.tertiaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
                 Text("Accent")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(typography.settingsFieldLabel)
                     .foregroundStyle(theme.secondaryLabel)
-                HStack(spacing: 6) {
+                HStack(spacing: metrics.settingsInlineSpacing) {
                     ForEach(NookAccentPreset.allCases) { preset in
                         Button {
                             var prefs = appState.appearancePreferences
@@ -79,14 +81,15 @@ public struct NookAppearanceSettingsSection: View {
                         } label: {
                             Circle()
                                 .fill(preset.color())
-                                .frame(width: 18, height: 18)
+                                .frame(
+                                    width: metrics.settingsAccentSwatchSize,
+                                    height: metrics.settingsAccentSwatchSize
+                                )
                                 .overlay(
                                     Circle()
                                         .stroke(
-                                            appState.appearancePreferences.accentPreset == preset
-                                                ? theme.primaryLabel.opacity(0.85)
-                                                : Color.clear,
-                                            lineWidth: 1.5
+                                            accentRingColor(for: preset),
+                                            lineWidth: metrics.settingsAccentSwatchStrokeWidth
                                         )
                                 )
                         }
@@ -97,15 +100,15 @@ public struct NookAppearanceSettingsSection: View {
             }
 
             if appState.appearancePreferences.surfaceStyle != .solid {
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
                     Text(strengthLabel)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(typography.settingsFieldLabel)
                         .foregroundStyle(theme.secondaryLabel)
                     Slider(value: backdropStrengthBinding, in: 0.35...1)
                         .controlSize(.small)
                         .accessibilityLabel(strengthLabel)
                     Text("Lower shows more wallpaper through the chrome.")
-                        .font(.system(size: 10, weight: .regular))
+                        .font(typography.settingsCaption)
                         .foregroundStyle(theme.tertiaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -120,7 +123,8 @@ public struct NookAppearanceSettingsSection: View {
         case .translucent:
             return "Translucent shows the wallpaper through a frosted material."
         case .liquidGlass:
-            return "Liquid Glass refracts the wallpaper through Apple's glass material on macOS 26, with a frosted-glass fallback on earlier versions."
+            return "Liquid Glass refracts the wallpaper through Apple's glass material on macOS 26, "
+                + "with a frosted-glass fallback on earlier versions."
         }
     }
 
@@ -140,14 +144,25 @@ public struct NookAppearanceSettingsSection: View {
     }
 
     @ViewBuilder
-    private func labeledPicker(title: String, accessibilityLabel: String, @ViewBuilder picker: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+    private func labeledPicker(
+        title: String,
+        accessibilityLabel: String,
+        @ViewBuilder picker: () -> some View
+    ) -> some View {
+        VStack(alignment: .leading, spacing: metrics.settingsFieldSpacing) {
             Text(title)
-                .font(.system(size: 10, weight: .medium))
+                .font(typography.settingsFieldLabel)
                 .foregroundStyle(theme.secondaryLabel)
             picker()
                 .accessibilityLabel(accessibilityLabel)
         }
+    }
+
+    /// The selected accent swatch's ring color; clear for the unselected swatches.
+    private func accentRingColor(for preset: NookAccentPreset) -> Color {
+        appState.appearancePreferences.accentPreset == preset
+            ? theme.primaryLabel.opacity(metrics.settingsAccentSwatchSelectedOpacity)
+            : Color.clear
     }
 
     private var chromePaletteBinding: Binding<NookChromePalette> {

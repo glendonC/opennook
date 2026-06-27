@@ -18,24 +18,26 @@ import SwiftUI
 /// configured theme automatically.
 public struct NookPlaceholderHomeView: View {
     @Environment(\.nookResolvedTheme) private var theme
+    @Environment(\.nookChromeTypography) private var typography
+    @Environment(\.nookChromeMetrics) private var metrics
 
     public init() {}
 
     public var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: metrics.placeholderStackSpacing) {
             NookMarkView(
-                size: 28,
-                strokeWidth: 2,
+                size: metrics.placeholderMarkSize,
+                strokeWidth: metrics.placeholderMarkStrokeWidth,
                 color: theme.secondaryLabel
             )
             Text("Nook")
-                .font(.system(size: 14, weight: .medium))
+                .font(typography.placeholderTitle)
                 .foregroundStyle(theme.primaryLabel)
             Text("Register your own view with NookConfiguration to start building.")
-                .font(.system(size: 11, weight: .regular))
+                .font(typography.placeholderBody)
                 .foregroundStyle(theme.tertiaryLabel)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
+        .padding(.vertical, metrics.placeholderVerticalPadding)
     }
 }

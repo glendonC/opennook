@@ -1,12 +1,12 @@
 # OpenNook
 
-[![CI](https://github.com/glendonC/opennook/actions/workflows/ci.yml/badge.svg)](https://github.com/glendonC/opennook/actions/workflows/ci.yml)
+[![CI](https://github.com/athledev-labs/opennook/actions/workflows/ci.yml/badge.svg)](https://github.com/athledev-labs/opennook/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![License: MIT (NookSurface)](https://img.shields.io/badge/NookSurface-MIT-blue.svg)](LICENSE-MIT-NOOKSURFACE)
 [![Swift 5.9+](https://img.shields.io/badge/swift-5.9%2B-orange.svg)](https://swift.org)
 [![Platform: macOS 15+](https://img.shields.io/badge/platform-macOS%2015%2B-lightgrey.svg)](#requirements)
-[![Swift Package Index](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FglendonC%2Fopennook%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/glendonC/opennook)
-[![Swift Package Index](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FglendonC%2Fopennook%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/glendonC/opennook)
+[![Swift Package Index](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fathledev-labs%2Fopennook%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/athledev-labs/opennook)
+[![Swift Package Index](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fathledev-labs%2Fopennook%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/athledev-labs/opennook)
 
 **An open-source framework for building macOS notch apps.**
 

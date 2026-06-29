@@ -6,6 +6,8 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-06-29
+
 ### Added
 
 - `NookChromeTypography` - a host-tunable token type for the framework's own
@@ -33,6 +35,9 @@ to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   public API only. (A few intentionally-structural literals stay inline: motion
   spring/offset magnitudes, the breadcrumb gradient mask, the fixed severity and
   destructive-action colors, and zero-floor spacers.)
+- The GitHub repository moved to [athledev-labs/opennook](https://github.com/athledev-labs/opennook).
+  Update your Swift package URL; GitHub redirects the old `glendonC/opennook` path
+  for a transition period.
 
 ## [0.3.1] - 2026-06-12
 
@@ -146,16 +151,17 @@ This is still 0.x: the public API is not frozen. Pin to a tag.
 
 ## [0.2.0] - 2026-05-23
 
-See the [v0.2.0 release](https://github.com/glendonC/opennook/releases) on
+See the [v0.2.0 release](https://github.com/athledev-labs/opennook/releases) on
 GitHub.
 
 ## [0.1.0] - 2026-05-22
 
 Initial public release. See the
-[v0.1.0 release](https://github.com/glendonC/opennook/releases) on GitHub.
+[v0.1.0 release](https://github.com/athledev-labs/opennook/releases) on GitHub.
 
-[Unreleased]: https://github.com/glendonC/opennook/compare/v0.3.1...HEAD
-[0.3.1]: https://github.com/glendonC/opennook/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/glendonC/opennook/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/glendonC/opennook/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/glendonC/opennook/releases/tag/v0.1.0
+[Unreleased]: https://github.com/athledev-labs/opennook/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/athledev-labs/opennook/compare/v0.3.1...v0.4.0
+[0.3.1]: https://github.com/athledev-labs/opennook/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/athledev-labs/opennook/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/athledev-labs/opennook/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/athledev-labs/opennook/releases/tag/v0.1.0

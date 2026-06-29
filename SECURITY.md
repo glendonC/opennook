@@ -10,7 +10,7 @@ release. Older tags are not patched.
 Please **do not** open a public issue for security problems.
 
 Use GitHub's private vulnerability reporting:
-<https://github.com/glendonC/opennook/security/advisories/new>
+<https://github.com/athledev-labs/opennook/security/advisories/new>
 
 Include:
 

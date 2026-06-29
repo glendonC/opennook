@@ -13,7 +13,7 @@ Report unacceptable behavior to the project maintainer
 message or a [private security advisory][advisory]. All reports will be
 handled with discretion.
 
-[advisory]: https://github.com/glendonC/opennook/security/advisories/new
+[advisory]: https://github.com/athledev-labs/opennook/security/advisories/new
 
 Maintainers who do not follow or enforce the Code of Conduct in good faith
 may face temporary or permanent repercussions as determined by other

@@ -61,6 +61,12 @@ public struct NookConfiguration: Sendable {
     /// the built-in screen; the host view reads ``AppState`` via `@EnvironmentObject`.
     public var settings: (@Sendable @MainActor () -> AnyView)? = nil
 
+    /// Extra host sections appended to the framework's **built-in** Settings surface, rendered
+    /// below the framework groups (Appearance, Display, ...) and above About. Empty (the default)
+    /// leaves Settings unchanged. Ignored when ``settings`` fully replaces the built-in screen.
+    /// Use ``addSettingsSection(id:title:content:)`` to append one from a `@ViewBuilder`.
+    public var settingsSections: [NookSettingsSection] = []
+
     /// Top-bar configuration - leading cluster (title/icon), and the two visibility
     /// flags for the top bar and the Settings UI. Grouped so the related knobs
     /// travel together and future top-bar settings land here cleanly. See
@@ -224,6 +230,19 @@ public struct NookConfiguration: Sendable {
         @ViewBuilder _ content: @escaping @Sendable @MainActor () -> Content
     ) {
         settings = { AnyView(content()) }
+    }
+
+    /// Appends one host section to the framework's built-in Settings surface from a `@ViewBuilder`.
+    /// The section renders below the framework groups and above About, in the same collapsible
+    /// disclosure chrome. See ``NookSettingsSection``.
+    public mutating func addSettingsSection<Content: View & Sendable>(
+        id: String? = nil,
+        title: String,
+        @ViewBuilder content: @escaping @Sendable @MainActor () -> Content
+    ) {
+        settingsSections.append(
+            NookSettingsSection(id: id, title: title, content: content)
+        )
     }
 
     /// Registers host actions for the top bar's trailing cluster from a `@ViewBuilder`

@@ -18,6 +18,8 @@ import SwiftUI
 /// no card fills, no rules.
 struct SettingsView: View {
     @ObservedObject var appState: AppState
+    /// Host-supplied sections rendered below the framework groups and above About.
+    let hostSections: [NookSettingsSection]
     let onToggleKeepOpen: () -> Void
     let onResetAllSettings: () -> Void
 
@@ -112,6 +114,12 @@ struct SettingsView: View {
                             style: .standard,
                             action: onResetAllSettings
                         )
+                    }
+                }
+
+                ForEach(hostSections) { hostSection in
+                    section(hostSection.title) {
+                        hostSection.content()
                     }
                 }
 

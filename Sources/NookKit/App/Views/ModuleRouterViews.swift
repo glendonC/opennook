@@ -32,6 +32,7 @@ struct ModuleRouterExpandedView: View {
             theme: configuration.theme,
             home: configuration.home,
             settings: configuration.settings,
+            settingsSections: configuration.settingsSections,
             topBar: configuration.topBar,
             labels: configuration.labels,
             metrics: configuration.metrics,

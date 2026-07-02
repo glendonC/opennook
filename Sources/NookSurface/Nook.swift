@@ -103,7 +103,7 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
     let compactLeadingContent: CompactLeading
     let compactTrailingContent: CompactTrailing
     /// Construction-time flags set by the no-compact convenience init. Immutable so
-    /// they can't be flipped mid-flight and trip the view's transition heuristics - 
+    /// they can't be flipped mid-flight and trip the view's transition heuristics -
     /// the no-compact case is a build-time choice, not runtime state.
     let disableCompactLeading: Bool
     let disableCompactTrailing: Bool
@@ -302,7 +302,9 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
     var effectiveOpeningAnimation: Animation { transitionConfiguration.openingAnimation ?? style.openingAnimation }
     var effectiveClosingAnimation: Animation { transitionConfiguration.closingAnimation ?? style.closingAnimation }
-    var effectiveConversionAnimation: Animation { transitionConfiguration.conversionAnimation ?? style.conversionAnimation }
+    var effectiveConversionAnimation: Animation {
+        transitionConfiguration.conversionAnimation ?? style.conversionAnimation
+    }
 
     /// When the chrome becomes visible (state transitions out of `.hidden`), replay any
     /// feedback that was requested during the boot race. Single sink keeps lifetime tied
@@ -331,9 +333,9 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
             .sink { [weak self] newState in
                 guard let self else { return }
                 switch newState {
-                case .expanded: self.onExpand?()
-                case .compact: self.onCompact?()
-                case .hidden: self.onHide?()
+                    case .expanded: self.onExpand?()
+                    case .compact: self.onCompact?()
+                    case .hidden: self.onHide?()
                 }
             }
             .store(in: &cancellables)
@@ -481,10 +483,10 @@ where Expanded: View, CompactLeading: View, CompactTrailing: View {
 
 // MARK: - Public lifecycle
 
-public extension Nook {
+extension Nook {
     /// Expand the chrome. Pass `nil` (the default) to let ``resolvedScreen`` pick the
     /// target - typically the host's persisted display preference via ``screenProvider``.
-    func expand(on screen: NSScreen? = nil) async {
+    public func expand(on screen: NSScreen? = nil) async {
         guard let target = screen ?? resolvedScreen else { return }
         let skipHide = transitionConfiguration.skipIntermediateHides
         await runTransition { [weak self] generation in
@@ -494,7 +496,7 @@ public extension Nook {
 
     /// Collapse the chrome to its compact pill. Pass `nil` (the default) to let
     /// ``resolvedScreen`` pick the target.
-    func compact(on screen: NSScreen? = nil) async {
+    public func compact(on screen: NSScreen? = nil) async {
         guard let target = screen ?? resolvedScreen else { return }
         let skipHide = transitionConfiguration.skipIntermediateHides
         await runTransition { [weak self] generation in
@@ -502,11 +504,11 @@ public extension Nook {
         }.value
     }
 
-    /// Hide the chrome and tear the window down. Routed through ``runTransition(_:)`` - 
+    /// Hide the chrome and tear the window down. Routed through ``runTransition(_:)`` -
     /// exactly like `expand`/`compact` - so the hide and its teardown live fully inside
     /// the generation system: a newer transition reliably supersedes an in-flight hide,
     /// cancelling its task before its `fadeOutWindow`/`deinitializeWindow` can run.
-    func hide() async {
+    public func hide() async {
         await runTransition { [weak self] generation in
             await self?._hide(generation: generation)
         }.value
@@ -515,7 +517,7 @@ public extension Nook {
 
 // MARK: - Peripheral feedback
 
-public extension Nook {
+extension Nook {
     /// Play a one-shot peripheral cue along the chrome's perimeter. Default is the shimmer sweep.
     ///
     /// Use this for low-priority "something happened" signals the user can catch in
@@ -523,7 +525,7 @@ public extension Nook {
     /// timing - no internal queueing or debouncing; rapid successive calls re-anchor
     /// `startedAt` and the in-flight animation restarts. A cue requested while the chrome
     /// is hidden is queued and replayed the next time the nook becomes visible.
-    func playFeedback(
+    public func playFeedback(
         _ effect: NookFeedback = .shimmer,
         tint: Color = Color(nsColor: .controlAccentColor),
         duration: TimeInterval = 0.85,
@@ -540,17 +542,17 @@ public extension Nook {
             repeats: repeats
         )
         switch state {
-        case .compact, .expanded:
-            // Chrome is visible (either as compact pill or expanded surface) - fire
-            // immediately. The shimmer overlay strokes the same `NookShape` perimeter in
-            // both states, so the visual reads on either.
-            setFeedbackEvent(event)
-            pendingFeedback = nil
-        case .hidden:
-            // Boot race or user-hidden: queue for the next visible transition. The overlay
-            // can't paint without chrome, but we don't want to drop the request entirely
-            // because the cue's whole job is "tell the user when they're not looking."
-            pendingFeedback = event
+            case .compact, .expanded:
+                // Chrome is visible (either as compact pill or expanded surface) - fire
+                // immediately. The shimmer overlay strokes the same `NookShape` perimeter in
+                // both states, so the visual reads on either.
+                setFeedbackEvent(event)
+                pendingFeedback = nil
+            case .hidden:
+                // Boot race or user-hidden: queue for the next visible transition. The overlay
+                // can't paint without chrome, but we don't want to drop the request entirely
+                // because the cue's whole job is "tell the user when they're not looking."
+                pendingFeedback = event
         }
     }
 }
@@ -701,7 +703,8 @@ extension Nook {
         // newer transition supersedes us, or if hover behavior stops requesting deferral.
         if hoverBehavior.contains(.keepVisible), isHovering {
             while isCurrent(generation), isHovering,
-                  hoverBehavior.contains(.keepVisible), !Task.isCancelled {
+                hoverBehavior.contains(.keepVisible), !Task.isCancelled
+            {
                 try? await Task.sleep(for: Self.keepVisiblePollInterval)
             }
             // Superseded (or cancelled) while waiting for the cursor to leave: a newer
@@ -850,8 +853,8 @@ extension Nook {
     }
 }
 
-private extension Nook {
-    func initializeWindow(screen: NSScreen, orderFront: Bool = true) {
+extension Nook {
+    fileprivate func initializeWindow(screen: NSScreen, orderFront: Bool = true) {
         deinitializeWindow()
 
         notchSize = screen.notchFrameWithMenubarAsBackup.size
@@ -891,7 +894,7 @@ private extension Nook {
             dragInterceptor.topAnchor.constraint(equalTo: container.topAnchor),
             dragInterceptor.bottomAnchor.constraint(equalTo: container.bottomAnchor),
             dragInterceptor.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            dragInterceptor.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+            dragInterceptor.trailingAnchor.constraint(equalTo: container.trailingAnchor),
         ])
 
         let panel = NookPanel(
@@ -924,13 +927,30 @@ private extension Nook {
 
     /// Show with the hosting layer starting at opacity 0, then animate to 1. The window itself
     /// is at full alpha - only the SwiftUI content fades in, masking any first-frame layout pop.
-    func showWindow() {
+    fileprivate func showWindow() {
         guard let window = windowController?.window else { return }
 
         let layer = hostingLayer
         layer?.opacity = 0
 
         window.orderFrontRegardless()
+
+        // Re-pin a forced appearance now that the window is on screen. The macOS 26 Liquid Glass
+        // material binds its light/dark rendering when the hosting view first appears, and does not
+        // re-resolve when `window.appearance` was pinned before it was visible (as it is at window
+        // creation in `initializeWindow`). A cold launch in a forced Light or Dark theme otherwise
+        // paints a stale, system-appearance glass until the user toggles the theme by hand. Flipping
+        // the appearance off and back on the next runloop - while the content is still faded to zero
+        // below - reproduces that manual toggle so the glass adopts the pinned scheme unseen. No-op
+        // when following the Mac (nil), where the system appearance is already correct.
+        if let forcedAppearance = chromeAppearance {
+            DispatchQueue.main.async { [weak window] in
+                window?.appearance = nil
+                DispatchQueue.main.async { [weak window] in
+                    window?.appearance = forcedAppearance
+                }
+            }
+        }
 
         guard let layer else { return }
 
@@ -943,7 +963,7 @@ private extension Nook {
         layer.opacity = 1
     }
 
-    func deinitializeWindow() {
+    fileprivate func deinitializeWindow() {
         guard let windowController else { return }
         windowController.close()
         self.windowController = nil
